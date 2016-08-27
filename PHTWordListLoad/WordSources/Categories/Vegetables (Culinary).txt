@@ -1,0 +1,249 @@
+
+;;Leafy and salad vegetables
+Amaranth
+Arugula
+Beet greens
+Bok choy
+Borage greens
+Broccolini
+Brussels sprout
+Cabbage
+Catsear
+Celery
+Celtuce
+Chaya
+Chickweed
+Chicory
+Chinese mallow
+Chrysanthemum
+Collard greens
+Common purslane
+Corn salad
+Cress
+Dandelion
+Dill
+Endive
+Fat hen
+Fiddlehead
+Fluted pumpkin
+Garden rocket
+Golden samphire
+Good King Henry
+Grape leaves
+Greater plantain
+Kai-lan
+Kale
+Komatsuna
+Kuka
+Lagos bologi
+Lamb's lettuce
+Lamb's quarters
+Land cress
+Lettuce
+Lizard's tail
+Malabar spinach
+Melokhia
+Miner's lettuce
+Winter purslane
+Mizuna greens
+Mustard
+Napa cabbage
+Siu choi
+New Zealand Spinach
+Orache
+Pak choy
+Paracress
+Pea sprouts
+Pea leaves
+Poke
+Radicchio
+Rapini
+broccoli rabe
+Samphire
+Sculpit
+Stridolo
+Sea beet
+Sea kale
+Sierra Leone bologi
+Soko
+Sorrel
+Sour cabbage
+Spinach
+Summer purslane
+Swiss chard
+Tatsoi
+Turnip greens
+Watercress
+Water spinach
+Wheatgrass
+Yarrow
+Yao choy
+Yu choy
+
+;;Fruits
+Avocado
+Bell pepper
+Bitter melon
+Bitter gourd
+Chayote
+Cucumber
+Ivy gourd
+Eggplant
+Aubergine
+Brinjal
+Luffa
+Olive fruit
+Pumpkin
+Squash
+Sweet pepper
+Tinda
+Tomatillo
+Tomato
+Vanilla
+West Indian gherkin
+Winter melon
+Zucchini
+Courgette
+Marrow
+
+;;Flowers and flower buds
+Artichoke
+Broccoli
+Broccolini flowers
+Caper
+Cauliflower
+Daylily
+Courgette flowers
+Squash blossoms
+
+;;Podded vegetables
+American groundnut
+Azuki bean
+Black-eyed pea
+Chickpea
+Common bean
+Drumstick
+Dolichos bean
+Fava bean
+Garbanzo
+Green bean
+French bean
+Guar
+Horse gram
+Indian pea
+Lentil
+Lima bean
+Moth bean
+Mung bean
+Okra
+Pea
+Peanut
+Pigeon pea
+Ricebean
+Runner bean
+Snap pea
+sugarsnap
+mangetout
+Snow pea
+Soybean
+Tarwi
+Tarhui
+Chocho
+Tepary bean
+Urad bean
+Velvet bean
+Winged bean
+Yardlong bean
+
+;;Bulb and stem vegetables
+Asparagus
+Cardoon
+Celeriac
+Celery
+Chives
+Elephant garlic
+Florence fennel
+Garlic
+Garlic chives
+Kohlrabi
+Kurrat
+Lemongrass
+Leek
+Lotus root
+Nopal
+Onion
+Pearl onion
+Potato onion
+Prussian asparagus
+Spring onion
+Scallion
+Shallot
+Tree onion
+Welsh onion
+Wild leek
+
+;;Root and tuberous vegetables
+Ahipa
+Arracacha
+Bamboo shoot
+Beetroot
+Burdock
+Broadleaf arrowhead
+Camas
+Canna
+Carrot
+Cassava
+Chinese artichoke
+Daikon
+Earthnut pea
+Elephant foot yam
+Ensete
+Galangal
+Ginger
+Hamburg parsley
+Horseradish
+Jerusalem artichoke
+Jícama
+Mashua
+Parsnip
+Pignut
+Potato
+Prairie turnip
+Radish
+Rutabaga
+Salsify
+Scorzonera
+Skirret
+Swede
+Sweet potato
+Kumara
+Taro
+Ti
+Tigernut
+Turmeric
+Turnip
+Ulluco
+Wasabi
+Water caltrop
+Water chestnut
+Yacón
+Yam
+
+;;Sea vegetables
+Aonori
+Arame
+Carola
+Dabberlocks
+Badderlocks
+Dulse
+Dillisk
+Hijiki
+Kombu
+Laver
+Gim
+Mozuku
+Nori
+Ogonori
+Sea grape
+Sea lettuce
+Wakame

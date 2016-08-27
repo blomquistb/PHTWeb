@@ -1,0 +1,198 @@
+aluminium
+bismuth
+chromium
+cobalt
+copper
+gallium
+gold
+indium
+iron
+lead
+magnesium
+mercury
+nickel
+potassium
+plutonium
+rhodium
+scandium
+silver
+sodium
+titanium
+tin
+uranium
+zinc
+zirconium
+molybdenum
+
+
+Alnico
+Duralumin
+Hiduminium
+Kryron
+Magnalium
+Scandium
+Cerrosafe
+Nichrome 
+Megallium
+Stellite
+Talonite
+Ultimet
+Vitallium
+Arsenical copper
+Beryllium copper
+Billon
+Brass
+Chinese silver
+Dutch metal
+Gilding metal
+Muntz metal
+Pinchbeck
+Prince's metal
+Tombac
+Bronze
+Aluminium bronze
+Arsenical bronze
+Bell metal
+Florentine bronze
+Guanín
+Gunmetal
+Glucydur
+Phosphor bronze
+Ormolu
+Gilt Bronze
+Speculum metal
+Constantan
+Copper hydride
+Copper–tungsten
+Corinthian bronze
+Cunife
+Cupronickel
+Cymbal alloys
+Bell metal
+Devarda's alloy
+Electrum
+Hepatizon
+Heusler alloy
+Manganin
+Molybdochalkos
+Nickel silver
+Nordic gold
+Shakudo
+Tumbaga
+Galfenol
+Galinstan
+Al_Ga
+Crown gold
+Electrum
+Rhodite
+Rose gold
+Tumbaga
+White gold
+Field's metal
+Elinva
+Fernico
+Ferroalloys
+Ferroboron
+Ferrocerium
+Ferrochrome
+Ferromagnesium
+Ferromanganese
+Ferromolybdenum
+Ferronickel
+Ferrophosphorus
+Ferrosilicon
+Ferrotitanium
+Ferrouranium
+Ferrovanadium
+Invar
+Iron Cast iron
+Pig iron
+Iron hydride
+Kovar
+Spiegeleisen
+Staballoy
+Steel
+Bulat steel
+Chromoly
+Crucible steel
+Damascus steel
+Hadfield steel
+High speed steel
+Mushet steel
+HSLA steel
+Maraging steel
+Reynolds 531
+Silicon steel
+Spring steel
+Stainless steel
+Alloy 20
+Celestrium
+Marine grade stainless
+Martensitic stainless steel
+Alloy 28
+Sanicro 28
+Surgical stainless steel
+Zeron 100
+Tool steel
+Weathering steel
+Cor-ten
+Wootz steel
+Molybdochalkos
+Solder
+Terne
+Type metal
+Elektron
+Magnox
+T-Mg–Al–Zn
+Amalgam
+Alnico
+Alumel
+Chromel
+Cupronickel
+Ferronickel
+German silver
+Hastelloy
+Inconel
+Nichrome
+Nickel-carbon
+Nicrosil
+Nisil
+Nitinol
+Permalloy
+Supermalloy
+Brass
+Stainless
+Coin silver
+NaK
+KLi
+Plutonium–aluminium
+Plutonium–cerium
+Plutonium–cerium–cobalt
+Plutonium–gallium
+Plutonium–gallium–cobalt
+Plutonium–zirconium
+Mischmetal
+Terfenol-D
+Pseudo palladium
+Scandium hydride
+Argentium sterling silver
+Billon
+Britannia silver
+Doré bullion
+Electrum
+Goloid
+Platinum sterling
+Shibuichi
+Sterling silver
+Tibetan silver
+NaK
+Beta C
+6al–4v
+Babbitt
+Britannium
+Pewter
+Solder
+Terne
+Staballoy
+Zamak
+Zircaloy

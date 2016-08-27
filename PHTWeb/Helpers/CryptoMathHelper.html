@@ -1,0 +1,905 @@
+﻿<!--
+Featue Todo:
+
+
+-->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>CryptoMath Helper</title>
+    <script src="/es6-shim.js"></script>
+    <script src="/jquery-2.1.4.js"></script>
+    <script src="/Utils.js"></script>    
+    <script src="/PHTWords.js"></script>
+
+    <script type="text/javascript">
+
+
+
+        var gSearchResults = [];
+        var gSearchResultsSort = 1;
+        var gSearchMapTry = "";
+
+        var gExpressions = [];
+        var gLeadingDigits = "";
+        var gMapSorting = 1;
+        var gMapping = [];
+
+
+        ////
+        // CryptoExpression Class Definition
+        ////
+        function CryptoExpression(text) {
+            text = text.replace(/(\t| )/g, ''); // remove spaces and tab characters
+
+            this.text = text;
+
+            var boolOperators = ['!=', '<=', '>=', '=', '<', '>'];
+            for (var i = 0 ; i < boolOperators.length; i++) {
+                if (this.ParseBooleanExpression(boolOperators[i], text)) {
+                    return;
+                }
+            }
+
+            var mathOperators = ['+', '-', '*', '/'];
+            for (var i = 0; i < mathOperators.length; i++) {
+                if (this.ParseMathExpression(mathOperators[i], text)) {
+                    return;
+                }
+            }
+
+            if (isNaN(text)) {
+                this.digits = text;
+
+                if (this.digits.length > 1) {
+                    var leadingDigit = text.charAt(0);
+                    if (gLeadingDigits.indexOf(leadingDigit) < 0) {
+                        gLeadingDigits = gLeadingDigits + leadingDigit;
+                    }
+                }
+
+                return;
+            }
+
+            this.value = +text; // converts text to number if valid, otherwise this.value becomes NaN.
+        }
+
+        CryptoExpression.prototype.ParseBooleanExpression = function (operator, text) {
+            var exps = text.split(operator);
+            if (exps.length > 2) throw ("CryptoExpression: more than one '" + operator + "' in expression.");
+            if (exps.length == 2) {
+                this.operator = operator;
+                this.left = new CryptoExpression(exps[0]);
+                this.right = new CryptoExpression(exps[1]);
+                return true;
+            }
+
+            return false;
+        }
+
+        CryptoExpression.prototype.ParseMathExpression = function (operator, text) {
+            var index = text.indexOf(operator);
+            if (index >= 0) {
+                var leftExp = text.substr(0, index);
+                var rightExp = text.substr(index + operator.length);
+
+                this.operator = operator;
+                this.left = new CryptoExpression(leftExp);
+                this.right = new CryptoExpression(rightExp);
+                return true;
+            }
+
+            return false;
+        }
+
+        CryptoExpression.prototype.Value = function (mapping) {
+            if (!isNaN(this.value)) {
+                return this.value;
+            } else if (this.digits) {
+                return this.DigitsValue(mapping);
+            } else if (this.operator == '+') {
+                return this.left.Value(mapping) + this.right.Value(mapping);
+            } else if (this.operator == '-') {
+                return this.left.Value(mapping) - this.right.Value(mapping);
+            } else if (this.operator == '*') {
+                return this.left.Value(mapping) * this.right.Value(mapping);
+            } else if (this.operator == '/') {
+                return this.left.Value(mapping) / this.right.Value(mapping);
+            } else if (this.operator == '=') {
+                return this.left.Value(mapping) == this.right.Value(mapping);
+            } else if (this.operator == '<') {
+                return this.left.Value(mapping) < this.right.Value(mapping);
+            } else if (this.operator == '>') {
+                return this.left.Value(mapping) > this.right.Value(mapping);
+            } else if (this.operator == '!=') {
+                return this.left.Value(mapping) != this.right.Value(mapping);
+            } else if (this.operator == '<=') {
+                return this.left.Value(mapping) <= this.right.Value(mapping);
+            } else if (this.operator == '>=') {
+                return this.left.Value(mapping) >= this.right.Value(mapping);
+            }
+            else {
+                throw "CryptoExpression: Invalid operator: " + this.operator;
+            }
+        }
+
+        CryptoExpression.prototype.DigitsValue = function (mapping) {
+            if (this.digits == "$") {
+                return mapping.base;
+            }
+
+            var value = 0;
+            var base = 1;
+            for (var i = this.digits.length; i > 0; i--) {
+                value = value + mapping[this.digits.charAt(i-1)] * base;
+                base = base * mapping.base;
+            }
+
+            return value;
+        }
+
+        CryptoExpression.prototype.ContainsDigit = function (digit) {
+            if (this.digits && this.digits.indexOf(digit) >= 0) {
+                return true;
+            }
+
+            if (this.left && this.left.ContainsDigit(digit)) {
+                return true;
+            }
+
+            if (this.right && this.right.ContainsDigit(digit)) {
+                return true;
+            }
+
+            return false;
+        }
+
+
+
+
+        function doSolve() {
+            var startTime = new Date().getTime();
+
+            var results = [];
+
+            var text = getOriginalText();
+
+            if (getIgnoreCase()) {
+                text = text.toUpperCase();
+            }
+
+            var txtExpressions = text.split(/(\r\n|\r|\n)/g);  // each line is an expression
+
+            doMapChange();
+
+            gExpressions = [];
+            gLeadingDigits = "";
+
+            for (var i = 0; i < txtExpressions.length; i++) {
+                if (txtExpressions[i].trim() != "") {
+                    gExpressions.push(new CryptoExpression(txtExpressions[i]));
+                }
+            }
+
+            for (var i = 0; i < gMapping.length; i++) {
+                var digit = gMapping[i].digit;
+                for (var j = 0; j < gExpressions.length; j++) {
+                    if (gExpressions[j].operator == '=') {
+                        if (gExpressions[j].left.digits == digit) {
+                            if (gExpressions[j].right.value) {
+                                gMapping[i].value = "" + gExpressions[j].right.value;
+                                break;
+                            } else if (!gExpressions[j].right.ContainsDigit(digit)) {
+                                gMapping[i].value = gExpressions[j].right.text;
+                            }
+                        }
+
+                        if (gExpressions[j].right.digits == digit) {
+                            if (gExpressions[j].left.value) {
+                                gMapping[i].value = "" + gExpressions[j].left.value;
+                                break;
+                            } else if (!gExpressions[j].left.ContainsDigit(digit)) {
+                                gMapping[i].value = gExpressions[j].left.text;
+                            }
+                        }
+                    }
+                }
+            }
+
+            renderMappingTable(gMapping);
+
+            var bases = getBaseRange();
+            for (var b = 0; b < bases.length; b++) {
+                var base = bases[b];
+
+                var digits = [];
+                var values = [];
+
+                var mapping = { "base": base };
+
+                for (var i = 0; i < base; i++) {
+                    if (i != 0 || getAllowZeroDigit()) {
+                        values.push(i);
+                    }
+                }
+
+                for (var i = 0; i < gMapping.length; i++) {
+                    var v = gMapping[i].value.trim();
+                    if (v) {
+                        var value = +v;
+                        if (isNaN(value)) {
+                            gMapping[i].expression = new CryptoExpression(v);
+                        } else {
+                            mapping[gMapping[i].digit] = value;
+                            var index = values.indexOf(value);
+                            if (index >= 0) {
+                                values.splice(index, 1);
+                            }
+                        }
+                    } else {
+                        digits.push(gMapping[i].digit);
+                    }
+                }
+
+                if (values.length >= digits.length) {
+                    results = results.concat(doSolve2(mapping, digits, values));
+                }
+            }
+
+
+            renderResults(results);
+
+            setDuration(new Date().getTime() - startTime);
+            beep();
+
+            return results;
+        }
+
+        function doSolve2(mapping, digits, values) {
+            var results = [];
+
+            // base case check if mapping makes the provided expressions valid.
+            //
+            if (digits.length == 0) {
+                var valid = true;
+
+                for (var i = 0; i < gMapping.length; i++) {
+                    if (gMapping[i].expression) {
+                        var value = gMapping[i].expression.Value(mapping);
+                        var index = values.indexOf(value);
+                        if (index >= 0) {
+                            values.splice(index, 1);
+                            mapping[gMapping[i].digit] = gMapping[i].expression.Value(mapping);
+                        }
+                        else {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (valid) {
+                    for (var i = 0; i < gExpressions.length; i++) {
+                        if (!gExpressions[i].Value(mapping)) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (valid) {
+                    results.push(jQuery.extend({}, mapping));
+                }
+
+                return results;
+            }
+
+            var di = 0;
+            var digit = digits[di];
+            var remainingDigits = digits.slice(0, di).concat(digits.slice(di + 1));
+            var isLeadingDigit = gLeadingDigits.indexOf(digit) >= 0;
+
+            for (var vi = 0; vi < values.length; vi++) {
+                var value = values[vi];
+                if ((value != 0) || !isLeadingDigit || getAllowLeadingZeros()) {
+                    var remainingValues = values.slice(0, vi).concat(values.slice(vi + 1));
+
+                    mapping[digit] = value;
+
+                    results = results.concat(doSolve2(mapping, remainingDigits, remainingValues));
+                }
+            }
+
+            return results;
+        }
+
+
+        function doEncryptionChanged() {
+            gMapping = getNewMapping(gMapping, getOriginalText(), getExcludeText());
+            renderMappingTable(gMapping);
+        }
+
+        function doMapChange() {
+            var table = document.getElementById("MappingTable");
+
+            for (var i = 1, row; row = table.rows[i]; i++) {
+                var mapEdit = row.cells[1].firstChild;
+                var newValue = mapEdit.value;
+                if (getIgnoreCase()) {
+                    newValue = newValue.toUpperCase();
+                    mapEdit.value = newValue;
+                }
+
+                if (gMapping[i - 1].value != newValue) {
+                    gMapping[i - 1].value = newValue;
+                }
+            }
+        }
+
+
+
+        function getAllowDuplicateValues() {
+            var elem = document.getElementById("AllowDuplicateValues");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getAllowLeadingZeros() {
+            var elem = document.getElementById("AllowLeadingZeros");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getAllowZeroDigit() {
+            var elem = document.getElementById("AllowZeroDigit");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return true;
+        }
+
+        function getBaseRange() {
+            var result = [];
+            var text = document.getElementById("BaseRange").value
+
+            var basesArray = [];
+            var bases = text.split(",");
+
+            for (var i = 0; i < bases.length; i++) {
+                var base = bases[i].trim();
+                if (base.indexOf("-") > 0) {
+                    var range = base.split("-");
+                    if (range.length != 2) {
+                        throw "Invalid number of bases in range (" + base + ")";
+                    }
+
+                    var rStart = parseInt(range[0].trim());
+                    var rEnd = parseInt(range[1].trim());
+                    if (rStart > rEnd) {
+                        var temp = rStart;
+                        rStart = rEnd;
+                        rEnd = temp;
+                    }
+
+                    if (isNaN(rStart) || isNaN(rEnd) || rStart < 2 || rEnd > 256) {
+                        throw "Invalid base range (" + base + ")";
+                    }
+
+                    for (var j = rStart; j <= rEnd; j++) {
+                        basesArray[j] = j;
+                    }
+                }
+                else {
+                    var value = parseInt(base);
+                    if (isNaN(value) || value < 2 || value > 256) {
+                        throw "Invalid base (" + base + ")";
+                    }
+                    basesArray[value] = value;
+                }
+            }
+
+            for (var i = 0; i < basesArray.length; i++) {
+                if (basesArray[i]) {
+                    result.push(i);
+                }
+            }
+            
+            return result;
+        }
+
+            function getOriginalText() {
+                return document.getElementById("Encrypted").innerText;
+            }
+
+            function getIgnoreCase() {
+                var elem = document.getElementById("IgnoreCase");
+                if (elem) {
+                    return elem.checked;
+                }
+
+                return true;
+            }
+
+            function getNewMapping(oldMap, encryptedText, excludeText) {
+                var domainChars = "";
+                var newMap = [];
+
+                // Calculate new map from encrypted text minus the characters in exludeText.
+                //
+                var first = true;
+                var previousChar = '';
+                for (var i = 0; i < encryptedText.length; i++) {
+                    var encryptedChar = encryptedText.charAt(i);
+                    if (getIgnoreCase()) {
+                        encryptedChar = encryptedChar.toUpperCase();
+                    }
+
+                    if (!excludeText || (excludeText.indexOf(encryptedChar) < 0)) {
+                        var index = domainChars.indexOf(encryptedChar);
+                        if (index < 0) {
+                            newMap.push({ digit: encryptedChar, value: "" });
+                            domainChars = domainChars + encryptedChar;
+                            index = domainChars.length - 1;
+                        }
+                        else {
+                            newMap[index].frequency++;
+                            if (previousChar == encryptedChar) {
+                                newMap[index].double++;
+                            }
+                        }
+
+                        if (first) {
+                            newMap[index].first = newMap[index].first + 1;
+                            first = false;
+                        }
+                    }
+                    else {
+                        if (PHTWords.IsWhitespace(encryptedChar)) {
+                            first = true;
+                        }
+                    }
+
+                    previousChar = encryptedChar;
+                }
+
+                // Copy any mappings from the old map to the new map.
+                //
+                for (var i = 0; i < newMap.length; i++) {
+                    for (var j = 0; j < oldMap.length; j++) {
+                        if (newMap[i].digit == oldMap[j].digit) {
+                            newMap[i].value = oldMap[j].value;
+                            break;
+                        }
+                    }
+                }
+
+                return newMap;
+            }
+
+
+            function renderMappingTable(map) {
+
+                switch (gMapSorting) {
+                    case 1: map.sort(function (a, b) { return a.digit.charCodeAt(0) - b.digit.charCodeAt(0) }); break;
+                    case 2: map.sort(function (a, b) { if (b.value.charCodeAt(0) == a.value.charCodeAt(0)) { return a.digit.charCodeAt(0) - b.digit.charCodeAt(0) } return a.value.charCodeAt(0) - b.value.charCodeAt(0) }); break;
+                    default: break;
+                }
+
+                var countElem = document.getElementById("MapCount");
+                if (countElem) {
+                    countElem.value = map.length;
+                }
+
+                var t = document.getElementById("MappingTable");
+                t.innerHTML = '<tr><th><a href="javascript:void(0)" onclick="doSortByDigit();">Digit</a></th><th><a href="javascript:void(0)" onclick="doSortByValue();">Value</a></th></tr>';
+
+                for (var i = 0; i < map.length; i++) {
+                    var r = t.insertRow(-1);
+
+                    c = r.insertCell(-1);
+                    c.style.textAlign = "center";
+                    c.innerHTML = map[i].digit;
+
+                    c = r.insertCell(-1);
+                    c.style.textAlign = "center";
+                    c.innerHTML = '<input type="edit" size="20" onkeyup="doMapChange();" style="text-align: center;" value="' + map[i].value + '"/>'
+                }
+            }
+
+            function doSortByDigit() {
+                gMapSorting = 1;
+                renderMappingTable(gMapping);
+            }
+
+            function doSortByValue() {
+                gMapSorting = 2;
+                renderMappingTable(gMapping);
+            }
+
+
+
+            function renderResults(results) {
+
+                //switch (gResultsSorting) {
+                //    case 1: map.sort(function (a, b) { return a.digit.charCodeAt(0) - b.digit.charCodeAt(0) }); break;
+                //    case 2: map.sort(function (a, b) { if (b.value.charCodeAt(0) == a.value.charCodeAt(0)) { return a.digit.charCodeAt(0) - b.digit.charCodeAt(0) } return a.value.charCodeAt(0) - b.value.charCodeAt(0) }); break;
+                //    default: break;
+                //}
+
+                var countElem = document.getElementById("ResultsCount");
+                if (countElem) {
+                    countElem.value = results.length;
+                }
+
+                // Determine all the values that could be set and sort them aplphabetically.
+                //
+                var keys = [];
+                if (results.length > 0) {
+                    for (var key in results[0]) {
+                        if (results[0].hasOwnProperty(key) && key != "base") {
+                            keys.push(key);
+                        }
+                    }
+
+                    keys.sort();
+                }
+
+                // Accumulate all the valid bases and values from the results.
+                //
+                var bases = [];
+                var keyValues = [];
+
+                for (var i = 0; i < results.length; i++) {
+                    var baseIndex = bases.indexOf(results[i].base);
+                    if (baseIndex < 0) {
+                        baseIndex = bases.length;
+                        bases.push(results[i].base);
+                        keyValues[baseIndex] = [];
+                        for (var k = 0; k < keys.length; k++) {
+                            keyValues[baseIndex][k] = [];
+                        }
+                    }
+
+                    for (var k = 0; k < keys.length; k++) {
+                        var key = keys[k];
+                        if (keyValues[baseIndex][k].indexOf(results[i][key]) < 0) {
+                            keyValues[baseIndex][k].push(results[i][key]);
+                        }
+                    }
+                }
+
+                var t = document.getElementById("ResultsTable");
+                t.innerHTML = '<tr><th><a href="javascript:void(0)" onclick="doSortByDigit();">Base</a></th><th style="text-align:left;"><a href="javascript:void(0)" onclick="doSortByValues();">Values</a></th></tr>';
+
+                if (true) {
+                    // Render accumulated combinatinos for each base.
+                    //
+                    for (var b = 0; b < bases.length; b++) {
+                        var r = t.insertRow(-1);
+
+                        c = r.insertCell(-1);
+                        c.style.textAlign = "center";
+                        c.innerHTML = bases[b];
+
+                        var values = "";
+                        for (var k = 0; k < keys.length; k++) {
+                            if (values) {
+                                values += ";";
+                            }
+                            values = values + keys[k] + '=' + keyValues[b][k].join(",");
+                        }
+
+                        c = r.insertCell(-1);
+                        c.style.textAlign = "left";
+                        c.innerHTML = values
+                    }
+                }
+                else {
+                    // Render every single possible combination
+                    //
+                    for (var i = 0; i < results.length; i++) {
+                        var r = t.insertRow(-1);
+
+                        c = r.insertCell(-1);
+                        c.style.textAlign = "center";
+                        c.innerHTML = results[i].base;
+
+                        var values = "";
+                        for (var k = 0; k < keys.length; k++) {
+                            if (values) {
+                                values += ";";
+                            }
+                            values = values + keys[k] + '=' + results[i][keys[k]];
+                        }
+
+                        c = r.insertCell(-1);
+                        c.style.textAlign = "left";
+                        c.innerHTML = values
+                    }
+                }
+            }
+
+
+            function setDuration(duration) {
+                var millis = (duration % 1000);
+                var seconds = Math.floor((duration / 1000)) % 60;
+                var minutes = Math.floor((duration / 1000) / 60);
+
+                var text = ""
+                if (minutes < 10) text += "0";
+                text += minutes;
+                text += ":";
+                if (seconds < 10) text += "0";
+                text += seconds;
+                text += ":";
+                if (millis < 10) {
+                    text += "00";
+                } else if (millis < 100) {
+                    text += "0";
+                }
+                text += millis;
+
+                var elem = document.getElementById("Duration");
+                if (elem) {
+                    elem.value = text;
+                }
+            }
+
+
+
+
+
+            function getNumericValue(id, defaultValue) {
+                var result = defaultValue;
+
+                var elem = document.getElementById(id);
+                if (elem) {
+                    result = parseInt(elem.value.trim());
+                    if (isNaN(result)) result = defaultValue;
+                }
+
+                return result;
+            }
+
+            function setInputValue(id, value) {
+                var elem = document.getElementById(id);
+                if (elem) {
+                    elem.value = value;
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+            ///
+            ///
+            function getExcludeText() {
+                var excludeEdit = document.getElementById("Exclude");
+                var numCheckbox = document.getElementById("Numbers");
+                var puncCheckbox = document.getElementById("Punctuation");
+                var wsCheckbox = document.getElementById("Whitespace");
+
+                var result = "";
+
+                if (excludeEdit && excludeEdit.value) {
+                    result = result + excludeEdit.value;
+                }
+
+
+                if (numCheckbox && numCheckbox.checked) {
+                    result = result + PHTWords.Digits;
+                }
+
+                if (puncCheckbox && puncCheckbox.checked) {
+                    result = result + PHTWords.Punctuation;
+                }
+
+                if (wsCheckbox && wsCheckbox.checked) {
+                    result = result + PHTWords.Whitespace;
+                }
+
+                return result
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+            function doSortByFrequency() {
+                gSearchResultsSort = 1;
+                renderSearchResults(gSearchResults);
+            }
+
+            function doSortByWords() {
+                gSearchResultsSort = 2;
+                renderSearchResults(gSearchResults);
+            }
+
+            function doFlipMapping(row, word, digit, pattern) {
+                if (gSearchMapTry) {
+                    for (var j = 0; j < gMapping.length; j++) {
+                        if (gSearchMapTry.indexOf(gMapping[j].digit) > -1) {
+                        }
+                    }
+                    gSearchMapTry = "";
+                }
+
+
+                if (row) {
+                    if (row.style.backgroundColor == "yellow") {
+                        row.style.backgroundColor = "inherit";
+                    }
+                    else {
+                        // remove highlight from any other cell
+                        var table = document.getElementById("MappingTable");
+
+                        for (var i = 0; i < row.parentNode.parentNode.rows.length; i++) {
+                            row.parentNode.parentNode.rows[i].style.backgroundColor = "inherit";
+                        }
+
+                        row.style.backgroundColor = "yellow";
+
+                        // lock the mapping for this word
+                        for (var i = 0; i < word.length; i++) {
+                            for (var j = 0; j < gMapping.length; j++) {
+                                if (digit[i] == gMapping[j].digit) {
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                renderMappingTable(gMapping);
+            }
+
+            function renderSearchResults(data, startTime) {
+
+                switch (gSearchResultsSort) {
+                    case 1: { data.sort(function (a, b) { return b.frequency - a.frequency; }); break; }
+                    case 2: { data.sort(function (a, b) { if (a.value > b.value) { return 1; } else if (a.value < b.value) { return -1; } else { return 0; } }); break; }
+                }
+
+                gSearchResults = data;
+
+                var table = document.getElementById("ResultsTable");
+
+                table.innerHTML = '';
+
+                var elem = document.getElementById("ResultsCount");
+                if (elem) {
+                    if (data) {
+                        elem.value = data.length;
+                    } else {
+                        elem.value = "";
+                    }
+                }
+
+                var digit = "";
+                elem = document.getElementById("SearchCypher");
+                if (elem) {
+                    digit = elem.value;
+                }
+
+                var pattern = "";
+                elem = document.getElementById("SearchPattern");
+                if (elem) {
+                    pattern = elem.value;
+                }
+
+                for (var i = 0; i < data.length; i++) {
+                    var r = table.insertRow(-1);
+                    if (digit) {
+                        r.setAttribute("onclick", "doFlipMapping(this,'" + escapeJSLiterial(data[i].value) + "','" + escapeJSLiterial(digit) + "','" + escapeJSLiterial(pattern) + "');");
+                    }
+
+                    var c = r.insertCell(-1);
+                    c.innerHTML = data[i].value;
+
+                    c = r.insertCell(-1);
+                    c.style.textAlign = "right";
+                    c.innerHTML = data[i].frequency;
+                }
+
+                if (startTime) {
+                    setDuration(new Date().getTime() - startTime);
+                    beep();
+                }
+            }
+
+
+
+
+    </script>
+</head>
+<body onload="doEncryptionChanged();">
+
+    <table style="width:100%;">
+        <tr>
+            <td id="SubstitutionMapping" style="width:1%;vertical-align:top;white-space:nowrap;">
+                <span>Count:</span>
+                <input type="text" size="5" disabled="disabled" id="MapCount" />
+                <br />
+                <hr />
+                <table id="MappingTable">
+                </table>
+            </td>
+            <td style="vertical-align:top;border-right: 3px solid black;border-left: 3px solid black;padding-left:5px; padding-right:10px;">
+                
+                <table style="width:100%">
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <span>Exclude:</span>
+                            <input type="text" id="Exclude" onkeyup="doEncryptionChanged();" value="+-*/!=<>$"/>
+                            <label><input type="checkbox" id="Numbers" checked="checked" value="Numbers" onchange="doEncryptionChanged();" />Numbers</label>
+                            <label><input type="checkbox" id="Punctuation" checked="checked" value="Punctuation" onchange="doEncryptionChanged();" />Punctuation</label>
+                            <label><input type="checkbox" id="Whitespace" checked="checked" value="Whitespace" onchange="doEncryptionChanged();" />Whitespace</label>
+                            <br />
+                            <hr />
+                        </td>
+                    </tr>
+                </table>
+
+                <table id="AutoMapping" style="width:100%">
+                    <tr>
+                        <td colspan="2">
+                            <label><input type="checkbox" id="AllowDuplicateValues" value="1" />Allow Duplicate Values</label>
+                            <label><input type="checkbox" id="AllowLeadingZeros" value="1" />Allow Leading Zeros</label>
+                            <label><input type="checkbox" id="AllowZeroDigit" value="1" checked="checked" />Allow Zero Digit</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id="OccuranceFreqTitle" style="text-align:right;">
+                            Base Range:
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <input type="text" id="BaseRange" value="10" size="50" />
+                            <button onclick="doSolve()">Solve</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><hr /></td>
+                    </tr>
+                </table>
+
+                <span>Equations:</span>
+                <label><input type="checkbox" id="IgnoreCase" checked="checked" value="1" onchange="doEncryptionChanged();" />Ignore Case</label>
+                <textarea id="Encrypted" style="width:100%;height:175px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doEncryptionChanged();"></textarea>
+
+                <hr />
+                <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
+                <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
+                <label>Max Results: <input type="text" maxlength="4" id="MaxResults" size="5" value="999" /></label>
+                <br />
+                <hr />
+
+                <table id="ResultsTable" style="width:100%;">
+                </table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

@@ -1,0 +1,1141 @@
+﻿<!DOCTYPE html>
+
+<!--
+Featue Todo:
+
+
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <script src="/es6-shim.js"></script>
+    <script src="/jquery-2.1.4.js"></script>
+    <script src="/Utils.js"></script>
+    <script src="/PHTWords.js"></script>
+
+
+
+    <script type="text/javascript">
+
+        function LadderSolution(ladder) {
+            this.ladder = ladder;
+            this.text = "";
+            this.frequency = 0;
+
+            if (ladder) {
+                var count = 0;
+
+                for (var i = 0; i < ladder.length; i++) {
+                    if (ladder[i]) {
+                        if (this.text != "") {
+                            this.text += ",";
+                        }
+                        this.text += ladder[i].value;
+                        this.frequency += ladder[i].frequency;
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    this.frequency = Math.floor(this.frequency / count);
+                }
+            }
+        }
+
+        function LadderSolutionCompareText(a, b) {
+            var result = 0;
+
+            if (a.text > b.text) {
+                result = 1;
+            }
+            else if (a.text < b.text) {
+                result = -1;
+            }
+
+            return result;
+        }
+
+        function LadderSolutionCompareLength(a, b) {
+            if (a.text.length > b.text.length) {
+                return 1;
+            }
+            else if (a.text.length < b.text.length) {
+                return -1;
+            }
+
+            return LadderSolutionCompareText(a, b);
+        }
+
+        function LadderSolutionCompareFrequency(a, b) {
+            if (a.frequency > b.frequency) {
+                return 1;
+            }
+            else if (a.frequency < b.frequency) {
+                return -1;
+            }
+
+            return LadderSolutionCompareText(a, b);
+        }
+
+
+
+        var gSolutions = [];
+        var gPrevLadder = null;
+
+        var cmdColumn = 0;
+        var rungColumn = 1;
+        var orderColumn = 2;
+        var indexColumn = 3;
+        var wordColumn = 4;
+        var clueColumn = 5;
+
+        function renumberRungs(table) {
+            for (var i = 1; i < table.rows.length; i++) {
+                table.rows[i].cells[rungColumn].innerHTML = "" + i;
+            }
+        }
+
+        function getWordList() {
+            var table = document.getElementById("WordLadderTable");
+
+            var results = [];
+
+            if (table) {
+                for (var i = 1; i < table.rows.length; i++) {
+                    var word = table.rows[i].cells[wordColumn].firstChild.value.trim();
+                    results.push(word);
+                }
+            }
+
+            return results;
+        }
+
+        function getWordLadder() {
+            var table = document.getElementById("WordLadderTable");
+
+            var results = [];
+
+            if (table) {
+                for (var i = 1; i < table.rows.length; i++) {
+                    var word = table.rows[i].cells[wordColumn].firstChild.value.trim();
+                    if (word) {
+                        words = PHTWords.GetWordMatches(word, null, null, null, null, "", 0, 2);
+                        if (words.length == 0) {
+                            results.push(new WordInfo(word, 0));
+                        }
+                        else if (words.length == 1) {
+                            results.push(words[0]);
+                        }
+                        else {
+                            results.push(new WordInfo(word, -1));
+                        }
+                    }
+                    else {
+                        results.push(null);
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        function setWordLadder(ladder, overwrite) {
+            var table = document.getElementById("WordLadderTable");
+
+            if (table && ladder && (ladder.length == (table.rows.length - 1))) {
+                for (var i = 1; i < table.rows.length; i++) {
+                    if (ladder[i - 1] != null) {
+                        table.rows[i].cells[wordColumn].firstChild.value = ladder[i - 1].value;
+                    }
+                    else if (overwrite) {
+                        table.rows[i].cells[wordColumn].firstChild.value = "";
+                    }
+                }
+            }
+        }
+
+        function getChangeLetter() {
+            var elem = document.getElementById("ChangeLetter");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getAddLetter() {
+            var elem = document.getElementById("AddLetter");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getRemoveLetter() {
+            var elem = document.getElementById("RemoveLetter");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getAllowRepeats() {
+            var elem = document.getElementById("AllowRepeats");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getAllowAnagrams() {
+            var elem = document.getElementById("AllowAnagrams");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getIsCircle() {
+            var elem = document.getElementById("IsCircle");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getInitialLength() {
+            var result = 0;
+
+            var elem = document.getElementById("InitialLength");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function getMinWordLength() {
+            var result = 0;
+
+            var elem = document.getElementById("MinWordLength");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function getMaxWordLength() {
+            var result = 0;
+
+            var elem = document.getElementById("MaxWordLength");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function getLadderPatterns(wordInfo, chgLetter, addLetter, rmvLetter, allowAnagrams) {
+            var patterns = [];
+
+            if (wordInfo) {
+                var word = wordInfo.value;
+
+                if (allowAnagrams) {
+                    if (wordInfo.frequency != -1) {
+                        word = PHTWords.GetAnagramIdx(word);
+
+                        if (chgLetter) {
+                            patterns = patterns.concat(PHTWords.GetChangeLetterAnagramPatterns(word));
+                        }
+                        if (addLetter) {
+                            patterns = patterns.concat(PHTWords.GetAddLetterPatterns(word));
+                        }
+                        if (rmvLetter) {
+                            patterns = patterns.concat(PHTWords.GetRemoveLetterPatterns(word));
+                        }
+                    }
+                    else {
+                        if (word.indexOf("%") < 0) {
+                            word = word.replace(/\[.*\]/g, "_");
+
+                            var base = word.replace(/_/g, "");
+                            base = PHTWords.GetAnagramIdx(base);
+
+                            patterns.push(base);
+                            for (var i = word.length - base.length; i > 0; i--) {
+                                var newPatterns = [];
+                                for (var j = 0; j < patterns.length; j++) {
+                                    newPatterns = newPatterns.concat(PHTWords.GetAddLetterPatterns(patterns[j]))
+                                }
+                                patterns = newPatterns;
+                            }
+
+                            var newPatterns = [];
+                            for (var i = 0; i < patterns.length; i++) {
+                                if (chgLetter) {
+                                    newPatterns = newPatterns.concat(PHTWords.GetChangeLetterAnagramPatterns(patterns[i]));
+                                }
+                                if (addLetter) {
+                                    newPatterns = newPatterns.concat(PHTWords.GetAddLetterPatterns(patterns[i]));
+                                }
+                                if (rmvLetter) {
+                                    newPatterns = newPatterns.concat(PHTWords.GetRemoveLetterPatterns(patterns[i]));
+                                }
+                            }
+
+                            patterns = newPatterns;
+                        }
+                    }
+                }
+                else {
+                    if (chgLetter) {
+                        patterns = patterns.concat(PHTWords.GetChangeLetterPatterns(word));
+                    }
+                    if (addLetter) {
+                        patterns = patterns.concat(PHTWords.GetAddLetterPatterns(word));
+                    }
+                    if (rmvLetter) {
+                        patterns = patterns.concat(PHTWords.GetRemoveLetterPatterns(word));
+                    }
+                }
+            }
+
+            var results = [];
+            $.each(patterns, function (i, el) {
+                if ($.inArray(el, results) === -1) results.push(el);
+            });
+
+            return results.join('|');
+        }
+
+        function appendPatterns(curPatterns, newPatterns) {
+            if (!newPatterns) {
+                return curPatterns;
+            }
+
+            if (curPatterns) {
+                curPatterns += "&";
+            }
+
+            return curPatterns + newPatterns;
+        }
+
+        function doClearSolutions(keepSelected) {
+            if (keepSelected) {
+                var newSolutions = [];
+                var table = document.getElementById("ResultsTable");
+                if (table) {
+                    for (var i = 0; i < table.rows.length; i++) {
+                        if (table.rows[i].style.backgroundColor == "yellow") {
+                            newSolutions.push(gSolutions[i]);
+                        }
+                    }
+                }
+                gSolutions = newSolutions;
+            }
+            else {
+                gSolutions = [];
+            }
+
+            renderSolutions(gSolutions);
+        }
+
+        function doSelect(event) {
+            var row = event.currentTarget;
+            var table = row.parentElement;
+
+            if (row.style.backgroundColor == "yellow") {
+                row.style.backgroundColor = "";
+                if (gPrevLadder) {
+                    setWordLadder(gPrevLadder, true);
+                    gPrevLadder = null;
+                }
+            }
+            else {
+                for (var i = 0; i < table.rows.length; i++) {
+                    table.rows[i].style.backgroundColor = "";
+                }
+                if (!gPrevLadder) {
+                    gPrevLadder = getWordLadder();
+                }
+                row.style.backgroundColor = "yellow";
+                setWordLadder(gSolutions[row.rowIndex].ladder, false);
+            }
+
+            doUpdateText();
+        }
+
+        function doSearch() {
+            var countElem = document.getElementById("ResultsCount");
+            if (countElem) {
+                countElem.value = "";
+            }
+
+            var durElem = document.getElementById("Duration");
+            if (durElem) {
+                durElem.value = "";
+            }
+
+
+            window.setTimeout("doSearchWork();", 0);
+        }
+
+        function doSearchWork() {
+            var startTime = new Date().getTime();
+
+            var newSolutions = solve(getWordLadder(), getChangeLetter(), getAddLetter(), getRemoveLetter(), getAllowRepeats(), getAllowAnagrams(), getInitialLength(), getDictionaries(), getMinFrequency(), getMinWordLength(), getMaxWordLength());
+
+            gPrevLadder = null;
+            gSolutions = newSolutions;
+            doSortByFrequency();    // calls render solutions after sorting.
+
+            setDuration(new Date().getTime() - startTime);
+
+            beep();
+        }
+
+        function solve(ladder, chgLetter, addLetter, rmvLetter, allowRepeats, allowAnagrams, initialLength, dictionaries, minFrequency, minWordLength, maxWordLength) {
+            solutions = [];
+
+            // Look for ladder position to fill.
+            //
+            var pos = -1;
+            var top = "";
+            var bottom = "";
+
+            for (var i = ladder.length - 1; i > -1; i--) {
+                if ((ladder[i] == null) || (ladder[i].frequency == -1)) {
+                    pos = i;
+
+                    if (i != 0) {
+                        top = ladder[i - 1];
+                    }
+                    else {
+                        if (getIsCircle() && (ladder.length > 2)) {
+                            top = ladder[ladder.length - 1];
+                        }
+                        else {
+                            top = null;
+                        }
+                    }
+
+                    if (i != (ladder.length - 1)) {
+                        bottom = ladder[i + 1];
+                    }
+                    else {
+                        if (getIsCircle() && (ladder.length > 2)) {
+                            bottom = ladder[0];
+                        }
+                        else {
+                            bottom = null;
+                        }
+                    }
+
+                    if ((top != null && top.frequency != -1) || (bottom != null && bottom.frequency != -1)) {
+                        break;
+                    }
+                }
+            }
+
+            if (pos == -1) {
+                solutions.push(new LadderSolution(ladder));
+            }
+            else {
+                var patterns = "";
+                var anagrams = "";
+
+                if (ladder[pos] != null) {
+                    patterns = appendPatterns(patterns, ladder[pos].value);
+                }
+
+                if ((ladder[pos] == null) && (top == null) && (bottom == null)) {
+                    for (var i = 0; i < initialLength; i++) {
+                        patterns += "_";
+                    }
+                }
+                else {
+                    if (top) {
+                        if (allowAnagrams) {
+                            anagrams = appendPatterns(anagrams, getLadderPatterns(top, chgLetter, addLetter, rmvLetter, allowAnagrams));
+                        }
+                        else {
+                            patterns = appendPatterns(patterns, getLadderPatterns(top, chgLetter, addLetter, rmvLetter, allowAnagrams));
+                        }
+                    }
+
+                    if (bottom) {
+                        if (allowAnagrams) {
+                            anagrams = appendPatterns(anagrams, getLadderPatterns(bottom, chgLetter, addLetter, rmvLetter, allowAnagrams));
+                        }
+                        else {
+                            patterns = appendPatterns(patterns, getLadderPatterns(bottom, chgLetter, addLetter, rmvLetter, allowAnagrams));
+                        }
+                    }
+                }
+
+                if (!allowRepeats) {
+                    for (var i = 0; i < ladder.length; i++) {
+                        if (ladder[i] && (pos != i) && (ladder[i].frequency != -1)) {
+                            patterns = appendPatterns(patterns, "!" + ladder[i].value);
+                        }
+                    }
+                }
+
+                var words = PHTWords.GetWordMatches(patterns, anagrams, null, null, null, dictionaries, minFrequency, 1000, minWordLength, maxWordLength);
+                for (var i = 0; i < words.length; i++) {
+                    var newLadder = ladder.slice();
+                    newLadder[pos] = words[i];
+                    solutions = solutions.concat(solve(newLadder, chgLetter, addLetter, rmvLetter, allowRepeats, allowAnagrams, initialLength, dictionaries, minFrequency, minWordLength, maxWordLength));
+                }
+            }
+
+            return solutions;
+        }
+
+        function doSuggestWords(event) {
+            var startTime = new Date().getTime();
+
+            var row = event.currentTarget.parentElement.parentElement;
+            var index = row.rowIndex - 1;
+
+            var ladder = getWordLadder();
+            var chgLetter = getChangeLetter();
+            var addLetter = getAddLetter();
+            var rmvLetter = getRemoveLetter();
+            var allowRepeats = getAllowRepeats();
+            var allowAnagrams = getAllowAnagrams();
+
+            var patterns = "";
+            var anagrams = "";
+
+            if (ladder[index] != null) {
+                patterns = appendPatterns(patterns, ladder[index].value);
+            }
+
+            if (getIsCircle() && (ladder.length > 2) && (index == 0) && (ladder[ladder.length - 1] != null)) {
+                if (allowAnagrams) {
+                    anagrams = appendPatterns(anagrams, getLadderPatterns(ladder[ladder.length - 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+                else {
+                    patterns = appendPatterns(patterns, getLadderPatterns(ladder[ladder.length - 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+            } else if ((index > 0) && (ladder[index - 1] != null)) {
+                if (allowAnagrams) {
+                    anagrams = appendPatterns(anagrams, getLadderPatterns(ladder[index - 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+                else {
+                    patterns = appendPatterns(patterns, getLadderPatterns(ladder[index - 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+            }
+
+            if (getIsCircle() && (ladder.length > 2) && (index == (ladder.length - 1)) && (ladder[0] != null)) {
+                if (allowAnagrams) {
+                    anagrams = appendPatterns(anagrams, getLadderPatterns(ladder[0], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+                else {
+                    patterns = appendPatterns(patterns, getLadderPatterns(ladder[0], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+            } else if ((index < (ladder.length - 1)) && (ladder[index + 1] != null)) {
+                if (allowAnagrams) {
+                    anagrams = appendPatterns(anagrams, getLadderPatterns(ladder[index + 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+                else {
+                    patterns = appendPatterns(patterns, getLadderPatterns(ladder[index + 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+            }
+
+            if (!allowRepeats) {
+                for (var i = 0; i < ladder.length; i++) {
+                    if (ladder[i] && (i != index) && (ladder[i].frequency != -1)) {
+                        patterns = appendPatterns(patterns, "!" + ladder[i].value);
+                    }
+                }
+            }
+
+            var solutions = [];
+            var words = PHTWords.GetWordMatches(patterns, anagrams, null, null, null, getDictionaries(), getMinFrequency(), 1000, getMinWordLength(), getMaxWordLength());
+            for (var i = 0; i < words.length; i++) {
+                var newLadder = new Array(ladder.length);
+                for (var j = ladder.length - 1; j >= 0; j--) {
+                    newLadder[j] = null;
+                }
+                newLadder[index] = words[i];
+                solutions.push(new LadderSolution(newLadder));
+            }
+
+            gPrevLadder = null;
+            gSolutions = solutions;
+            doSortByFrequency();    // calls render solutions after sorting.
+
+            setDuration(new Date().getTime() - startTime);
+
+            beep();
+        }
+
+        function doSortByFrequency() {
+            gSolutions.sort(function (a, b) { return -LadderSolutionCompareFrequency(a, b) });
+            renderSolutions(gSolutions);
+        }
+
+        function doSortByWords() {
+            gSolutions.sort(function (a, b) { return LadderSolutionCompareText(a, b) });
+            renderSolutions(gSolutions);
+        }
+
+        function doSortByWordLength() {
+            gSolutions.sort(function (a, b) { return LadderSolutionCompareLength(a, b) });
+            renderSolutions(gSolutions);
+        }
+
+        function doUpdateText() {
+            var chgResult = "";
+            var addResult = "";
+            var rmvResult = "";
+            var frmResult = "";
+            var toResult = "";
+
+            var diffs = [];
+            var ladder = getWordList();
+
+            for (var i = 1; i < ladder.length; i++) {
+                diffs.push(findDiffs(ladder[i - 1], ladder[i]));
+            }
+
+            if (getIsCircle()) {
+                diffs.push(findDiffs(ladder[ladder.length - 1], ladder[0]));
+            }
+
+            for (var i = 0; i < diffs.length; i++) {
+                chgResult += diffs[i].change;
+                addResult += diffs[i].add;
+                rmvResult += diffs[i].remove;
+                frmResult += diffs[i].from;
+                toResult += diffs[i].to;
+            }
+
+            updateResults("IndexResult", getIndexedValues());
+            updateResults("ChangeResult", chgResult);
+            updateResults("AddResult", addResult);
+            updateResults("RemoveResult", rmvResult);
+            updateResults("FromResult", frmResult);
+            updateResults("ToResult", toResult);
+        }
+
+        function updateResults(name, value) {
+            var elem = document.getElementById(name);
+            if (elem) {
+                elem.cells[1].innerHTML = value;
+                if (value.replace(/_/g, '') == "") {
+                    elem.style.display = "none";
+                }
+                else {
+                    elem.style.display = "";
+                }
+            }
+        }
+
+        function findDiffs(first, second) {
+            var result = { from: "_", to: "_", change: "_", add: "_", remove: "_" };
+
+            if (first && second) {
+                if (containsWildCards(first) || containsWildCards(second)) {
+                    return result;
+                }
+
+                if (first.length == second.length) {
+                    result.add = "";
+                    result.remove = "";
+                    result.change = "";
+                    for (var i = 0 ; i < first.length; i++) {
+                        if (first[i] != second[i]) {
+                            result.from = first[i];
+                            result.to = second[i];
+                            break;
+                        }
+                    }
+                }
+                else if (first.length < second.length) {
+                    for (var i = 0; i < first.length; i++) {
+                        for (var j = 0; j < second.length; j++) {
+                            if (first[i] == second[j]) {
+                                second = second.substring(0, j) + second.substring(j + 1);
+                                break;
+                            }
+                        }
+                    }
+                    result.change = second;
+                    result.add = second;
+                    result.remove = "";
+                    result.from = "";
+                    result.to = "";
+                }
+                else if (second.length < first.length) {
+                    for (var i = 0; i < second.length; i++) {
+                        for (var j = 0; j < first.length; j++) {
+                            if (second[i] == first[j]) {
+                                first = first.substring(0, j) + first.substring(j + 1);
+                                break;
+                            }
+                        }
+                    }
+                    result.change = first;
+                    result.add = "";
+                    result.remove = first;
+                    result.from = "";
+                    result.to = "";
+                }
+            }
+
+            return result;
+        }
+
+        function getIndexedValues() {
+            var result = "";
+
+            var table = document.getElementById("WordLadderTable");
+            if (table) {
+                var resultArray = [];
+
+                for (var row = 1; row < table.rows.length; row++) {
+                    var word = table.rows[row].cells[wordColumn].children[0].value;
+                    var orderings = getIntValues(table.rows[row].cells[orderColumn].children[0].value);
+                    var indexes = getIntValues(table.rows[row].cells[indexColumn].children[0].value);
+                    for (var i = 0; i < indexes.length; i++) {
+                        var value = "";
+                        var index = indexes[i] - 1;
+                        if ((index > -1) && word && !containsWildCards(word)) {
+                            index = index % word.length;    // wrap index around length of word.
+                            value = word[index];
+                        }
+                        else {
+                            value = "_";
+                        }
+
+                        result += value;
+
+                        if (value) {
+                            if ((orderings.length == indexes.length) && (orderings[i] > -1)) {
+                                resultArray[orderings[i] - 1] = value;
+                            }
+                        }
+                    }
+                }
+
+                if (resultArray.length > 0) {
+                    for (var i = 0; i < resultArray.length; i++) {
+                        if (!resultArray[i]) {
+                            resultArray[i] = "_";
+                        }
+                    }
+                    result = resultArray.join("");
+                }
+            }
+
+            return result;
+        }
+
+        function getIntValues(s) {
+            var result = [];
+
+            if (s) {
+                var values = s.split(',');
+                for (var i = 0; i < values.length; i++) {
+                    var value = parseInt(values[i]);
+                    if (isNaN(value)) {
+                        value = 0;
+                    }
+                    result.push(value);
+                }
+            }
+
+            return result;
+        }
+
+        function containsWildCards(s) {
+            var wildCards = "_%[";
+
+            for (var i = 0; i < s.length; i++) {
+                if (wildCards.indexOf(s[i]) > -1) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function doAddRow(table, rowIndex) {
+            if (typeof (table) === "undefined") {
+                table = document.getElementById("WordLadderTable");
+            }
+
+            if (table) {
+                if (typeof (rowIndex) === "undefined") {
+                    rowIndex = -1;
+                }
+
+                var row = table.insertRow(rowIndex);
+                var cmdCell = row.insertCell(-1);
+                var rungCell = row.insertCell(-1);
+                var orderCell = row.insertCell(-1);
+                var indexCell = row.insertCell(-1);
+                var wordCell = row.insertCell(-1);
+                var clueCell = row.insertCell(-1);
+
+                cmdCell.style.whiteSpace = "nowrap";
+                cmdCell.innerHTML = '<button onclick="doDelRow(event);">Del</button><button onclick="doInsRow(event);">Ins</button>';
+
+                rungCell.style.textAlign = "center";
+
+                orderCell.innerHTML = '<input type="text" style="width:2em;" value="" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />';
+
+                indexCell.innerHTML = '<input type="text" style="width:2em;" value="" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />';
+
+                wordCell.style.whiteSpace = "nowrap";
+                wordCell.innerHTML = '<input type="text" style="width:9em;" value="" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" /><button onclick="doSuggestWords(event);">Sug</button>';
+
+                clueCell.innerHTML = '<div contenteditable="true"></div>';
+
+                renumberRungs(table);
+                doUpdateText();
+            }
+        }
+
+        function doDelRow(event) {
+            var row = event.currentTarget.parentElement.parentElement;
+            var table = row.parentElement.parentElement;
+
+            // Don't let them delete the last data row (row 1 is the title row).
+            if (table.rows.length > 2) {
+                table.deleteRow(row.rowIndex);
+
+                renumberRungs(table);
+                doUpdateText();
+            }
+        }
+
+        function doInsRow(event) {
+            var row = event.currentTarget.parentElement.parentElement;
+            var table = row.parentElement.parentElement;
+
+            doAddRow(table, row.rowIndex);
+        }
+
+        function doValueKeyDown(event) {
+            var cell = event.currentTarget.parentElement;
+            var row = cell.parentElement;
+            var table = row.parentElement.parentElement;
+
+            if (event.keyCode == 13) {
+                if (event.shiftKey) {
+                    if (row.rowIndex > 1) {
+                        table.rows[row.rowIndex - 1].cells[cell.cellIndex].firstChild.select();
+                    }
+                }
+                else {
+                    if (row.rowIndex == (table.rows.length - 1)) {
+                        doAddRow(table);
+                        table.rows[table.rows.length - 1].cells[cell.cellIndex].firstChild.select();
+                    }
+                    else {
+                        table.rows[row.rowIndex + 1].cells[cell.cellIndex].firstChild.select();
+                    }
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        function doValueKeyUp(event) {
+            doUpdateText();
+            return true;
+        }
+
+        //------------------------------------------------
+        //----------  Results Rendering Metods ---------------------------
+
+        function renderSolutions(solutions) {
+
+            var duplicates = 0;
+
+            var table = document.getElementById("ResultsTable");
+            if (table) {
+                table.innerHTML = "";
+                for (var i = 0; i < solutions.length; i++) {
+                    var r = table.insertRow(-1);
+                    r.setAttribute("onclick", "doSelect(event);");
+
+                    var c = r.insertCell(-1);
+                    c.innerHTML = "<b>" + solutions[i].text + "</b>"
+                    c = r.insertCell(-1);
+                    c.style.textAlign = "right";
+                    c.innerHTML = "(" + solutions[i].frequency + ")";
+                }
+            }
+
+            var elem = document.getElementById("ResultsCount");
+            if (elem) {
+                elem.value = "" + (solutions.length - duplicates) + " (" + solutions.length + ")";
+            }
+        }
+
+        function getDictionaries() {
+            var dictionaries = "";
+
+            var elem = document.getElementById("WordList");
+            if (elem && elem.checked) {
+                dictionaries += "0";
+            }
+
+            elem = document.getElementById("ModernEnglish");
+            if (elem && elem.checked) {
+                dictionaries += "1";
+            }
+
+            elem = document.getElementById("MiddleEnglish");
+            if (elem && elem.checked) {
+                dictionaries += "2";
+            }
+
+            return dictionaries
+        }
+
+        function getMinFrequency() {
+            var result = 0;
+
+            var elem = document.getElementById("MinFrequency");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function setDuration(duration) {
+            var millis = (duration % 1000);
+            var seconds = Math.floor((duration / 1000)) % 60;
+            var minutes = Math.floor((duration / 1000) / 60);
+
+            var text = ""
+            if (minutes < 10) text += "0";
+            text += minutes;
+            text += ":";
+            if (seconds < 10) text += "0";
+            text += seconds;
+            text += ":";
+            if (millis < 10) {
+                text += "00";
+            } else if (millis < 100) {
+                text += "0";
+            }
+            text += millis;
+
+            var elem = document.getElementById("Duration");
+            if (elem) {
+                elem.value = text;
+            }
+        }
+
+        //------------------------------------------------
+
+
+        //------------------------------------------------
+        //----------  Word List Methods ---------------------------
+        function doGetWordList() {
+            PHTWords.Clear();
+
+            var LinesAsWords = false;
+            var UseFrequency = false;
+
+            var elem = document.getElementById("LinesAsWords");
+            if (elem) {
+                LinesAsWords = elem.checked;
+            }
+
+            elem = document.getElementById("UseFrequency");
+            if (elem) {
+                UseFrequency = elem.checked;
+            }
+
+            elem = document.getElementById("WordListText");
+            if (elem) {
+                var text = elem.value.trim();
+                var lines = text.split("\n");
+
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i].trim().replace(/[\s]+/g, ' ');
+
+                    var words = line.split(" ");
+                    for (var j = 0; j < words.length; j++) {
+                        if (UseFrequency) {
+                            var wi = PHTWords.GetWordMatches(words[j], null, null, null, null, "1");
+                            if (wi.length) {
+                                PHTWords.AddWord(words[j], wi[0].frequency);
+                            }
+                            else {
+                                PHTWords.AddWord(words[j], 0);
+                            }
+                        }
+                        else {
+                            PHTWords.AddWord(words[j], 7000000);
+                        }
+                    }
+
+                    if (LinesAsWords && (words.length > 1)) {
+                        if (UseFrequency) {
+                            var wi = PHTWords.GetWordMatches(line, null, null, null, null, "1");
+                            if (wi.length) {
+                                PHTWords.AddWord(line, wi[0].frequency);
+                            }
+                            else {
+                                PHTWords.AddWord(line, 0);
+                            }
+                        }
+                        else {
+                            PHTWords.AddWord(line, 7000100);
+                        }
+                    }
+                }
+            }
+        }
+        //-------------------------------------------------------------------
+
+
+    </script>
+</head>
+<body onload="doAddRow();">
+    <table style="width:100%;">
+        <tr>
+            <td valign="top" style="width:50%;border-right: 3px solid black;border-left: 3px solid black;padding-left:5px; padding-right:10px;">
+                <table style="width: 100%">
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="3">
+                            <label><input type="checkbox" id="ChangeLetter" checked="checked" value="1" />Change Letter</label>
+                            <label><input type="checkbox" id="AddLetter" value="1" />Add Letter</label>
+                            <label><input type="checkbox" id="RemoveLetter" value="1" />Remove Letter</label>
+                            <hr />
+                            <label><input type="checkbox" id="AllowRepeats" value="1" />Allow Repeats</label>
+                            <label><input type="checkbox" id="AllowAnagrams" value="1" />Allow Anagrams</label>
+                            <label><input type="checkbox" id="IsCircle" value="1" onchange="doUpdateText();" />Is Circle</label>
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;">
+                            <label>Initial Length: <input type="text" id="InitialLength" value="4" style="width:2em;" /></label>
+                            <label>Min Length: <input type="text" id="MinWordLength" value="3" style="width:2em;"/></label>
+                            <label>Max Length: <input type="text" id="MaxWordLength" value=""  style="width:2em;"/></label>
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            <button onclick="doSearch();">Search</button>
+                        </td>
+                    </tr>
+                </table>
+
+                <hr />
+                Results:
+                <table id="Results">
+                    <tr id ="IndexResult"><td>Index:</td><td></td></tr>
+                    <tr id ="FromResult"><td>From:</td><td></td></tr>
+                    <tr id ="ToResult"><td>To:</td><td></td></tr>
+                    <tr id ="ChangeResult"><td>Change:</td><td></td></tr>
+                    <tr id ="AddResult"><td>Add:</td><td></td></tr>
+                    <tr id ="RemoveResult"><td>Remove:</td><td></td></tr>
+                </table>
+                <hr />
+
+                <table id="WordLadderTable">
+                    <tr>
+                        <th>Cmds</th>
+                        <th>Rung</th>
+                        <th>Order</th>
+                        <th>Index</th>
+                        <th>Word</th>
+                        <th>Clue</th>
+                    </tr>
+                </table>
+            </td>
+            <td valign="top" style="width:50%;">
+
+                <table style="width: 100%">
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="2">
+                            <span>Dictionary:</span>
+                            <label><input type="checkbox" id="ModernEnglish" value="1" checked="checked" />Modern&nbsp;English</label>
+                            <label><input type="checkbox" id="MiddleEnglish" value="2" />Middle&nbsp;English</label>
+                            <label><input type="checkbox" id="WordList" value="-1" />Word&nbsp;List</label>
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="2">
+                            <label>Min&nbsp;Frequency: <input type="text" id="MinFrequency" size="10" value="1" title="Modern English (BNC):
+  0 = 700,000 words
+  1 = 80,000 words
+  15 = 60,000 words
+  50 = 40,000 words
+  200 = 20,000 words
+  500 = 10,000 words
+  1500 = 5,000 words
+  4000 = 2,500 words
+  10000 = 1,000 words
+" /></label>
+                            <br />
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="1">
+                            <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
+                            <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
+                        </td>
+                        <td style="white-space: nowrap;text-align:right;">
+                           <!-- <button onclick="doClearSolutions(true);">Clear&nbsp;Unselected</button> -->
+                            <button onclick="doClearSolutions(false);">Clear&nbsp;All</button>
+                        </td>
+                    </tr>
+                </table>
+
+                <hr />
+
+                <div style="border:1px solid black;">
+                    <table id="ResultsHeader" style="width:100%;">
+                        <tr>
+                            <th style="text-align:left;">
+                                <a href="javascript:void(0)" onclick="doSortByWords();">Alphabetical</a>
+                                <a href="javascript:void(0)" onclick="doSortByWordLength();">Length</a>
+                            </th>
+                            <th style="text-align:right;"><a href="javascript:void(0)" onclick="doSortByFrequency();">Frequency</a></th>
+                        </tr>
+                    </table>
+                </div>
+                <div style="height:460px;overflow-y:auto;border:1px solid black;">
+                    <table id="ResultsTable" style="width:100%;"></table>
+                </div>
+
+                <br />
+                <span>Word List:</span>
+                <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" value="1" />Lines Are Words</label>
+                <label><input type="checkbox" id="UseFrequency" onclick="doGetWordList();" value="1" />Use BNC Frequency</label>
+                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doGetWordList();"></textarea>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

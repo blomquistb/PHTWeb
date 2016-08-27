@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" CodeBehind="GetWordMatches.aspx.cs" Inherits="PHTWeb.GetWordMatches" ValidateRequest="false" EnableEventValidation="false" EnableSessionState="False" EnableViewState="false" EnableTheming="false"%>

@@ -1,0 +1,569 @@
+﻿<!DOCTYPE html>
+
+<html style="height:100%;">
+<head>
+    <title>Decode Helper</title>
+
+    <script src="/es6-shim.js"></script>
+
+    <script src="PeriodicTable.js"></script>
+    <script src="RomanNumbers.js"></script>
+    <script src="MorseCode.js"></script>
+    <script src="Semaphore.js"></script>
+    <script src="Braille.js"></script>
+    <script src="NavalFlags.js"></script>
+    <script src="ASL.js"></script>
+
+    <script type="text/javascript">
+
+        var gDecodeTypeHtml = '<select onchange="doDecodeTypeChange(1);">' +
+                        '<option value="*ASL">ASL</option>' +
+                        '<option value="*NavalFlags">Naval Flags</option>' +
+                        '<option value="*WordIndex">Word Index</option>' +
+                    '</select>';
+
+        var gDecodeInput = {
+            "ASCIIBase16": {
+                "Display": "ASCII Base16",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = parseInt(input.value, 16);
+                    if (isNaN(value)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        setOutput(row, String.fromCharCode(value));
+                    }
+                }
+            },
+
+            "ASCIIBase10": {
+                "Display": "ASCII Base10",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = parseInt(input.value, 10);
+                    if (isNaN(value)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        setOutput(row, String.fromCharCode(value));
+                    }
+                }
+            },
+
+            "ASCIIBase8": {
+                "Display": "ASCII Base8",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = parseInt(input.value, 8);
+                    if (isNaN(value)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        setOutput(row, String.fromCharCode(value));
+                    }
+                }
+            },
+
+            "ASCIIBase2": {
+                "Display": "ASCII Base2",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = parseInt(input.value, 2);
+                    if (isNaN(value)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        setOutput(row, String.fromCharCode(value));
+                    }
+                }
+            },
+
+            "ASCIIRoman": {
+                "Display": "ASCII Roman",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = RomanNumbers.Parse(input.value);
+                    if (isNaN(value)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        setOutput(row, String.fromCharCode(value));
+                    }
+                }
+            },
+
+            "ASCIIChemSym": {
+                "Display": "ASCII Chem Sym",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = PeriodicTable.SymbolFind(input.value);
+                    if (value == null) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        setOutput(row, String.fromCharCode(value.AtomicNumber));
+                    }
+                }
+            },
+
+            "AtomicNumber": {
+                "Display": "Atomic Number",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = parseInt(input.value, 10);
+                    if (isNaN(value)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        var info = PeriodicTable.AtomicNumberFind(value);
+                        if (info) {
+                            setOutput(row, info.Symbol);
+                        }
+                        else {
+                            setOutput(row, input.value);
+                        }
+                    }
+                },
+            },
+
+
+            "Braille": {
+                "Display": "Braille",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" /><canvas width="20" height="22" style="float:right;"></canvas>',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = Braille.ToChar(input.value);
+                    if (typeof (value) === "undefined") {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        setOutput(row, value);
+                    }
+
+                    Braille.DrawFromCode(getInputCell(row).children[1], input.value);
+                },
+            },
+
+            "Morse": {
+                "Display": "Morse Code",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = MorseCode.ToChar(input.value);
+                    if (typeof (value) === "undefined") {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        setOutput(row, value);
+                    }
+                },
+            },
+
+            "OrdinalBase10": {
+                "Display": "Ordinal Base10",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = parseInt(input.value, 10);
+                    if (isNaN(value) || (value < 1)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        value = (value - 1) % 26;
+                        setOutput(row, String.fromCharCode('A'.charCodeAt(0) + value));
+                    }
+                }
+            },
+
+            "OrdinalBase2": {
+                "Display": "Ordinal Base2",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = parseInt(input.value, 2);
+                    if (isNaN(value) || (value < 1)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        value = (value - 1) % 26;
+                        setOutput(row, String.fromCharCode('A'.charCodeAt(0) + value));
+                    }
+                }
+            },
+
+            "OrdinalBase3": {
+                "Display": "Ordinal Base3",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = parseInt(input.value, 3);
+                    if (isNaN(value) || (value < 1)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        value = (value - 1) % 26;
+                        setOutput(row, String.fromCharCode('A'.charCodeAt(0) + value));
+                    }
+                }
+            },
+
+            "OrdinalRoman": {
+                "Display": "Ordinal Roman",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var value = RomanNumbers.Parse(input.value);
+                    if (isNaN(value) || (value < 1)) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        value = (value - 1) % 26;
+                        setOutput(row, String.fromCharCode('A'.charCodeAt(0) + value));
+                    }
+                }
+            },
+
+            "OrdinalChemSym": {
+                "Display": "Ordinal Chem Sym",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    var info = PeriodicTable.SymbolFind(input.value);
+                    if (info == null) {
+                        setOutput(row, input.value);
+                    }
+                    else {
+                        var value = (info.AtomicNumber - 1) % 26;
+                        setOutput(row, String.fromCharCode('A'.charCodeAt(0) + value));
+                    }
+                }
+            },
+
+            "PassThrough": {
+                "Display": "Pass Through",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    if (input) {
+                        setOutput(row, input.value);
+                    }
+                }
+            },
+
+            "SemaphoreHHMM": {
+                "Display": "Semaphore HH:MM",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    if (input) {
+                        value = Semaphore.ToCharHHMM(input.value);
+                        if (value) {
+                            setOutput(row, value);
+                        }
+                        else {
+                            setOutput(row, input.value);
+                        }
+                    }
+                }
+            },
+
+            "SemaphoreMMSS": {
+                "Display": "Semaphore MM:SS",
+                "HTML": '<input type="text" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />',
+                "Decode": function (row) {
+                    var input = getInputCell(row).children[0];
+                    if (input) {
+                        value = Semaphore.ToCharMMSS(input.value);
+                        if (value) {
+                            setOutput(row, value);
+                        }
+                        else {
+                            setOutput(row, input.value);
+                        }
+                    }
+                }
+            },
+        };
+
+
+        function doResize() {
+            var div = document.getElementById("DecodeDiv");
+            if (div) {
+                div.style.height = (document.body.clientHeight - div.offsetTop) + "px";
+            }
+        }
+
+        function doDecodeAll() {
+            var table = document.getElementById("DecodeTable");
+            if (table) {
+                for (var row = 1; row < table.rows.length; row++) {
+                    gDecodeInput[getDecodeType(table.rows[row])].Decode(table.rows[row]);
+                }
+
+                doUpdateText();
+            }
+
+            doResize();
+        }
+
+        function doDecodeTypeChange(event) {
+            var row = event.currentTarget.parentElement.parentElement;
+
+            var type = getDecodeType(row);
+
+            var valueCell = getInputCell(row);
+            var prevValue = valueCell.children[0].value;
+
+            valueCell.innerHTML = gDecodeInput[type].HTML;
+
+            valueCell.children[0].value = prevValue;
+            valueCell.children[0].select();
+
+            gDecodeInput[type].Decode(row);
+
+            doDecodeAll();
+        }
+
+        function doValueKeyDown(event) {
+            var table = document.getElementById("DecodeTable");
+            if (table) {
+                var row = event.currentTarget.parentElement.parentElement;
+                if (((event.keyCode == 9) || (event.keyCode == 13)) && (! event.shiftKey) && (row == table.rows[table.rows.length - 1])) {
+                    doAddRow();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function doValueKeyUp(event) {
+            doDecodeAll();
+            return true;
+        }
+
+        function doAddRow(rowIndex) {
+            if (typeof (rowIndex) === "undefined") {
+                rowIndex = -1;
+            }
+
+            var table = document.getElementById("DecodeTable");
+            if (table) {
+                var prevTypeSelect;
+                if (table.rows.length > 1) {
+                    var prevTypeSelect = getTypeCell(table.rows[table.rows.length - 1]).children[0];
+                    if (rowIndex >= 0) {
+                        prevTypeSelect = getTypeCell(table.rows[rowIndex]).children[0];
+                    }
+                }
+
+                var row = table.insertRow(rowIndex);
+                var resultCell = row.insertCell(-1);
+                var typeCell = row.insertCell(-1);
+                var valueCell = row.insertCell(-1);
+                var cmdCell = row.insertCell(-1);
+
+                typeCell.innerHTML = getDecodeTypeSelect();
+                if (prevTypeSelect) {
+                    typeCell.children[0].selectedIndex = prevTypeSelect.selectedIndex;
+                }
+
+                var type = getDecodeType(row);
+
+                valueCell.innerHTML = gDecodeInput[type].HTML;
+                valueCell.children[0].select();
+
+                cmdCell.innerHTML = '<button onclick="doDelRow(event);">Del</button><button onclick="doInsRow(event);">Ins</button>';
+
+                gDecodeInput[type].Decode(row);
+                doUpdateText();
+            }
+        }
+
+        function doDelRow(event) {
+            var row = event.currentTarget.parentElement.parentElement;
+            var table = row.parentElement.parentElement;
+
+            // Don't let them delete the last data row (row 1 is the title row).
+            if (table.rows.length > 2) {
+                table.deleteRow(row.rowIndex);
+            }
+        }
+
+        function doInsRow(event) {
+            var row = event.currentTarget.parentElement.parentElement;
+            doAddRow(row.rowIndex);
+        }
+
+        function doUpdateText() {
+            var result = "";
+
+            var numberMode = {};
+
+            var table = document.getElementById("DecodeTable");
+            if (table) {
+                for (var row = 1; row < table.rows.length; row++) {
+                    var rowElem = table.rows[row];
+                    var char = getOutput(rowElem);
+                    var type = getDecodeType(rowElem);
+
+                    // Check to see if this character causes "Number" mode to begin or end for the decode type
+                    //
+                    if ((char == '#') && ((type == "Braille") || (type.indexOf("Semaphore") == 0))) {
+                        numberMode[type] = true;
+                    }
+                    else if ((char == '&') && (type == "Braille")) {
+                        numberMode[type] = false;
+                    }
+                    else if ((char == 'J') && (type.indexOf("Semaphore") == 0)) {
+                        char = '&';
+                        numberMode[type] = false;
+                    }
+
+                    // If number mode is enabled for this type then perform the transformation.
+                    //
+                    if (numberMode[type]) {
+                        if (type == "Braille") {
+                            if (char >= 'A' && char <= 'J') {
+                                char = String.fromCharCode('0'.charCodeAt(0) + ((char.charCodeAt(0) - 'A'.charCodeAt(0) + 1) % 10));
+                            }
+                        }
+                        else if (type.indexOf("Semaphore") == 0) {
+                            if ((char >= 'A') && (char <= 'I')) {
+                                char = String.fromCharCode('0'.charCodeAt(0) + ((char.charCodeAt(0) - 'A'.charCodeAt(0) + 1) % 10));
+                            }
+                            else if (char == 'K') {
+                                char = '0';
+                            }
+                        }
+                    }
+
+                    result += char;
+                }
+            }
+
+            var output = document.getElementById("Output");
+            if (output) {
+                output.innerHTML = result;
+            }
+        }
+
+        function getOutput(row) {
+            return getOutputCell(row).innerText;
+        }
+
+        function setOutput(row, value) {
+            if (!value) {
+                value = " ";
+            }
+
+            if (getIgnoreCase()) {
+                value = value.toUpperCase();
+            }
+
+            getOutputCell(row).innerText = value;
+        }
+
+        function getOutputCell(row) {
+            var result;
+
+            if (row) {
+                result = row.cells[0];
+            }
+
+            return result;
+        }
+
+        function getTypeCell(row) {
+            var result;
+
+            if (row) {
+                result = row.cells[1];
+            }
+
+            return result;
+        }
+
+        function getInputCell(row) {
+            var result;
+
+            if (row) {
+                result = row.cells[2];
+            }
+
+            return result;
+        }
+
+        function getDecodeType(row) {
+            var result;
+
+            var cell = getTypeCell(row);
+
+            if (cell) {
+                var select = cell.children[0];
+                result = select.options[select.selectedIndex].value
+            }
+
+            return result;
+        }
+
+        function getIgnoreCase() {
+            var elem = document.getElementById("IgnoreCase");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return true;
+        }
+
+        function getDecodeTypeSelect() {
+            var html = '<select onchange="doDecodeTypeChange(event);">';
+            for (type in gDecodeInput) {
+                html += '<option value="' + type + '">' + gDecodeInput[type].Display + '</option>';
+            }
+            html += '</select>';
+
+            return html;
+        }
+
+
+
+    </script>
+</head>
+<body onload="doAddRow(); doResize();" onresize="doResize();" style="height:100%;margin:0;">
+    <div style="height:100%;width:100%">
+        <div style="display:table-cell"><b>Text:</b> <span id="Output"></span></div>
+
+        <hr />
+        <label><input type="checkbox" id="IgnoreCase" checked="checked" value="1" onchange="doDecodeAll();" />Ignore Case</label>
+        <hr />
+
+        <div id="DecodeDiv" style="overflow-y:auto;">
+            <table id="DecodeTable" style="">
+                <tr>
+                    <th>
+                        Output
+                    </th>
+                    <th>
+                        Type
+                    </th>
+                    <th>
+                        Input
+                    </th>
+                    <th>
+                        Cmds
+                    </th>
+                </tr>
+            </table>    
+        </div>
+    </div>
+</body>
+</html>

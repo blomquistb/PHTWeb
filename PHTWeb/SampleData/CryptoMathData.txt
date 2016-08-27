@@ -1,0 +1,108 @@
+﻿
+PS16: Work-Life Balance
+----------------------------------
+Base Range: 26
+
+w+o+r+k > l+i+f+e
+w+o+r+k+f+l+o+w = f+r+i+e+r
+f+l+o+o+r = i+l+l
+f+o+r+k = w+i+l+l+o+w
+l+o+o+k = f+o+l+i+o
+o+f+f+e+r = r+o+l+e
+e+l+f+l+i+k+e = k+o+o+k+i+e+r
+o+w+l+i+e+r = e+e+r+i+e
+
+Answer:  f        ii
+       lkowr      eil
+
+reduced:-----
+
+w+o+r+k > l+i+f+e
+w+o+r+k+f+l+o+w = f+r+i+e+r
+f+l+o+o+r = i+l+l
+f+o+r+k = w+i+l+l+o+w
+l+o+o+k = f+o+l+i+o
+o+f+f+e+r = r+o+l+e
+e+l+f+l+i+k+e = k+o+o+k+i+e+r
+o+w+l+i+e+r = e+e+r+i+e
+
+e = o+o+i+r-4*f
+w = 3*o+2*i+2*r-10*f
+k = f+i
+l = f+f
+
+----------------------------------
+
+PD2015: A Lannister Always Pays His Debts
+----------------------------------
+HORSE + ARMOR = AMULET
+H=8
+M = A + H - 9
+
+HONOR + LION = THREE
+L=8
+
+MONEY + CASH = ANNOYS
+C=8
+
+TIME + LION = MOTEL
+I=8
+
+BRIBE + LION = GONER
+B=8
+
+KNIFE + LION = HORSES
+N=8
+
+----------------------------------
+
+PH16 Queen:Under Pressure
+----------------------------------
+[10]nne+jex=yzqy
+[23]syk+zfk=yvuy
+[5]eyhq+yyhq=hhyq
+[25]xvplm+gcsvy=yzvumw
+[10]hv+hv=nq
+
+[4]eyhq+yyhq=hheq
+[16]hqkn+dkkv=lljk
+[19]hmlh+fmyz=yqutx
+[25]chrbt+vxkwe=ybkaao
+[2]yyq+yqy=yqyy
+
+Q=0
+Y=1
+E=2
+H=3
+B=4
+V=5
+Z=6
+N=7
+J=8
+X=9
+D=10
+R=11
+K=12
+L=13
+T=14
+F=15
+O=16
+U=17
+M=18
+W=19
+P=20
+G=21
+S=22
+A=23
+C=24
+----------------------------------
+
+----------------------------------
+PS16-Office Space Math
+----------------------------------
+A+B=B
+C*C=BC
+D*D=ED
+D-C=F
+GH+IJ=FED
+IG-HJ=C

@@ -1,0 +1,47 @@
+N|north
+E|east
+S|south
+W|west
+NE|north-east
+NW|north-west
+SE|south-east
+SW|south-west
+
+AVE
+BLVD|boulevard
+DR|drive
+FWY|freeway
+LN|lane
+PKWY|parkway
+PL|place
+RD|road
+ST|street
+WAY
+
+zip+4|zip-plus-four
+zip-code
+
+1 Microsoft Way
+1600 Pennsylvania Ave
+77 Sunset Strip
+10 Downing Street
+221B Baker Street
+46 Harley Street
+186 Fleet Street
+18 George Street
+84 Charing Cross Road
+7 Eccles Street
+99 Rue de Rivoli 
+211 West Fort Street
+3 Rue Royale
+263 Prinsengracht
+350 Fifth Avenue
+442 Glenwood Avenue 
+1060 West Addison Street 
+90210 
+Canal Street
+Delaware Avenue
+Las Vegas Boulevard
+Fifth Avenue
+Vermont Street
+Mulholland Drive

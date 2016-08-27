@@ -1,0 +1,1111 @@
+﻿<!--
+Featue Todo:
+
+
+-->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Polyomino Helper</title>
+    <script src="/es6-shim.js"></script>
+    <script src="/jquery-2.1.4.js"></script>
+    <script src="/Utils.js"></script>    
+
+
+    <style type="text/css">
+        table.TileList {
+            text-align: center;
+            vertical-align: middle;
+            border-spacing: 8px;
+        }
+
+        table.TileList > tbody > tr > td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        table.Tile {
+            text-align: center;
+            vertical-align: central;
+            border-spacing: 0px;
+        }
+
+        table.Tile td {
+            padding: 0px;
+            margin: 0px;
+            border: 0px;
+            width: 1em;
+            height: 1em;
+            border: 1px solid white;
+        }
+
+        table.Tile td.Blank {
+            border: 1px solid white;
+        }
+
+        table.Tile td.Full {
+            border: 1px solid lightgray;
+        }
+    </style>
+
+
+    <script type="text/javascript">
+
+
+
+        var gTiles = [];
+
+        var gField = null;
+        var gResults = [];
+
+        var gSolveUseAllTiles = true;
+        var gIgnoreContent = false;
+        var gAllowRotations = false;
+        var gAllowFlips = false;
+
+        ////
+        // Tile Class Definition
+        ////
+        function Tile(grid) {
+            this.grid = grid;
+            this.flips = [];            // 2 - hoirzontal and vertical flips
+            this.rotations = [];        // 3 - rotations of the original shape
+            this.fliprotations = [];    // 2 - 90 deg rotations of the horiz and vertical flips
+
+            this.height = grid.length;
+            this.width = grid[0].length;
+            this.size = 0;
+
+            for (var i = 0; i < this.height; i++) {
+                for (var j = 0; j < this.width; j++) {
+                    if (this.grid[i][j] != ' ') {
+                        this.size++;
+                    }
+                }
+            }
+        }
+
+        Tile.prototype.Equals = function (b) {
+            if (this.height != b.height || this.width != b.width || this.size != b.size) {
+                return false;
+            }
+
+            for (var row = 0; row < this.height; row++) {
+                for (var col = 0; col < this.width; col++) {
+                    if (this.grid[row][col] != b.grid[row][col]) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        Tile.prototype.EqualsShape = function (b) {
+            if (this.height != b.height || this.width != b.width || this.size != b.size) {
+                return false;
+            }
+
+            for (var row = 0; row < this.height; row++) {
+                for (var col = 0; col < this.width; col++) {
+                    if ((this.grid[row][col] != ' ' && b.grid[row][col] == ' ') || (this.grid[row][col] == ' ' && b.grid[row][col] != ' ')) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        Tile.prototype.getVariations = function (allowRotations, allowFlips, ignoreContent) {
+            var variations = [this];
+
+            if (allowRotations) {
+                variations = variations.concat(this.Rotations());
+            }
+
+            if (allowFlips) {
+                variations = variations.concat(this.Flips());
+                if (allowRotations) {
+                    variations = variations.concat(this.FlipRotations());
+                }
+            }
+
+            var results = [];
+            for (var i = 0; i < variations.length; i++) {
+                if (ignoreContent) {
+                    if (results.findIndex(function (item) { return item.EqualsShape(variations[i]); }) == -1) {
+                        results.push(variations[i]);
+                    }
+                }
+                else {
+                    if (results.findIndex(function (item) { return item.Equals(variations[i]); }) == -1) {
+                        results.push(variations[i]);
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        Tile.prototype.Rotations = function () {
+            if (this.rotations.length == 0) {
+                // Construct the rotations array
+                this.rotations.push(new Tile(this.RotateGrid90(this.grid)));
+                this.rotations.push(new Tile(this.RotateGrid90(this.rotations[0].grid)));
+                this.rotations.push(new Tile(this.RotateGrid90(this.rotations[1].grid)));
+            }
+
+            return this.rotations;
+        }
+
+        Tile.prototype.FlipRotations = function () {
+            if (this.fliprotations.length == 0) {
+                // Construct the fliprotations array
+                var flips = this.Flips();
+                this.fliprotations.push(new Tile(this.RotateGrid90(flips[0].grid)));
+                this.fliprotations.push(new Tile(this.RotateGrid90(flips[1].grid)));
+            }
+
+            return this.fliprotations;
+        }
+
+        Tile.prototype.Flips = function () {
+            if (this.flips.length == 0) {
+                // Construct the flips array
+                this.flips.push(new Tile(this.FlipGridHoriz(this.grid)));
+                this.flips.push(new Tile(this.FlipGridVert(this.grid)));
+            }
+
+            return this.flips;
+        }
+
+        Tile.prototype.RotateGrid90 = function (source) {
+            var result = [];
+
+            var rows = source.length;
+            var cols = source[0].length;
+
+            for (var j = 0; j < cols; j++) {
+                result.push([]);
+                for (var i = 0; i < rows; i++) {
+                    result[j].push(source[rows - i - 1][j]);
+                }
+            }
+
+            return result;
+        }
+
+        Tile.prototype.FlipGridHoriz = function (source) {
+            var result = [];
+
+            var rows = source.length;
+            var cols = source[0].length;
+
+            for (var i = 0; i < rows; i++) {
+                result.push([]);
+                for (var j = 0; j < cols; j++) {
+                    result[i].push(source[rows - i - 1][j]);
+                }
+            }
+
+            return result;
+        }
+
+        Tile.prototype.FlipGridVert = function (source) {
+            var result = [];
+
+            var rows = source.length;
+            var cols = source[0].length;
+
+            for (var i = 0; i < rows; i++) {
+                result.push([]);
+                for (var j = 0; j < cols; j++) {
+                    result[i].push(source[i][cols - j - 1]);
+                }
+            }
+
+            return result;
+        }
+
+        Tile.prototype.getValue = function (row, col) {
+            if (row < 0 || row >= this.height || col < 0 || col >= this.width) {
+                return ' ';
+            }
+
+            return this.grid[row][col];
+        }
+
+        Tile.prototype.RenderAsTable = function () {
+            var result ='<table class="Tile">';
+
+            for (var row = 0; row < this.height; row++) {
+                result += "<tr>";
+                for (var col = 0; col < this.width; col++) {
+                    var value = this.getValue(row, col);
+                    result += "<td";
+                    if (value == ' ') {
+                        result += ' class="Blank"';
+                    }
+                    else {
+                        result += ' class="Full"';
+
+                        var style = "";
+                        if (this.getValue(row - 1, col) == ' ') {
+                            if (style) {
+                                style += ";";
+                            }
+                            style += "border-top-color:black";
+                        }
+                        if (this.getValue(row + 1, col) == ' ') {
+                            if (style) {
+                                style += ";";
+                            }
+                            style += "border-bottom-color:black";
+                        }
+                        if (this.getValue(row, col - 1) == ' ') {
+                            if (style) {
+                                style += ";";
+                            }
+                            style += "border-left-color:black";
+                        }
+                        if (this.getValue(row, col + 1) == ' ') {
+                            if (style) {
+                                style += ";";
+                            }
+                            style += "border-right-color:black";
+                        }
+
+                        if (style) {
+                            result += ' style ="' + style + '"';
+                        }
+                    }
+
+                    result += ">" + value + "</td>";
+                }
+                result += "</tr>";
+            }
+
+            result += "</table>";
+
+            return result;
+        }
+
+        ////
+        // TileLocation Class Definition
+        ////
+        function TileLocation(row, col, tile) {
+            this.row = row;     // the field row that the top of the tile begins in.
+            this.col = col;     // the field column that the tile begins in.
+            this.tile = tile;   // the polyomino tile that is being placed located 
+        }
+
+        ////
+        // Field Class Definition
+        ////
+        function Field(data) {
+            this.height = 0;    // the height of the field
+            this.width = 0;     // the width of the field
+            this.space = 0;     // the number of free spaces in the field
+            this.grid = [];     // the base grid of the field
+            this.areas = [];    // the defined areas of this Field as seperate fields.
+            this.tiles = [];    // the tiles that have been added to this field
+            this.holes = [];    // holes that need to be left open in field.
+
+            if (typeof (data) == "string") {
+                var text = data;
+                text = text.replace(/(\r\n|\r)/g, '\n');    // standerdize line breaks to '\n'
+                var lines = text.split('\n');
+
+                this.height = lines.length;
+                for (var i = 0; i < lines.length; i++) {
+                    if (lines[i].length > this.width) {
+                        this.width = lines[i].length;
+                    }
+                }
+
+                for (var row = 0; row < this.height; row++) {
+                    this.grid.push([]);
+                    for (var col = 0; col < this.width; col++) {
+                        if (col < lines[row].length) {
+                            this.grid[row].push(lines[row].charAt(col));
+                            if (lines[row].charAt(col) == '*') {
+                                this.space++;
+                            }
+                        }
+                        else {
+                            this.grid[row].push(' ');
+                        }
+                    }
+                }
+            }
+            else if (Array.isArray(data)) {
+                this.grid = data;
+
+                this.height = this.grid.length;
+
+                for (var row = 0; row < this.grid.length; row++) {
+                    if (typeof (this.grid[row]) == "undefined") {
+                        this.grid[row] = [];
+                    }
+                    else {
+                        if (this.width < this.grid[row].length) {
+                            this.width = this.grid[row].length;
+                        }
+                    }
+                }
+
+                for (var row = 0; row < this.height; row++) {
+                    for (var col = 0; col < this.width; col++) {
+                        if (typeof (this.grid[row][col]) == "undefined") {
+                            this.grid[row][col] = ' ';
+                        }
+                        else {
+                            this.space++;
+                        }
+                    }
+                }
+            }
+            else if (typeof (data) == "object") {
+                field = data;
+
+                this.height = field.height;
+                this.width = field.width;
+                this.space = field.space;
+
+                // create a new array that contains all the same elements of the old array
+                this.grid = field.grid.slice(0);
+
+                // create new column arrays that contain the same elements of the previous column arrays.
+                for (var row = 0; row < this.height; row++) {
+                    this.grid[row] = this.grid[row].slice(0);
+                }
+
+                // create a new array that contains all the same elements of the old array
+                this.tiles = field.tiles.slice(0);
+
+                // create a new array that contains all the same elements of the old array
+                this.holes = field.holes.slice(0);
+            }
+        }
+
+        Field.prototype.Equals = function (b) {
+            if (this.height != b.height || this.width != b.width || this.size != b.size) {
+                return false;
+            }
+
+            // TODO: This check means that the same results made with different shapes will be eliminated as duplicats which may
+            //       not be valid.
+            //
+            for (var row = 0; row < this.height; row++) {
+                for (var col = 0; col < this.width; col++) {
+                    if (this.getValue(row, col) != b.getValue(row, col)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        Field.prototype.insideArea = function (area) {
+            // TODO: This check is ineffecient if I make it a bounds check and keep track of the bounds of calcualted areas it would be
+            //       much more efficient.
+            for (var row = 0; row < this.height; row++) {
+                for (var col = 0; col < this.width; col++) {
+                    if ((this.getValue(row, col) == '*') && (area.getValue(row, col) != '*')) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        Field.prototype.getAreas = function () {
+            if (this.areas.length == 0) {
+
+                for (var row = 0; row < this.height; row++) {
+                    for (var col = 0; col < this.width; col++) {
+                        if (this.findArea(this.areas, row, col) == null && this.getValue(row, col) == '*') {
+                            var field = new Field(this.fillArea([], row, col));
+
+                            // copy any holes that connect to this area into the new field.
+                            for (var i = 0; i < this.holes.length; i++) {
+                                if (field.getValue(this.holes[i].row, this.holes[i].col) == '*') {
+                                    field.holes.push(this.holes[i]);
+                                }
+                            }
+
+                            this.areas.push(field);
+                        }
+                    }
+                }
+
+                // sort areas by size ascending
+                this.areas.sort(function (a, b) { return a.getSpace() - b.getSpace(); });
+            }
+
+            return this.areas;  
+        }
+
+        Field.prototype.getArea = function (row, col) {
+            return this.findArea(this.getAreas(), row, col);
+        }
+
+        Field.prototype.findArea = function (areas, row, col) {
+
+            for (var i = 0; i < areas.length; i++) {
+                if (areas[i].getValue(row, col) == '*') {
+                    return areas[i];
+                }
+            }
+
+            return null;
+        }
+
+        Field.prototype.fillArea = function (area, row, col) {
+
+            if (typeof area[row] != 'undefined' && typeof area[row][col] != 'undefined') {
+                return area;
+            }
+
+            if (this.findArea(this.areas, row, col) != null || this.getValue(row, col) != '*') {
+                return area;
+            }
+
+            if (typeof area[row] == 'undefined') {
+                area[row] = [];
+            }
+
+            area[row][col] = '*';
+
+            this.fillArea(area, row + 1, col);
+            this.fillArea(area, row - 1, col);
+            this.fillArea(area, row, col + 1);
+            this.fillArea(area, row, col - 1);
+
+            return area;
+        }
+
+        Field.prototype.pushTile = function (row, col, tile) {
+            this.tiles.push(new TileLocation(row, col, tile));
+            this.space -= tile.size;
+            this.areas = [];
+        }
+
+        Field.prototype.popTile = function () {
+            var tile = this.tiles.pop().tile;
+
+            this.space += tile.size;
+            this.areas = [];
+
+            return tile;
+        }
+
+        Field.prototype.isValid = function (row, col, tile) {
+
+            if (this.getSpace() < tile.size) {
+                return false;
+            }
+
+            for (tRow = 0; tRow < tile.height; tRow++) {
+                for (tCol = 0; tCol < tile.width; tCol++) {
+                    if ((tile.grid[tRow][tCol] != ' ') && (this.getValue(row + tRow, col + tCol) != '*')) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        Field.prototype.getSpace = function () {
+            var result = this.space;
+
+            for (var i = 0; i < this.holes.length; i++) {
+                result -= this.holes[i].size;
+            }
+
+            return result;
+        }
+
+        Field.prototype.getValue = function (row, col) {
+            if (row < 0 || row >= this.height || col < 0 || col >= this.width) {
+                return ' ';
+            }
+
+            for (var i = 0; i < this.tiles.length; i++) {
+                var tile = this.tiles[i].tile;
+                var tRow = this.tiles[i].row;
+                var tCol = this.tiles[i].col;
+
+                if (row >= tRow && row < tRow + tile.height && col >= tCol && col < tCol + tile.width && tile.grid[row - tRow][col - tCol] != ' ') {
+                    return tile.grid[row - tRow][col - tCol];
+                }
+            }
+
+            return this.grid[row][col];
+        }
+
+        Field.prototype.isSolved = function () {
+            if (this.getSpace() == 0) {
+                if (this.holes.length > 0) {
+                    for (var i = 0; i < this.holes.length; i++) {
+                        var hole = this.getArea(this.holes[i].row, this.holes[i].col);
+                        if (hole == null || hole.space != this.holes[i].size) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        Field.prototype.RenderAsTable = function () {
+            var result = '<table class="Tile">';
+
+            for (var row = 0; row < this.height; row++) {
+                result += "<tr>";
+                for (var col = 0; col < this.width; col++) {
+                    var value = this.getValue(row, col);
+                    result += "<td";
+                    if (value == ' ') {
+                        result += ' class="Blank"';
+                    }
+                    else {
+                        result += ' class="Full"';
+                    }
+
+                    var style = this.getCellStyle(row, col);
+                    if (style) {
+                        result += ' style="' + style + '"';
+                    }
+
+                    result += ">";
+
+                    if (value == '*' || value == ' ') {
+                        result += "&nbsp;";
+                    }
+                    else {
+                        result += value;
+                    }
+
+                    result += "</td>";
+                }
+                result += "</tr>";
+            }
+
+            result += "</table>";
+
+            return result;
+        }
+
+        Field.prototype.getCellStyle = function (row, col) {
+            var style = "";
+
+            if (row < 0 || row >= this.height || col < 0 || col >= this.width) {
+                return style;
+            }
+
+            for (var i = 0; i < this.tiles.length; i++) {
+                var tile = this.tiles[i].tile;
+                var tRow = this.tiles[i].row;
+                var tCol = this.tiles[i].col;
+
+                if (row >= tRow && row < tRow + tile.height && col >= tCol && col < tCol + tile.width && tile.getValue(row - tRow, col - tCol) != ' ') {
+                    var iRow = row - tRow;
+                    var iCol = col - tCol;
+
+                    if (tile.getValue(iRow - 1, iCol) == ' ') {
+                        if (style) {
+                            style += ";";
+                        }
+                        if (this.getValue(row - 1, col) == ' ') {
+                            style += "border-top: 2px solid black";
+                        }
+                        else {
+                            style += "border-top-color:black";
+                        }
+                    }
+                    if (tile.getValue(iRow + 1, iCol) == ' ') {
+                        if (style) {
+                            style += ";";
+                        }
+                        if (this.getValue(row + 1, col) == ' ') {
+                            style += "border-bottom: 2px solid black";
+                        }
+                        else {
+                            style += "border-bottom-color:black";
+                        }
+                    }
+                    if (tile.getValue(iRow, iCol - 1) == ' ') {
+                        if (style) {
+                            style += ";";
+                        }
+                        if (this.getValue(row, col - 1) == ' ') {
+                            style += "border-left: 2px solid black";
+                        }
+                        else {
+                            style += "border-left-color:black";
+                        }
+                    }
+                    if (tile.getValue(iRow, iCol + 1) == ' ') {
+                        if (style) {
+                            style += ";";
+                        }
+                        if (this.getValue(row, col + 1) == ' ') {
+                            style += "border-right: 2px solid black";
+                        }
+                        else {
+                            style += "border-right-color:black";
+                        }
+                    }
+
+                    break;
+                }
+            }
+
+            return style;
+        }
+
+
+
+        function getPolyominoText() {
+            return document.getElementById("PolyominoText").innerText;
+        }
+
+        function getFieldText() {
+            var result = document.getElementById("FieldText").innerText;
+
+            return result;
+        }
+
+        function getFieldHoles() {
+            var text = getInputValue("Holes");
+            var holes = text.split(';');
+            var results = [];
+
+            for (var i = 0; i < holes.length; i++) {
+                if (holes[i].trim()) {
+                    var size_loc = holes[i].split('-');
+                    var row_col = size_loc[1].split(',');
+                    results.push({ "size": parseInt(size_loc[0].trim()), "row": parseInt(row_col[0].trim()), "col": parseInt(row_col[1].trim()) });
+                }
+            }
+
+            return results;
+        }
+
+        function getIgnoreCase() {
+            var elem = document.getElementById("IgnoreCase");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return true;
+        }
+
+        function getAllowRotations() {
+            var elem = document.getElementById("AllowRotations");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getAllowFlips() {
+            var elem = document.getElementById("AllowFlips");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getIgnoreContent() {
+            var elem = document.getElementById("IgnoreContent");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function setDuration(duration) {
+            var millis = (duration % 1000);
+            var seconds = Math.floor((duration / 1000)) % 60;
+            var minutes = Math.floor((duration / 1000) / 60);
+
+            var text = ""
+            if (minutes < 10) text += "0";
+            text += minutes;
+            text += ":";
+            if (seconds < 10) text += "0";
+            text += seconds;
+            text += ":";
+            if (millis < 10) {
+                text += "00";
+            } else if (millis < 100) {
+                text += "0";
+            }
+            text += millis;
+
+            var elem = document.getElementById("Duration");
+            if (elem) {
+                elem.value = text;
+            }
+        }
+
+        ///
+        ///
+        function doAddTiles() {
+            var text = getPolyominoText();
+
+            if (getIgnoreCase()) {
+                text = text.toUpperCase();
+            }
+
+            text = text.replace(/(\r\n|\r)/g, '\n');    // standerdize line breaks to '\n'
+
+            var lines = text.split('\n');
+
+            var tileLines = [];
+            var sepTiles = [];
+
+            for (var i = 0; i < lines.length; i++) {
+                lines[i] = lines[i].replace(/\s+$/, '');    // trim whitespace from the right hand side of the lines
+
+                if (lines[i]) {
+                    tileLines.push(lines[i]);
+                }
+                else {
+                    if (tileLines.length > 0) {
+                        sepTiles.push(tileLines);
+                    }
+                    tileLines = [];
+                }
+            }
+
+            if (tileLines.length > 0) {
+                sepTiles.push(tileLines);
+            }
+
+            // Turn each collection of text lines into a Polyomino.
+            //
+            for (var tIndex = 0; tIndex < sepTiles.length; tIndex++) {
+                lines = sepTiles[tIndex];
+
+                // Remove columns on the left that are completly blank.
+                var removingBlanks = true;      
+                while (removingBlanks) {
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].charAt(0) != ' ') {
+                            removingBlanks = false;
+                            break;
+                        }
+                    }
+
+                    // if still removing blanks then we need to strip the first column off the rows.
+                    if (removingBlanks) {
+                        for (var i = 0; i < lines.length; i++) {
+                            lines[i] = lines[i].substr(1);
+                        }
+                    }
+                }
+
+                // Find the height and width of the Polyomino
+                //
+                var height = lines.length
+                var width = 0;
+                for (var i = 0; i < lines.length; i++) {
+                    if (lines[i].length > width) {
+                        width = lines[i].length;
+                    }
+                }
+
+                // Define the polyominno grid and determine its size.
+                //
+                var grid = [];
+                for (var i = 0; i < lines.length; i++) {
+                    grid.push([]);
+                    for (var j = 0; j < width; j++) {
+                        if (j < lines[i].length) {
+                            grid[i].push(lines[i].charAt(j));
+                        }
+                        else {
+                            grid[i].push(' ');
+                        }
+                    }
+                }
+
+                gTiles.push(new Tile(grid));
+            }
+
+            gTiles.sort(function (a, b) { return b.size - a.size; })
+            renderTiles(gTiles);
+        }
+
+        ///
+        ///
+        function doReplaceTiles() {
+
+            gTiles = [];
+
+            doAddTiles();
+        }
+
+        function doSolve() {
+            var startTime = new Date().getTime();
+
+            var tileTotalSize = 0;
+            gTiles.forEach(function (item, idex) { tileTotalSize += item.size; });
+            gSolveUseAllTiles = gField.getSpace() == tileTotalSize;
+
+            gAllowRotations = getAllowRotations();
+            gAllowFlips = getAllowFlips();
+            gIgnoreContent = getIgnoreContent();
+
+            gResults = doSolve3(gField, gTiles);
+
+            renderResults(gResults);
+
+            setDuration(new Date().getTime() - startTime);
+            setInputValue("ResultsCount", gResults.length);
+            beep();
+        }
+
+        function doSolve2(field, tiles) {
+            var results = [];
+
+            if (field.isSolved()) {
+                results.push(new Field(field));
+                return results;
+            }
+
+            for (var i = 0; i < (gSolveUseAllTiles ? Math.min(1, tiles.length) : tiles.length); i++) {
+                if (field.getSpace() >= tiles[i].size) {
+                    var remTiles = tiles.slice(i + 1);
+                    var variations = tiles[i].getVariations(gAllowRotations, gAllowFlips, gIgnoreContent);
+                    for (var j = 0; j < variations.length; j++) {
+                        var tile = variations[j];
+                        var height = field.height - tile.height + 1;
+                        var width = field.width - tile.width + 1;
+                        for (var row = 0; row < height; row++) {
+                            for (var col = 0; col < width; col++) {
+                                if (field.isValid(row, col, tile)) {
+                                    field.pushTile(row, col, tile);
+                                    results = results.concat(doSolve2(field, remTiles));
+                                    field.popTile()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return results;
+        }
+
+
+        function doSolve3(field, tiles, index) {
+            var results = [];
+
+            if (field.isSolved()) {
+                results.push(new Field(field));
+                return results;
+            }
+
+            var area = getSmallestArea(field);
+
+            if (typeof (index) == "undefined") {
+                index = 0;
+            }
+
+            // Try each tile in every position of the smallest area found.
+            if (area) {
+                for (var i = index; i < tiles.length; i++) {
+
+                    var sumUntriedTiles = 0;
+                    for (var t = i; t < tiles.length; t++) {
+                        sumUntriedTiles += tiles[t].size;
+                    }
+
+                    if (sumUntriedTiles < area.getSpace()) {
+                        return results;
+                    }
+
+                    if (area.getSpace() >= tiles[i].size) {
+                        var remTiles = tiles.slice(0, i).concat(tiles.slice(i + 1));
+                        var variations = tiles[i].getVariations(gAllowRotations, gAllowFlips, gIgnoreContent);
+                        for (var j = 0; j < variations.length; j++) {
+                            var tile = variations[j];
+                            var height = area.height - tile.height + 1;
+                            var width = area.width - tile.width + 1;
+                            for (var row = 0; row < height; row++) {
+                                for (var col = 0; col < width; col++) {
+                                    if (area.isValid(row, col, tile)) {
+                                        field.pushTile(row, col, tile);
+
+                                        var newArea = getSmallestArea(field);
+                                        if (newArea && newArea.insideArea(area)) {
+                                            // If the new area is inside the current area then we only have to try the tiles that we have not alread attempted.
+                                            tempResults = doSolve3(field, remTiles, i);
+                                        }
+                                        else {
+                                            // If the new area is outside of the current area than we have to try all the remaining tiles.
+                                            tempResults = doSolve3(field, remTiles, 0);
+                                        }
+
+                                        // only add non-duplicates to the results collection
+                                        for (var r = 0; r < tempResults.length; r++) {
+                                            if (results.findIndex(function (item) { return item.Equals(tempResults[r]); }) == -1) {
+                                                results.push(tempResults[r]);
+                                            }
+                                        }
+
+                                        field.popTile();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        ///
+        /// Returns the smallest area whos space is greater than zero. Areas equal to or less than zero a specified holes in the field.
+        ///
+        function getSmallestArea(field) {
+            var area = null;
+            var areas = field.getAreas();
+            for (var a = 0; a < areas.length; a++) {
+                if (areas[a].getSpace() > 0) {
+                    area = areas[a];
+                    break;
+                }
+            }
+
+            return area;
+        }
+
+        function doFieldChanged() {
+            var fieldDisplay = document.getElementById("FieldDisplay");
+
+            gField = new Field(getFieldText());
+            gField.holes = getFieldHoles();
+
+            setInputValue("FieldSpace", gField.getSpace());
+            fieldDisplay.innerHTML = gField.RenderAsTable();
+        }
+
+        ///
+        ///
+        function renderTiles(tiles) {
+
+            var t = document.getElementById("TileList");
+
+            t.innerHTML = ''
+
+            var totalSize = 0;
+            for (var i = 0; i < tiles.length; i++) {
+                var r = t.insertRow(-1);
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "center";
+                c.innerHTML = tiles[i].RenderAsTable();
+                totalSize += tiles[i].size;
+            }
+
+            setInputValue("TileCount", tiles.length);
+            setInputValue("TileSize", totalSize);
+        }
+
+
+        ///
+        ///
+        function renderResults(fields) {
+
+            var t = document.getElementById("ResultsList");
+
+            t.innerHTML = ''
+
+            var totalSize = 0;
+            for (var i = 0; i < fields.length; i++) {
+                var r = t.insertRow(-1);
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "center";
+                c.innerHTML = fields[i].RenderAsTable();
+            }
+        }
+
+
+
+    </script>
+</head>
+<body>
+
+    <table style="width:100%;">
+        <tr>
+            <td style="vertical-align:top;white-space:nowrap;">
+                <table id="TileList" class="TileList">
+                </table>
+            </td>
+            <td style="vertical-align:top;border-right: 3px solid black;border-left: 3px solid black;padding-left:5px; padding-right:10px;">
+                
+                <label>Tile Count:<input type="text" size="4" disabled="disabled" id="TileCount" /></label>
+                <label>Tile Size:<input type="text" size="4" disabled="disabled" id="TileSize" /></label>
+                <hr />
+
+                <label><input type="checkbox" id="IgnoreCase" checked="checked" value="1" />Ignore Case</label>
+                <br />
+                <span>Tiles:</span>
+                <button onclick="doReplaceTiles()">Replace</button>
+                <button onclick="doAddTiles();">Add</button>
+                <br />
+                <textarea id="PolyominoText" style="width:15em;height:15em;font-family:Courier New, Courier, monospace;font-size:12px;"></textarea>
+
+                <table id="PolyominoDisplay" style="width:100%;">
+                </table>
+
+            </td>
+            <td style="vertical-align:top;border-right: 3px solid black;padding-left:5px; padding-right:10px;">
+                <label>Field Space:<input type="text" size="5" disabled="disabled" id="FieldSpace" /></label>
+                <label><input type="checkbox" id="CoverLetters" value="1" />Cover Letters</label>
+                <hr />
+                <div id="FieldDisplay" style="width:100%;">
+                </div>
+                <hr />
+                <br />
+                <label>Holes: <input type="text" id="Holes" size="24" value="" title="S1-R1,C1;S2-R2,C2" onchange="doFieldChanged();" /></label>
+                <br />
+                <textarea id="FieldText" onchange="doFieldChanged();" style="width:30em;height:15em;font-family:Courier New, Courier, monospace;font-size:12px;"></textarea>
+                <br />
+                <hr />
+            </td>
+            <td style="vertical-align:top;border-right: 3px solid black;padding-left:5px; padding-right:10px;">
+                <label><input type="checkbox" id="AllowRotations" value="1" />Allow Rotations</label>
+                <label><input type="checkbox" id="AllowFlips" />Allow Flips</label>
+                <label><input type="checkbox" id="IgnoreContent" />Ignore Content</label>
+                <button onclick="doSolve();" style="float: right;">Solve</button>
+                <hr />
+                <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
+                <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
+                <br />
+                <hr />
+                <table id="ResultsList" class="TileList" style="width:100%;">
+                </table>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

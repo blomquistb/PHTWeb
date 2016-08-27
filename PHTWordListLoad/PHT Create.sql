@@ -1,0 +1,52 @@
+USE [pht]
+GO
+
+/****** Object:  Table [dbo].[Dictionary] ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Dictionary](
+	[length] [int] NOT NULL,
+	[frequency] [int] NOT NULL,
+	[domain] [int] NOT NULL,
+	[word_idx] [nvarchar](256) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL,
+	[anagram_idx] [nvarchar](256) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL,
+	[crypto_idx] [nvarchar](256) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL,
+	[crypto_anagram_idx] [nvarchar](256) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL,
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Dictionary_Anagram] ON [dbo].[Dictionary]
+(
+	[anagram_idx] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Dictionary_Crypto] ON [dbo].[Dictionary]
+(
+	[crypto_idx] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Dictionary_CryptoAnagram] ON [dbo].[Dictionary]
+(
+	[crypto_anagram_idx] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Dictionary_Word] ON [dbo].[Dictionary]
+(
+	[word_idx] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Dictionary_WordLength] ON [dbo].[Dictionary]
+(
+	[length] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+GO
+

@@ -1,0 +1,448 @@
+﻿
+PH17-Adele:Someone Like You (find color names and left over is hint)
+-------------------------------
+F L A M E V O R O D H O N E Y D E W O O H 
+A I N D I G O E S F O T U C O R A L A E T 
+E R H C O R O V H S U A N L A N I D R A C 
+D L A R E M E L D N L R A E P E C R U N O 
+D N E K O H C I T R A E U L B C T E C U P 
+O A A A U Q A S D L O G I R A M N W O R B 
+O S N Y O T E N E H S E F N L E K C I N R 
+W R I R C H E A S V O A A B R O N Z E E U 
+D E A R C B M V I W W R G E P L T C Z L B 
+E N O N I O I Y R N Y S O E L L H I C A Y 
+R I V C G N L A E G I E B K U A A E E T P 
+L M K A Y E T V C H I F H C M M S C R E U 
+L R C L H C A O O O F A L P A A S E U M R 
+E A A I A I L C W U K A A U W I M T L N P 
+H C L L P I D A B I R G V R O S A N E U L 
+S S B E W R Y D M E N E E E L H G I A G E 
+G I S I A E M O T E I E N B L C E M N R L 
+G A K T R R O U P I N K D M E U N T U J E 
+E F S G Y N A G O H A M E A Y F T Z A I S 
+T U W O N Y X I L A O C R A H C A D T H O 
+M Y O M I N E D S A L M O N O M E L U S R 
+-------------------------------
+
+
+SF15-Pac-Man: Blue Ghost (skip letter search)
+-------------------------------
+# # # # # S K L Y 
+# # # D E N I I M E M
+# # I N A D I G R G I O
+# R S A P I P H I Y R E P
+# T U R Q R U T O P I S E
+# C O B A I D L B T D T A
+B O A N Z B A Y I I N E L C
+E A Q A U A M A R I I E N E
+R P E R R S I A N A G L N Y
+Y Y T I E F F A E N H N E Y
+P A E R I W I N G K T L E A
+U L L V T R A M G A R I N E
+L C A Y # E R U L # E A N N
+# D L # # # K E # # # E P
+
+Down: 3,5,6,8,9,6,4,10,7,7,10,11,8,4
+Accross: 5,5,4,4,5,4,4,5,(5,3),8,8,5,4,4
+
+
+PH16-Cosmere:Sel
+--------------------------------------
+N S P Y V A G R R X 
+O S U V L F S E T S 
+I S F F O N T X U C 
+N H G F S F D U U S 
+I A K F Z B K Z X H 
+M O B M J O Z Z K A 
+O D V H Q R Y W K R 
+D N B A G E S D Y D 
+G R G A N N D N E X 
+X H N B V G B I E D
+
+
+AonDor, ChayShan, Dakhor, Devotion, Dominion, Resealing, Seons, Shaod, Shard, Skaze, Splinter
+Reod
+Shu-Keseg, Shu-Dereth, Shu-Korath
+
+
+
+PH16-Cosmere:Nalthis
+------------------------------
+G R W H O B E I B N 
+P A R G N S E K S L 
+E W I R A G O E U N 
+B E R E S E A R Y E 
+B N E B A D R D Y R 
+E L T H U M ? B E Y 
+O H A U O L U S M E 
+G A R A C S K L S E 
+M K E O B O H A R D 
+F E V E R A P P W Y
+
+blue grass
+red wagon
+yellow fever
+red robin
+black board
+blue berry
+black beard
+green thumb
+green house
+yellow pages
+
+PH16-Cosmere:Scadrial
+-------------------------------
+B R O P Z E D B O C 
+O X R T X N S O G R 
+D I T E E N C L N P 
+O T N O W S O R E P 
+E E S R T I D T L E 
+P R I H V L E C M R 
+I Z D T L L A O B B 
+O C A U L L E E R R 
+N S R I L L E O S A 
+N I N K E I B N S V
+
+bilEon (bilLon)
+braVs (braSs)
+broPze (broNze)
+cobMlt (cobAlt)
+cRpper (cOpper)
+goBd (goLd)
+irSn (irOn)
+lUad (lEad)
+niNkel (niCkel)
+peOter (peWter)
+rXodite (rHodite)
+silvTr (silvEr)
+solNer (solDer)
+sReel (sTeel)
+tXn (tIn)
+ziOc (ziNc)
+-----------------------------
+
+PH16-Cosmere:Roshar
+-------------------------------
+"I" in center
+N O S A A O I I N O 
+S I I R B N T L L I 
+N E O O H E A M U T 
+D T N C I S N I M A 
+I A R T O S E H R O 
+V N T I N O G D A F 
+I S A O N N R T R S 
+S P T T I V A N A N 
+I O R A T R O O I S 
+O N N O I P G R E S
+
+ADHESiON COHESION PROGRESSION TRANSFORMATION ILLUMINATION ABRASION GRAVITATION DIVISION TRANSPORTATION TENSION
+
+"N" in center
+O H E R A O G R 
+T I S B S R S E 
+A V I O S F S I 
+T A R T N O R O 
+I O L A I I M A 
+S I L U M V I T 
+N D O I S I A T 
+E R A N S P O R
+
+OHESIO BRAS ROGRESSIO RAVITATIO NSFORMATI D ENSI RANSPORTA IVISIO LLUMInAT
+
+"M" in center
+S R T L I S 
+P O S F V I 
+I A R O O G 
+T A N A T R 
+I T S E I E 
+V A I H S S
+
+HESI OGRESSI SFORmAT SPORT VISI AVITATI L A N
+
+"O" in center
+A T G E 
+T F R E 
+I V R S 
+O I M S
+
+E GRESS VITAT FoRM O I
+
+"S" in center
+I T
+O A
+
+ITA s o
+
+"T" in center
+
+-----------------------------------------
+SF13-BW2:Nine Lives
+
+R R G H O U L S M N
+F E L O N Y E I A O
+G L D R E G G A D O
+S L H R A T Y D M S
+E I W O U N D S A E
+V K L R O M O H N S
+A E M A G G O T I P
+R P I S T O L A M R
+G S E I D O B E U O
+W N Y L D A E D S C
+
+ANIMUS BLOODY BODIES CORPSE DAGGER DEADLY DEATHS
+FELONY GAOLER GHOULS GRAVES HORROR KILLER MADMAN
+MAGGOT MURDER NOOSES PISTOL WOUNDS
+-----------------------------------------------------
+
+PH15-What's Your Number:Two Arabian Knights
+# O H O O E S #
+C R U O N W F V
+R G N T V E L T
+E N I I S E E N
+S I I E T N N E
+E S D X E N E X
+
+Start1: 0,1
+Word Breaks2: 3,3,4,3
+
+Start2: 0,6
+Word Breaks1: 5,6,5,3,4
+
+
+-----------------------------------------------------
+SF13-CL2:The Headless Horseman
+Start: 1,4
+End: 0,2
+MinFrq: 50
+Word Breaks: 6,7,8,2,3,4,3,6,2,6,6
+
+Y S ? E E I A L
+W H _ L B L P N
+_ B _ L I E A T
+T O F T I M _ Y
+_ _ _ L L N E A
+K E R O H V _ S
+D D E O I O N _
+G O N E _ B P H
+
+
+-----------------------------------------------------
+SF13-BW1:Snakes on a Plane 
+O O B T L E N I O M R E T
+M R A T P S V S C O N D A
+S O G T Y N A A C C L A W
+L A N H O N K A N A D I A
+T D R E D N E B O C N O M
+N E P R E I A R A B D T H
+G M S E B W E D C D A U O
+A A M B O O S I K R E H M
+R M T A A C O O P P E R N
+T E R S P I N C I C C S O
+E K A N E V S T R T O T T
+B P K A R E K A N O R E C
+L A C D D E R T S L A R O
+
+-----------------------------------------------------
+SF13-CL1:Bestiary
+# # # # # N M G G F N
+# # # # O M L B O N W O
+# # # G I R W T G B A R Q
+# # A X Q U E O Z K L Z R O
+# R D H K B P C K V V I D L D
+D K T J S E N A A T S I N J W A
+L L R O P L V E Y C X N A U N Q
+E I E I B M O Z A L I D H K E E
+P O Y F L O X R L V G R Y I T G
+T K B A M P G O C E T I D B N A
+H W R I Y Q R S S L E G R U M L
+# E U N G T H L M H P R A N D
+# # K I U T M C J U Z N N T
+# # # N O T E L E K S K S
+# # # # E Y O S V E U W
+# # # # # C L M A I H
+
+
+SF15:Computer Space
+--------------------------
+P A C E I A D S D I O R E T 
+S B W X N V E O L X K Z A S 
+P Y K O C Q R R F B A T P N 
+U E G N X I S T Q M O K G U 
+J K T Q X N P A V T A L P R 
+V N O D R O O M L R O M S T 
+F Z U H G U D E T F R U O U 
+R O G G E R G M P E S T R G 
+S I U K B D I K Q Y U M A A 
+I X G A L O K S P E D E T T 
+R P A G A J R L I T N E S E 
+T S D C J Z E J B K Y C D N 
+E M O U L R E T E C O M M A 
+T Z J S T K B D L I S S I M
+
+Space Invaders
+Asteroids
+Frogger
+Moon Patrol
+Dig Dug
+Galaga
+Joust
+Berzerk
+Missile Command
+Tetris
+Donkey Kong
+Mortal Kombat
+Qix
+Centipede
+Outrun
+Stargate
+Tempest
+
+
+SF15:Enter the MCP Cone  (snake search h-wraps)
+-----------------------------
+N O L W O R N O F O
+A P D U D Y S U E R 
+M R O O Y I U T S U
+A R G Y G N B E X C
+
+Start: 3,6
+Snake: 4,5,3,4,3,6,3,2,3,7
+_ _ _ _   _ _ _ _ _ ,   _ _ _   _ _ _ _ - _ _ _   _ _ _ _ _ _   _ _ _   _ _   _ _ _   _ _ _ _ _ _ _ .
+
+
+SF15:Search for Missing Pinball
+--------------------------------
+P B I N S B N C L N A L L
+O U F N P A N A I D N I I
+P M L D E B V A I G T O P
+T P I E C E R N O B A F T 
+H E P J I D R E L X A M S
+E R P D A H U A O T R R M 
+N D E R L C G B H E E E A
+D M R V N O K G O G N E D
+T O B M O C I P N R N T D
+I T E N A L T U O A I I A
+L L A B I T L U M T P H I 
+T N P W U P C O Z Z S W L 
+R E T S N O M H R A M P E
+
+
+Addams
+Arabian
+Backbox
+Bumper
+Combo
+Drain
+Flipper
+Indiana
+Jackpot
+Lagoon
+Magic
+Match
+Medieval
+Monster
+Multiball
+Outlane
+Plunger
+Ramp
+Rollover
+Special
+Spinner
+Target
+Tilt
+Twilight
+White
+
+SF15: Pac-Man: Twisty Little Passages
+---------------------------------------
+E I E C N O M E S E P I T A N 
+T Q A O C M Z H T D Y E C # X 
+O A L D # U H A R Y L K P O Q 
+L E N B X B E U A L S # N Y F 
+M B L I N K Y G W C A U K I O 
+H K Y N F T N O B E N N S J P 
+A E O A K K Q F E P I C # D I 
+# Y # I D E C A R R # L S O # 
+N I R X G E H E R W U I E R E 
+E A G A R J E M Y E S U V A R 
+I P G L N I R Y O A O N Z N A 
+D P O A N T R # F D L L D G T 
+V L A G U I Y L R T L T J E D 
+H E M G E S Y T S E N U # N H 
+A U L M O R H E B E O T G N G
+
+
+(need to solve maze and output selected letters)
+
+Blinky Pinky Inky Clyde
+Apple Orange Strawberry Cherry Melon Galaxian Bell Key
+
+---------------------------------------
+
+
+PH16-Catch-22:(Milo) Mindbender
+---------------------------------------
+L A U G E I Y C Y C O O B T Y R X Q F I
+A Y W Y D E T Q H P E M L G B S H F U R
+S R O E F M U M R K H R J M B Y Z V P V
+T A N G G S E N M E I I H J F N N L V I
+M I S T H S O U D N A S H T I W L E T U
+F N D W R S M E A O L L A I P W B J P P
+U K E E S S L O W O O A L N I U Y E C N
+Y Z R A C F R O O S C M A T E W B E R T
+D X U C O A T R T N I L S A I W N V H C
+B K V H O N R G T N R E L E H L Q W M K
+Y N S B I T S O C K I A C S A L T D D W
+H I K I T C N A W O N K S I R M I L S O
+W T N L V K T T U D F S C R R X L O S O
+E C A L R U D S L O O F P O W A S H T X
+H H B A N D H F I O R T A Q L Q S N V V
+O S B B A S E L I F A R M U Z W U F Z F
+B E A K E T I M E L I N E I Q U V J E F
+O T S M B A O L K E L P R P T K K J C A
+S C S I F X R U T N K A E M C C G B W H
+G H M S E U U C Q K E R H V L R P V K I
+
+WITH INTO TIME KNOW LAST HERE EACH REAL LINE LAND COST LOST FOOD 
+BANK TALK SOON BILL HOLD FINE HALL RISK WISH RISE BASE RACE BALL 
+FARM BAND RAIN SEAT FILE SLOW BEAR SEEK ALAN FILL RAIL LOAN COAT 
+SNOW MERE BITS FAIL MOOD SAND SALT MOON LOCK WASH FOOL MATE BASS 
+INCH HALT TIDE RICE FLED SLIM LACE MIST KNIT FIST SLOT KNOT ROAR 
+ALAS GOAT BARK LEAK BEAN EDIT FOIL BERT BATS SLAM REDS STAB MESH 
+MUMS LIAR WITS UNTO DOOM SLIT BOAR CARO SEAM NILE TILT UNDO SANE 
+NASH OATS BEAK MRNA OFFA SOCK MASH COLA MITE SIKH ANEW INFO EMIT 
+TOIL KEEL SILT SCSI RICO TANG INCA LEEK ITCH ABBA LOCI TINT IRAS 
+SARI NILS QUIP ILSA ROOS LINT ROAN ISLA ABBS SALA GNAT KELP FORA 
+ETCH ARNO ARIE ALLO MELI DAKS EDEL DENI HOBO AMER TINK OSSA MAES 
+DUOS IOUS IDEN ELMA MILS RAFI IRAE FISC ALAE TONK KENO 
+
+These words feed into four word latters:  
+    9 rungs ends with yellow answer (UNIT)
+    10 rungs ends with MAIN
+    6 rungs ends with green answer (LACK)
+    11 rungs ends with "MESS"
+
+
+SF15: Portal 2
+------------------------------------------------
+# # # # # # # # C
+# # # # # # # # S
+# # # # # # # # T
+# # # # # # A L I V E
+# # A O N C H E L L E N S E C
+H E P R E F # A L U # K C A R T H
+P D E T C A S R U P L W A L L S C
+M I R A N I F N F R L S S T S T R
+U S # S E E A I E B E C A U # E A
+I N M S G E C N S I T N T R T A E
+R I T E I R T G U S N S I R U M S
+T I U S # M I S N O I T # E R S E
+D E L I C I O U S O E O C T E T R
+# # I M U T N E M O M O N N S
+# # # # # # Y D O B P
+
+ALIVE DELICIOUS LEARNINGS PBODY SATI-SFACTION TRACK-SUIT ATLAS FISSION
+MIS-TAKE PREF-ER SIM-ULA-TIONS TRIUMPH APER-TURE INSIDE MOIST RESEARCH
+STEAM TURRET BECAU-SE INTELL-IGENCE MOMENTUM RETR-ANSMIT STILL USEFUL
+CHELL WALLS
+
