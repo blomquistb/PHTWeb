@@ -1,0 +1,895 @@
+﻿<!--
+Featue Todo:
+
+    Add map change history and ability to undo operations.
+
+    Remove "Enable Stemming" check box
+
+-->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>CryptogramHelper</title>
+    <script src="/es6-shim.js"></script>
+    <script src="/jquery-2.1.4.js"></script>
+    <script src="/Utils.js"></script>    
+    <script src="/PHTWords.js"></script>
+
+    <script type="text/javascript">
+
+
+        ////English letter frequency sequence as  "ETAONRISHDLFCMUGYPWBVKJXQZ"
+        ////English letter first letter frequency "TASHWIOBMFCLDPNEGRYUVJKQZX"
+        ////common doubled letters "LL EE SS OO TT FF RR NN PP CC"
+        ////common letter pairs as "TH HE AN RE ER IN ON AT ND ST ES EN OF TE ED OR TI HI AS TO"
+        var gFatFingerMapping = {
+            'A': "QWSZ",
+            'B': "GHNV ",
+            'C': "XDFV ",
+            'D': "ERFSXC",
+            'E': "34WRSD",
+            'F': "RTGDCV",
+            'G': "TYFHVB",
+            'H': "YUGJBN",
+            'I': "89UOJK",
+            'J': "UIHKNM",
+            'K': "IOJLM,",
+            'L': "OPK;",
+            'M': "JKN, ",
+            'N': "HJBM ",
+            'O': "90IPKL",
+            'P': "0-OL",
+            'Q': "12WA",
+            'R': "45ETDF",
+            'S': "WEADZX",
+            'T': "56RYFG",
+            'U': "78YIHJ",
+            'V': "FGCB ",
+            'W': "23QEAS",
+            'X': "SDZC",
+            'Y': "67TUGH",
+            'Z': "ASX",
+            '1': "`2Q",
+            '2': "13QW",
+            '3': "24WE",
+            '4': "35ER",
+            '5': "46RT",
+            '6': "57TY",
+            '7': "68YU",
+            '8': "79UI",
+            '9': "80IO",
+            '0': "9-OP",
+            '-': "0=p[",
+            '=': "-[]",
+            '[': "-=P];'",
+            ']': "=[\'\n",
+            '\\': "]\n",
+            ';': "P[L\'./",
+            '\'': "[];/\n",
+            ',': "KLM. ",
+            '.': "L;,/",
+            '/': ";'.",
+            ' ': "CVBNM,",
+            '\n': "]\\\'"
+        };
+
+        var gSearchResults = [];
+        var gSearchResultsSort = 1;
+        var gSearchMapTry = "";
+
+        var gMaping = [];
+        var gMapSorting = 1;
+        var gLastAppliedFreq = function (map) {
+            map.sort(function (a, b) { if (b.frequency == a.frequency) { return a.cypher.charCodeAt(0) - b.cypher.charCodeAt(0) } return b.frequency - a.frequency; });
+            setAutoApplyHighlight("OccuranceFreqTitle");
+            return applyFrequency(map, getOccuranceFreq());
+        };
+
+        function doEncryptionChanged() {
+
+            gMaping = getNewMapping(gMaping, getOriginalText(), getExcludeText());
+
+            renderFatFingerMapping();
+            renderDecryptedText(gMaping);
+        }
+
+
+        function getDomain() {
+            var result = "";
+
+            var excludeText = getExcludeText();
+            var encryptedText = getOriginalText();
+
+            for (var i = 0; i < encryptedText.length; i++) {
+                var encryptedChar = encryptedText.charAt(i);
+
+                if (getIgnoreCase()) {
+                    encryptedChar = encryptedChar.toUpperCase();
+                }
+
+                if (!excludeText || (excludeText.indexOf(encryptedChar) < 0)) {
+                    var index = result.indexOf(encryptedChar);
+                    if (index < 0) {
+                        result = result + encryptedChar;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        function getOriginalText() {
+            return document.getElementById("Encrypted").innerText;
+        }
+
+        function getNewMapping(oldMap, encryptedText, excludeText) {
+            var domainChars = "";
+            var newMap = [];
+
+            // Calculate new map from encrypted text minus the characters in exludeText.
+            //
+            var first = true;
+            var previousChar = '';
+            for (var i = 0; i < encryptedText.length; i++) {
+                var encryptedChar = encryptedText.charAt(i);
+                if (getIgnoreCase()) {
+                    encryptedChar = encryptedChar.toUpperCase();
+                }
+
+                if (!excludeText || (excludeText.indexOf(encryptedChar) < 0)) {
+                    var index = domainChars.indexOf(encryptedChar);
+                    if (index < 0) {
+                        newMap.push({ cypher: encryptedChar, key: encryptedChar, frequency: 1, double: 0, first: 0 });
+                        domainChars = domainChars + encryptedChar;
+                        index = domainChars.length - 1;
+                    }
+                    else {
+                        newMap[index].frequency++;
+                        if (previousChar == encryptedChar) {
+                            newMap[index].double++;
+                        }
+                    }
+
+                    if (first) {
+                        newMap[index].first = newMap[index].first + 1;
+                        first = false;
+                    }
+                }
+                else {
+                    if (PHTWords.IsWhitespace(encryptedChar)) {
+                        first = true;
+                    }
+                }
+
+                previousChar = encryptedChar;
+            }
+
+            // Copy any remaining locked mappings from the old map to the new map.
+            //
+            for (var i = 0; i < newMap.length; i++) {
+                for (var j = 0; j < oldMap.length; j++) {
+                    if (newMap[i].cypher == oldMap[j].cypher) {
+                        newMap[i].locked = oldMap[j].locked;
+                        newMap[i].key = oldMap[j].key;
+                        break;
+                    }
+                }
+            }
+
+            // Apply last mapping strategy used.
+            //
+            if (getAutoApply()) {
+                return gLastAppliedFreq(newMap);
+            }
+
+            return newMap;
+        }
+
+        ///
+        ///
+        function decryptText(cypherText, map) {
+            var encryptedWord = "";
+            var decryptedWord = "";
+            var result = "";
+
+            if (getIgnoreCase()) {
+                cypherText = cypherText.toUpperCase();
+            }
+
+            for (var i = 0; i < cypherText.length; i++) {
+                if (PHTWords.IsWhitespace(cypherText.charAt(i))) {
+                    if (decryptedWord) {
+                        result = result + '<span onclick="doWordClick(\'' + escapeJSLiterial(escapeHtmlAttribute(encryptedWord)) + '\')">' + decryptedWord + '</span>';
+                        encryptedWord = "";
+                        decryptedWord = "";
+                    }
+                    result = result + getMapping(cypherText.charAt(i), map);
+                }
+                else {
+                    encryptedWord += cypherText.charAt(i);
+                    decryptedWord += getMapping(cypherText.charAt(i), map);
+                }
+            }
+
+            if (decryptedWord) {
+                result = result + '<span onclick="doWordClick(\'' + escapeJSLiterial(escapeHtmlAttribute(encryptedWord)) + '\')">' + decryptedWord + '</span>';
+            }
+
+            return result;
+        }
+
+        ///
+        ///
+        function getMapping(cypherChar, map) {
+            var result = cypherChar;
+
+            if (!PHTWords.IsWhitespace(cypherChar)) {
+                result = '<span style="color:grey;">' + cypherChar + '</span>';
+            }
+
+            for (var i = 0; i < map.length; i++) {
+                if (cypherChar == map[i].cypher) {
+                    if (map[i].locked) {
+                        result = '<span style="color:black;">' + map[i].key + '</span>';
+                    }
+                    else {
+                        result = '<span style="color:orange;">' + map[i].key + '</span>';
+                    }
+
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        function getIgnoreCase() {
+            var elem = document.getElementById("IgnoreCase");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return true;
+        }
+
+        function getDomainFilter() {
+            var elem = document.getElementById("DomainFilter");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function getCryptoType() {
+            var result = 1; // Default Substitution Cypher
+
+            var elem = document.getElementById("FatFinger");
+            if (elem && elem.checked) {
+                result = 2;
+            }
+
+            elem = document.getElementById("Vigenere");
+            if (elem && elem.checked) {
+                result = 3;
+            }
+
+            return result;
+        }
+
+        function setCryptoType(type) {
+            var substitutionPane = document.getElementById("SubstitutionMapping");
+            var fatFingerPane = document.getElementById("FatFingerMapping");
+            var autoMapping = document.getElementById("AutoMapping");
+
+            switch (type) {
+                case 2:
+                    {
+                        renderFatFingerMapping();
+                        renderDecryptedText(gMaping);
+                        setAutoApply(false);
+                        break;
+                    }
+                case 3: {
+                }
+                default:
+                    {
+                        setAutoApply(true);
+                        break;
+                    }
+            }
+        }
+
+        function getAutoApply() {
+            var elem = document.getElementById("AutoApply");
+            if (elem && elem.checked) {
+                return true;
+            }
+
+            return false;
+        }
+
+        function setAutoApply(value) {
+            var elem = document.getElementById("AutoApply");
+            if (elem) {
+                elem.checked = value;
+            }
+        }
+
+        function setAutoApplyHighlight(title) {
+            var titles = ["OccuranceFreqTitle", "FirstFreqTitle", "DoubleFreqTitle", "RotateN"];
+            for (var i = 0; i < titles.length; i++) {
+                var elem = document.getElementById(titles[i]);
+                if (elem) {
+                    if (titles[i] == title) {
+                        elem.style.backgroundColor = "yellow";
+                    }
+                    else {
+                        elem.style.backgroundColor = "inherit";
+                    }
+                }
+            }
+        }
+
+        function applyFrequency(map, freqString) {
+
+            var domainArray = [];
+            for (var i = 0; i < map.length; i++) {
+                domainArray.push(map[i].cypher);
+            }
+            domainArray.sort(function (a, b) { return a.charCodeAt(0) - b.charCodeAt(0); });
+            var domain = domainArray.join('');
+
+            for (var i = 0; i < map.length; i++) {
+                if (map[i].locked) {
+                    freqString = freqString.replace(new RegExp(map[i].key.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1'), 'g'), '');
+                    domain = domain.replace(new RegExp(map[i].key.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1'), 'g'), '');
+                }
+            }
+
+            for (var i = 0; i < map.length; i++) {
+                if (!map[i].locked) {
+                    if (freqString.length > 0) {
+                        map[i].key = freqString.substring(0, 1);
+                        freqString = freqString.substring(1);
+                        domain = domain.replace(new RegExp(map[i].key.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, '\\$1'), 'g'), '');
+                    }
+                    else if (domain.length > 0) {
+                        map[i].key = domain.substring(0, 1);
+                        domain = domain.substring(1);
+                    }
+                    else {
+                        map[i].key = '*';
+                    }
+                }
+            }
+
+            return map;
+        }
+
+
+
+        ///
+        ///
+        function getExcludeText() {
+            var excludeEdit = document.getElementById("Exclude");
+            var numCheckbox = document.getElementById("Numbers");
+            var puncCheckbox = document.getElementById("Punctuation");
+            var wsCheckbox = document.getElementById("Whitespace");
+
+            var result = "";
+
+            if (excludeEdit && excludeEdit.value) {
+                result = result + excludeEdit.value;
+            }
+
+
+            if (numCheckbox && numCheckbox.checked) {
+                result = result + PHTWords.Digits;
+            }
+
+            if (puncCheckbox && puncCheckbox.checked) {
+                result = result + PHTWords.Punctuation;
+            }
+
+            if (wsCheckbox && wsCheckbox.checked) {
+                result = result + PHTWords.Whitespace;
+            }
+
+            return result
+        }
+
+        function getOccuranceFreq() {
+            var freqInput = document.getElementById("OccuranceFreq");
+
+            return freqInput.value;
+        }
+
+        function getFirstLetterFreq() {
+            var freqInput = document.getElementById("FirstFreq");
+
+            return freqInput.value;
+        }
+
+        function getDoubleFreq() {
+            var freqInput = document.getElementById("DoubleFreq");
+
+            return freqInput.value;
+        }
+
+
+        function getNumericValue(id, defaultValue) {
+            var result = defaultValue;
+
+            var elem = document.getElementById(id);
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = defaultValue;
+            }
+
+            return result;
+        }
+
+        function setInputValue(id, value) {
+            var elem = document.getElementById(id);
+            if (elem) {
+                elem.value = value;
+            }
+        }
+
+
+        function doSortByFrequency() {
+            gSearchResultsSort = 1;
+            renderSearchResults(gSearchResults);
+        }
+
+        function doSortByWords() {
+            gSearchResultsSort = 2;
+            renderSearchResults(gSearchResults);
+        }
+
+
+        function renderSearchResults(data, startTime) {
+
+            switch (gSearchResultsSort) {
+                case 1: { data.sort(function (a, b) { return b.frequency - a.frequency; }); break; }
+                case 2: { data.sort(function (a, b) { if (a.value > b.value) { return 1; } else if (a.value < b.value) { return -1; } else { return 0; } }); break; }
+            }
+
+            gSearchResults = data;
+
+            var table = document.getElementById("ResultsTable");
+
+            table.innerHTML = '';
+
+            var elem = document.getElementById("ResultsCount");
+            if (elem) {
+                if (data) {
+                    elem.value = data.length;
+                } else {
+                    elem.value = "";
+                }
+            }
+
+            var cypher = "";
+            elem = document.getElementById("SearchCypher");
+            if (elem) {
+                cypher = elem.value;
+            }
+
+            var pattern = "";
+            elem = document.getElementById("SearchPattern");
+            if (elem) {
+                pattern = elem.value;
+            }
+
+            for (var i = 0; i < data.length; i++) {
+                var r = table.insertRow(-1);
+                if (cypher) {
+                    r.setAttribute("onclick", "doFlipMapping(this,'" + escapeJSLiterial(data[i].value) + "','" + escapeJSLiterial(cypher) + "','" + escapeJSLiterial(pattern) + "');");
+                }
+
+                var c = r.insertCell(-1);
+                c.innerHTML = data[i].value;
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "right";
+                c.innerHTML = data[i].frequency;
+            }
+
+            if (startTime) {
+                setDuration(new Date().getTime() - startTime);
+                beep();
+            }
+        }
+
+        function renderFatFingerMapping() {
+            var table = document.getElementById("FatFingerMappingTable");
+            table.innerHTML = "<tr><th>Key</th><th>Possibles</th></tr>";
+
+            var domainText = getDomain();
+            var excludeText = getExcludeText();
+            var domainFilter = getDomainFilter();
+
+            // Verify that the mapping table has all the domain characters and add them if they don't already exist.
+            //
+            for (var i = 0; i < domainText.length; i++) {
+                if (typeof (gFatFingerMapping[domainText[i]]) === "undefined") {
+                    gFatFingerMapping[domainText[i]] = "";
+                }
+            }
+
+            for (var key in gFatFingerMapping) {
+                if (!excludeText || (excludeText.indexOf(key) < 0)) {
+                    var rawValues = gFatFingerMapping[key];
+
+                    if (!domainFilter || domainText.indexOf(key) != -1) {
+                        var filteredValues = "";
+                        for (var j = 0; j < rawValues.length; j++) {
+                            if (!excludeText || (excludeText.indexOf(rawValues[j]) < 0)) {
+                                filteredValues += rawValues[j];
+                            }
+                        }
+
+                        var r = table.insertRow(-1);
+
+                        var c = r.insertCell(-1);
+                        c.innerHTML = key;
+
+                        c = r.insertCell(-1);
+                        c.innerHTML = '<input type="edit" size="10" onkeyup="doFatFingerMapChange();" style="" value="' + escapeHtmlAttribute(filteredValues) + '"/>'
+                    }
+                }
+            }
+
+            var countElem = document.getElementById("FatFingerMapCount");
+            if (countElem) {
+                countElem.value = "" + (table.rows.length - 1);
+            }
+
+        }
+
+        function doFatFingerMapChange() {
+            var table = document.getElementById("FatFingerMappingTable");
+
+            if (table) {
+                var excludeText = getExcludeText();
+
+                for (var i = 1, row; row = table.rows[i]; i++) {
+                    var key = row.cells[0].innerText;
+                    var values = row.cells[1].firstChild.value;
+                    if (gFatFingerMapping[key] != values) {
+                        var result = "";
+                        for (var j = 0; j < values.length; j++) {
+                            if (excludeText.indexOf(values[j]) == -1) {
+                                result += values[j];
+                            }
+                        }
+                        if (row.cells[1].firstChild.value != result) {
+                            row.cells[1].firstChild.value = result;
+                        }
+                        gFatFingerMapping[key] = result;
+                    }
+                }
+            }
+        }
+
+
+        function renderDecryptedText(map) {
+            var decryptedTextArea = document.getElementById("Decrypted");
+
+            decryptedTextArea.innerHTML = decryptText(getOriginalText(), map);
+        }
+
+
+        function doSearchKeyDown(event) {
+            if (event.keyCode == 13) {
+                doSearch();
+                return false;
+            }
+
+            return true;
+        }
+
+        function doSearch() {
+            gSearchMapTry = "";
+
+            var cypher = "";
+            var searchCypher = document.getElementById("SearchCypher");
+            if (searchCypher) {
+                cypher = searchCypher.value;
+            }
+
+            var pattern = "";
+            var searchPattern = document.getElementById("SearchPattern");
+            if (searchPattern) {
+                pattern = searchPattern.value;
+            }
+
+            PHTWords.GetWordMatches(pattern, null, PHTWords.GetCryptoIdx(cypher), null, null, getDictionaries(), getMinFrequency(), getMaxResults(), 0, 0, renderSearchResults);
+        }
+
+        function doWordClick(encryptedText) {
+            renderSearchResults([]);
+
+            var pattern = "";
+            var word = PHTWords.Trim(encryptedText, getExcludeText());
+
+            switch (getCryptoType()) {
+                case 1: { // Substitution Search
+                    var wildCard = "_";
+
+                    var mappedCharacter = getExcludeText().trim();
+                    for (var i = 0; i < gMaping.length; i++) {
+                        if (gMaping[i].locked) {
+                            mappedCharacter = mappedCharacter + gMaping[i].key;
+                        }
+                    }
+
+                    if (mappedCharacter) {
+                        wildCard = "[^" + PHTWords.EscapeString(mappedCharacter) + "]";
+                    }
+
+                    for (var i = 0; i < word.length; i++) {
+                        var found = false;
+                        for (var j = 0; j < gMaping.length; j++) {
+                            if (word[i] == gMaping[j].cypher) {
+                                if (gMaping[j].locked) {
+                                    pattern = pattern + PHTWords.EscapeString(gMaping[j].key);
+                                } else {
+                                    pattern = pattern + wildCard;
+                                }
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            pattern = pattern + PHTWords.EscapeString(word[i]);
+                        }
+                    }
+
+                    break;
+                }
+
+                case 2: { // Fat Finger Search
+
+                    word = word.toUpperCase();
+
+                    var excludeText = getExcludeText();
+
+                    for (var i = 0; i < word.length; i++) {
+                        if (excludeText && (excludeText.indexOf(word[i]) >= 0)) {
+                            pattern += word[i];
+                        }
+                        else {
+                            var values = gFatFingerMapping[word[i]];
+                            if (!values) {
+                                values = "";
+                            }
+
+                            pattern += "[";
+                            for (var j = 0; j < values.length; j++) {
+                                if (!excludeText || (excludeText.indexOf(values[j]) < 0)) {
+                                    pattern += PHTWords.EscapeString(values[j]);
+                                }
+                            }
+                            pattern += "]";
+                        }
+                    }
+
+                    word = "";
+
+                    break;
+                }
+
+                default: {
+                    break;
+                }
+            }
+
+
+            var searchCypher = document.getElementById("SearchCypher");
+            if (searchCypher) {
+                searchCypher.value = word;
+            }
+
+            var searchPattern = document.getElementById("SearchPattern");
+            if (searchPattern) {
+                searchPattern.value = pattern;
+            }
+
+            doSearch();
+        }
+
+
+
+
+
+
+
+        function getDictionaries() {
+            var dictionaries = "";
+
+            var elem = document.getElementById("WordList");
+            if (elem && elem.checked) {
+                dictionaries += "0";
+            }
+
+            elem = document.getElementById("ModernEnglish");
+            if (elem && elem.checked) {
+                dictionaries += "1";
+            }
+
+            elem = document.getElementById("MiddleEnglish");
+            if (elem && elem.checked) {
+                dictionaries += "2";
+            }
+
+            return dictionaries
+        }
+
+        function getMinFrequency() {
+            var result = 0;
+
+            var elem = document.getElementById("MinFrequency");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function getMaxResults() {
+            var result = 25;
+
+            var elem = document.getElementById("MaxResults");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 25;
+            }
+
+            return result;
+        }
+
+        function setDuration(duration) {
+            var millis = (duration % 1000);
+            var seconds = Math.floor((duration / 1000)) % 60;
+            var minutes = Math.floor((duration / 1000) / 60);
+
+            var text = ""
+            if (minutes < 10) text += "0";
+            text += minutes;
+            text += ":";
+            if (seconds < 10) text += "0";
+            text += seconds;
+            text += ":";
+            if (millis < 10) {
+                text += "00";
+            } else if (millis < 100) {
+                text += "0";
+            }
+            text += millis;
+
+            var elem = document.getElementById("Duration");
+            if (elem) {
+                elem.value = text;
+            }
+        }
+
+        function doGetWordList() {
+            PHTWords.Clear();
+            PHTWords.AddText(getInputValue("WordListText"), getIsChecked("LinesAsWords"), getIsChecked("UseFrequency"));
+        }
+
+
+    </script>
+</head>
+<body onload="doEncryptionChanged();">
+
+    <table style="width:100%;">
+        <tr>
+            <td id="FatFingerMapping" style="vertical-align:top;white-space:nowrap;">
+                <span>Count:</span>
+                <input type="text" size="5" disabled="disabled" id="FatFingerMapCount" />
+                <label><input type="checkbox" id="DomainFilter" checked="checked" value="1" onchange="renderFatFingerMapping();" />Domain Filter</label>
+                <br />
+                <hr />
+                <table id="FatFingerMappingTable">
+                </table>
+            </td>
+            <td style="vertical-align:top;border-right: 3px solid black;border-left: 3px solid black;padding-left:5px; padding-right:10px;">
+                
+                <table style="width:100%">
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            Crypto&nbsp;Type:
+                            <label><input type="radio" name="CryptoType" id="Substitution" checked="checked" value="1" onclick="setCryptoType(1);" />Substitution</label>
+                            <label><input type="radio" name="CryptoType" id="FatFinger" value="2" onclick="setCryptoType(2);" />Fat&nbsp;Finger</label>
+                            <label><input type="radio" name="CryptoType" id="Vigenere" value="3" onclick="setCryptoType(3);" />Vigenère</label>
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <span>Exclude:</span>
+                            <input type="text" id="Exclude" onkeyup="doEncryptionChanged();" value="+-=\/"/>
+                            <label><input type="checkbox" id="Numbers" checked="checked" value="Numbers" onchange="doEncryptionChanged();" />Numbers</label>
+                            <label><input type="checkbox" id="Punctuation" checked="checked" value="Punctuation" onchange="doEncryptionChanged();" />Punctuation</label>
+                            <label><input type="checkbox" id="Whitespace" checked="checked" value="Whitespace" onchange="doEncryptionChanged();" />Whitespace</label>
+                            <br />
+                            <hr />
+                        </td>
+                    </tr>
+                </table>
+
+                <span>Decrypted:</span>
+                <pre id="Decrypted" style="width:100%;height:250px;overflow-y:scroll;font-family:Courier New, Courier, monospace;font-size:12px;border: 1px solid black;padding:2px;"></pre>
+                <span>Encrypted:</span>
+                <label><input type="checkbox" id="IgnoreCase" checked="checked" value="1" onchange="doEncryptionChanged();" />Ignore Case</label>
+                <textarea id="Encrypted" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doEncryptionChanged();"></textarea>
+
+            </td>
+            <td style="vertical-align:top;">
+                <span>Dictionary:</span>
+                <label><input type="checkbox" id="ModernEnglish" checked="checked" value="1" />Modern&nbsp;English</label>
+                <label><input type="checkbox" id="MiddleEnglish" value="2" />Middle&nbsp;English</label>
+                <label><input type="checkbox" id="WordList" checked="checked" value="0" />Word&nbsp;List</label>
+                <hr />
+                <table style="width:100%;">
+                    <tr>
+                        <td>Cypher:</td>
+                        <td><input type="text" id="SearchCypher" size="50" onkeydown="doSearchKeyDown(event);" /></td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>Pattern:</td>
+                        <td><input type="text" id="SearchPattern" size="50" onkeydown="doSearchKeyDown(event);" /></td>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <label>Min Frequency: <input type="text" id="MinFrequency" size="10" value="0" onkeydown="doSearchKeyDown(event);" title="Modern English (BNC):
+  0 = 700,000 words
+  1 = 80,000 words
+  15 = 60,000 words
+  50 = 40,000 words
+  200 = 20,000 words
+  500 = 10,000 words
+  1500 = 5,000 words
+  4000 = 2,500 words
+  10000 = 1,000 words
+" /></label>
+                            <label title="Attempt to stem word if no matches found."><input type="checkbox" disabled="disabled" id="EnableStemming" value="1" />Enable Stemming</label>
+                        </td>
+                        <td style="text-align:right;"><button onclick="doSearch();">Search</button></td>
+                    </tr>
+                </table>
+                <hr />
+                <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
+                <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
+                <label>Max Results: <input type="text" maxlength="4" id="MaxResults" size="5" value="999" /></label>
+                <br />
+                <hr />
+                <table id="Table1" style="width:100%;">
+                    <tr>
+                        <th style="text-align:left;"><a href="javascript:void(0)" onclick="doSortByWords();">Words</a></th>
+                        <th style="text-align:right;"><a href="javascript:void(0)" onclick="doSortByFrequency();">Frequency</a></th>
+                    </tr>
+                </table>
+                <div style="height:525px;overflow-y:auto;border:1px solid black;">
+                    <table id="ResultsTable" style="width:100%;">
+                    </table>
+                </div>
+               <br />
+                <span style="font-weight:bold;">Word List:</span>
+                <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" value="1" />Lines Are Words</label>
+                <label><input type="checkbox" id="UseFrequency" onclick="doGetWordList();" value="1" />Use BNC Frequency</label>
+                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onchange="doGetWordList();"></textarea>
+             </td>
+        </tr>
+    </table>
+
+</body>
+</html>

@@ -13,9 +13,20 @@ function beep() {
 }
 
 
+function escapeHtml(str) {
+    return str.replace(/[&<>"]/g, replaceHtmlEscapedChars);
+}
+
+function unEscapeHtml(str) {
+    return str.replace(/(&amp;|&lt;|&gt;|&quot;)/g, replaceHtmlUnEscapedChars);
+}
 
 function escapeHtmlAttribute(str) {
     return str.replace(/[&<>"]/g, replaceHtmlEscapedChars);
+}
+
+function unEscapeHtmlAttribute(str) {
+    return str.replace(/(&amp;|&lt;|&gt;|&quot;)/g, replaceHtmlUnEscapedChars);
 }
 
 var htmlEscapeReplacements = {
@@ -29,11 +40,26 @@ function replaceHtmlEscapedChars(char) {
     return htmlEscapeReplacements[char] || char;
 }
 
+var htmlUnEscapeReplacements = {
+    '&amp;' : '&',
+    '&lt;'  : '<',
+    '&gt;'  : '>',
+    '&quot;': '"'
+};
+
+function replaceHtmlUnEscapedChars(char) {
+    return htmlUnEscapeReplacements[char] || char;
+}
+
 
 
 
 function escapeJSLiterial(str) {
     return str.replace(/['"\\]/g, replaceJSLiteralEscapeChars);
+}
+
+function unEscapeJSLiterial(str) {
+    return str.replace(/(\\'|\\"|\\\\)/g, replaceJSLiteralUnEscapeChars);
 }
 
 var jsLiteralEscapeReplacements = {
@@ -46,32 +72,203 @@ function replaceJSLiteralEscapeChars(char) {
     return jsLiteralEscapeReplacements[char] || char;
 }
 
+var jsLiteralUnEscapeReplacements = {
+    '\\\'' : '\'',
+    '\\\"' : '\"',
+    '\\\\' : '\\'
+};
 
-function setInputValue(id, value) {
+function replaceJSLiteralUnEscapeChars(char) {
+    return jsLiteralUnEscapeReplacements[char] || char;
+}
+
+/**
+ * Get the checked state of the input element specified by it's id.
+ *
+ * @param {string} id The id of the input element who's checked status will be returned
+ * @param {boolean} [defaultValue=false] The default state to return if the element is not found.
+ *
+ * @return {boolean} The checked state of the element specified by the id, if the element does not exist the defaultValue is returned.
+ */
+function getIsChecked(id, defaultValue) {
     var elem = document.getElementById(id);
+
+    if (elem) {
+        return elem.checked;
+    }
+
+    if (typeof defaultValue !== 'undefined') {
+        return defaultValue;
+    }
+
+    return false;
+}
+
+/**
+ * Set the checked state of the input element specified by it's id.
+ *
+ * @param {string} id The id of the input element who's checked status will be returned
+ * @param {boolean} value The value to set the element's checked state too.
+ */
+function setIsChecked(id, value) {
+    var elem = document.getElementById(id);
+
+    if (elem) {
+        elem.checked = value;
+    }
+}
+
+/**
+ * Set the value of the input element with the specified id.
+ *
+ * @param {string} id The id of the input element who's value will be set.
+ * @param {string} value The value that will be assigned to the input element if it exists.
+ */
+function setInputValue(id, value) {
+    /** @type {HTMLElement} */
+    var elem = document.getElementById(id);
+
     if (elem) {
         elem.value = value;
     }
 }
 
-function getInputValue(id) {
+/**
+ * Get the value of the input element with the specified id.
+ *
+ * @param {string} id The id of the HTMLElement whos value will be returned.
+ * @param {string} [defaultValue=""] The value to return if the element does not exist.
+ *
+ * @return {string} The value of the specified input field or the defaultValue if the element does not exist.
+ */
+function getInputValue(id, defaultValue) {
+    /** @type {HTMLElement} */
     var elem = document.getElementById(id);
+
     if (elem) {
         return elem.value;
+    }
+
+    if (defaultValue) {
+        return defaultValue;
     }
 
     return "";
 }
 
+/**
+ * Get the numeric value contained in an input field, or return the default value if what is contained in the input
+ * field is not a number.
+ *
+ * @param {string} id The id of the text input element that the number is contained in.
+ * @param {number} [defaultValue=0] The default value to return if the element did not exist or did not contain a number.
+ *
+ * @return {number} The number representation of the contents of the input field specified by the id provided or the defaultValue
+ *                  if the element does not exist or does not contain a number.
+ */
 function getNumericValue(id, defaultValue) {
-    var result = defaultValue;
-
+    /** @type {HTMLElement} */
     var elem = document.getElementById(id);
+
     if (elem) {
-        result = parseInt(elem.value.trim());
-        if (isNaN(result)) result = defaultValue;
+        /** @type {number} */
+        var result = parseInt(elem.value.trim());
+        if (!isNaN(result)) {
+            return result;
+        }
+    }
+    
+    if (defaultValue) {
+        return defaultValue;
     }
 
-    return result;
+    return 0;
 }
 
+/**
+ * Takes a duration in milliseconds and returns a string in the form of {HH:}MM:SS:mmm
+ *
+ * @param {number} duration The duration in milliseconds to conver to a display string.
+ *
+ * @return {string} A string representing the milliseconds value in the format "{HH:}MM:SS:mmm".
+ */
+function getDurationText(duration) {
+    /** @type {string} */
+    var text = ""
+
+    if (duration > 0) {
+        var millis = (duration % 1000);
+        duration -= millis;
+
+        var seconds = (duration / 1000) % 60;
+        duration -= (seconds * 1000);
+
+        var minutes = (duration / (1000 * 60)) % 60;
+        duration -= (minutes * 1000 * 60);
+
+        var hours = duration / (1000 * 60 * 60);
+
+        if (hours > 0) {
+            text += hours;
+            text += ":";
+        }
+
+        if (minutes < 10) text += "0";
+        text += minutes;
+        text += ":";
+
+        if (seconds < 10) text += "0";
+        text += seconds;
+        text += ":";
+
+        if (millis < 10) {
+            text += "00";
+        } else if (millis < 100) {
+            text += "0";
+        }
+        text += millis;
+    }
+
+    return text;
+}
+
+
+function getDictionaries() {
+    var dictionaries = "";
+
+    var dictionaryIds = ["WordList", "ModernEnglish", "MiddleEnglish"];
+    var dictionaryValues = ["0", "1", "2"];
+
+    for (var i = 0; i < dictionaryIds.length; i++) {
+        if (getIsChecked(dictionaryIds[i])) {
+            dictionaries += dictionaryValues[i];
+        }
+    }
+
+    return dictionaries
+}
+
+function getMinFrequency() {
+    return getNumericValue("MinFrequency", 0);
+}
+
+function getMaxResults() {
+    return getNumericValue("MaxResults", 999);
+}
+
+function setResultsCount(uniqueCount, fullCount) {
+    if ((typeof fullCount !== 'undefined') && uniqueCount != fullCount) {
+        setInputValue("ResultsCount", "" + uniqueCount + " (" + fullCount + ")");
+    }
+
+    setInputValue("ResultsCount", uniqueCount);
+}
+
+function setDuration(duration) {
+    setInputValue("Duration", getDurationText(duration));
+}
+
+function doGetWordList() {
+    PHTWords.Clear();
+    PHTWords.AddText(getInputValue("WordListText"), getIsChecked("LinesAsWords"), getIsChecked("UseFrequency"));
+}

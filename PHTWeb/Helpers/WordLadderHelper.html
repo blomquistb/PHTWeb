@@ -955,60 +955,7 @@ Featue Todo:
         //----------  Word List Methods ---------------------------
         function doGetWordList() {
             PHTWords.Clear();
-
-            var LinesAsWords = false;
-            var UseFrequency = false;
-
-            var elem = document.getElementById("LinesAsWords");
-            if (elem) {
-                LinesAsWords = elem.checked;
-            }
-
-            elem = document.getElementById("UseFrequency");
-            if (elem) {
-                UseFrequency = elem.checked;
-            }
-
-            elem = document.getElementById("WordListText");
-            if (elem) {
-                var text = elem.value.trim();
-                var lines = text.split("\n");
-
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i].trim().replace(/[\s]+/g, ' ');
-
-                    var words = line.split(" ");
-                    for (var j = 0; j < words.length; j++) {
-                        if (UseFrequency) {
-                            var wi = PHTWords.GetWordMatches(words[j], null, null, null, null, "1");
-                            if (wi.length) {
-                                PHTWords.AddWord(words[j], wi[0].frequency);
-                            }
-                            else {
-                                PHTWords.AddWord(words[j], 0);
-                            }
-                        }
-                        else {
-                            PHTWords.AddWord(words[j], 7000000);
-                        }
-                    }
-
-                    if (LinesAsWords && (words.length > 1)) {
-                        if (UseFrequency) {
-                            var wi = PHTWords.GetWordMatches(line, null, null, null, null, "1");
-                            if (wi.length) {
-                                PHTWords.AddWord(line, wi[0].frequency);
-                            }
-                            else {
-                                PHTWords.AddWord(line, 0);
-                            }
-                        }
-                        else {
-                            PHTWords.AddWord(line, 7000100);
-                        }
-                    }
-                }
-            }
+            PHTWords.AddText(getInputValue("WordListText"), getIsChecked("LinesAsWords"), getIsChecked("UseFrequency"));
         }
         //-------------------------------------------------------------------
 
@@ -1078,7 +1025,7 @@ Featue Todo:
                             <span>Dictionary:</span>
                             <label><input type="checkbox" id="ModernEnglish" value="1" checked="checked" />Modern&nbsp;English</label>
                             <label><input type="checkbox" id="MiddleEnglish" value="2" />Middle&nbsp;English</label>
-                            <label><input type="checkbox" id="WordList" value="-1" />Word&nbsp;List</label>
+                            <label><input type="checkbox" id="WordList" value="0" checked="checked" />Word&nbsp;List</label>
                             <hr />
                         </td>
                     </tr>
@@ -1129,10 +1076,10 @@ Featue Todo:
                 </div>
 
                 <br />
-                <span>Word List:</span>
+                <span style="font-weight:bold;">Word List:</span>
                 <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" value="1" />Lines Are Words</label>
                 <label><input type="checkbox" id="UseFrequency" onclick="doGetWordList();" value="1" />Use BNC Frequency</label>
-                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doGetWordList();"></textarea>
+                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onchange="doGetWordList();"></textarea>
             </td>
         </tr>
     </table>

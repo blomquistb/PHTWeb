@@ -3,8 +3,6 @@
 <!--
 Featue Todo:
 
-    Add "Use BNC Frequency" to Word List.
-
     Add "Select All" and "Deselect All" Buttons
 
     Clear Selection and search results when new maze data pasted.
@@ -183,32 +181,7 @@ Featue Todo:
 
         function doGetWordList() {
             PHTWords.Clear();
-
-            var LinesAsWords = false;
-
-            var elem = document.getElementById("LinesAsWords");
-            if (elem && elem.checked) {
-                LinesAsWords = true;
-            }
-
-            elem = document.getElementById("WordListText");
-            if (elem) {
-                var text = elem.value.trim();
-                var lines = text.split("\n");
-
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i].trim().replace(/[\s]+/g, ' ');
-
-                    var words = line.split(" ");
-                    for (var j = 0; j < words.length; j++) {
-                        PHTWords.AddWord(words[j], 7000000);
-                    }
-
-                    if (LinesAsWords && (words.length > 1)) {
-                        PHTWords.AddWord(line, 7000100);
-                    }
-                }
-            }
+            PHTWords.AddText(getInputValue("WordListText"), getIsChecked("LinesAsWords"), getIsChecked("UseFrequency"));
         }
 
         function doClearSolutions(keepSelected) {
@@ -1696,9 +1669,10 @@ Featue Todo:
                 </div>
 
                 <br />
-                <span>Word List:</span>
-                <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" checked="checked" value="1" />Lines Are Words</label>
-                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doGetWordList();"></textarea>
+                <span style="font-weight:bold;">Word List:</span>
+                <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" value="1" />Lines Are Words</label>
+                <label><input type="checkbox" id="UseFrequency" onclick="doGetWordList();" value="1" />Use BNC Frequency</label>
+                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onchange="doGetWordList();"></textarea>
             </td>
         </tr>
     </table>

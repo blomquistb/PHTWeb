@@ -14,7 +14,7 @@ namespace PHTWords
         {
             get
             {
-                const string punctuation = ";:.,!?[]{}()\"'“”‘’";
+                const string punctuation = ";:.,!?[]{}()\"'“”‘’`";
                 return punctuation;
             }
         }
@@ -204,10 +204,16 @@ namespace PHTWords
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="pattern"></param>
-        /// <param name="exclusions"></param>
-        /// <param name="domain"></param>
+        /// <param name="wordPatterns"></param>
+        /// <param name="anagramPatterns"></param>
+        /// <param name="cryptogramPatterns"></param>
+        /// <param name="cryptoAnagramPatterns"></param>
+        /// <param name="phoneticPatterns"></param>
+        /// <param name="dictionaries"></param>
         /// <param name="maxResults"></param>
+        /// <param name="minFrequency"></param>
+        /// <param name="minWordLength"></param>
+        /// <param name="maxWordLength"></param>
         /// <returns></returns>
         public static List<WordInfo> GetWordMatches(string wordPatterns, string anagramPatterns, string cryptogramPatterns, string cryptoAnagramPatterns, string phoneticPatterns,
                                                     int[] dictionaries, int maxResults = 25, int minFrequency = 0, int minWordLength = 0, int maxWordLength = 0)
@@ -369,6 +375,181 @@ namespace PHTWords
             return results;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="wordPatterns"></param>
+        /// <param name="anagramPatterns"></param>
+        /// <param name="cryptogramPatterns"></param>
+        /// <param name="cryptoAnagramPatterns"></param>
+        /// <param name="phoneticPatterns"></param>
+        /// <param name="dictionaries"></param>
+        /// <param name="minFrequency"></param>
+        /// <param name="minWordLength"></param>
+        /// <param name="maxWordLength"></param>
+        /// <returns></returns>
+        public static int GetWordCounts(string wordPatterns, string anagramPatterns, string cryptogramPatterns, string cryptoAnagramPatterns, string phoneticPatterns,
+                                 int[] dictionaries, int minFrequency = 0, int minWordLength = 0, int maxWordLength = 0)
+        {
+            int result = 0;
+
+            if (dictionaries == null)
+            {
+                dictionaries = new int[0];
+            }
+
+            var conn = GetConnection();
+            try
+            {
+                bool isFirstExpression = true;
+                List<string> patternValues = new List<string>();
+                StringBuilder selectSql = new StringBuilder("SELECT COUNT(*) as value FROM (SELECT DISTINCT ").Append(" d.word_idx FROM Dictionary d");
+
+                if (!String.IsNullOrEmpty(wordPatterns))
+                {
+                    AppendPatterns(selectSql, isFirstExpression, "d.word_idx", wordPatterns, patternValues);
+                    isFirstExpression = false;
+                }
+
+                if (!String.IsNullOrEmpty(anagramPatterns))
+                {
+                    AppendPatterns(selectSql, isFirstExpression, "d.anagram_idx", anagramPatterns, patternValues);
+                    isFirstExpression = false;
+                }
+
+                if (!String.IsNullOrEmpty(cryptogramPatterns))
+                {
+                    AppendPatterns(selectSql, isFirstExpression, "d.crypto_idx", cryptogramPatterns, patternValues);
+                    isFirstExpression = false;
+                }
+
+                if (!String.IsNullOrEmpty(cryptoAnagramPatterns))
+                {
+                    AppendPatterns(selectSql, isFirstExpression, "d.crypto_anagram_idx", cryptoAnagramPatterns, patternValues);
+                    isFirstExpression = false;
+                }
+
+                if ((dictionaries != null) && (dictionaries.Length != 0))
+                {
+                    if (isFirstExpression)
+                    {
+                        selectSql.Append(" WHERE ");
+                        isFirstExpression = false;
+                    }
+                    else
+                    {
+                        selectSql.Append(" AND ");
+                    }
+
+                    selectSql.Append("d.domain IN (");
+                    for (int i = 0; i < dictionaries.Length; i++)
+                    {
+                        if (i != 0)
+                        {
+                            selectSql.Append(",");
+                        }
+                        selectSql.Append(dictionaries[i]);
+                    }
+                    selectSql.Append(")");
+                }
+
+
+                if (minFrequency > 0)
+                {
+                    if (isFirstExpression)
+                    {
+                        selectSql.Append(" WHERE ");
+                        isFirstExpression = false;
+                    }
+                    else
+                    {
+                        selectSql.Append(" AND ");
+                    }
+
+                    selectSql.Append("d.frequency >= @minFrequency");
+                }
+
+                if (minWordLength > 0)
+                {
+                    if (isFirstExpression)
+                    {
+                        selectSql.Append(" WHERE ");
+                        isFirstExpression = false;
+                    }
+                    else
+                    {
+                        selectSql.Append(" AND ");
+                    }
+
+                    selectSql.Append("d.length >= @minWordLength");
+                }
+
+                if (maxWordLength > 0)
+                {
+                    if (isFirstExpression)
+                    {
+                        selectSql.Append(" WHERE ");
+                        isFirstExpression = false;
+                    }
+                    else
+                    {
+                        selectSql.Append(" AND ");
+                    }
+
+                    selectSql.Append("d.length <= @maxWordLength");
+                }
+
+                selectSql.Append(") AS c");
+
+                SqlCommand selectCmd = new SqlCommand(selectSql.ToString(), conn);
+
+                for (int i = 0; i < patternValues.Count; i++)
+                {
+                    selectCmd.Parameters.Add("@patternValue" + i, SqlDbType.NVarChar);
+                    selectCmd.Parameters["@patternValue" + i].Value = patternValues[i].ToUpperInvariant();
+                }
+
+                if (minFrequency > 0)
+                {
+                    selectCmd.Parameters.Add("@minFrequency", SqlDbType.Int);
+                    selectCmd.Parameters["@minFrequency"].Value = minFrequency;
+                }
+
+                if (minWordLength > 0)
+                {
+                    selectCmd.Parameters.Add("@minWordLength", SqlDbType.Int);
+                    selectCmd.Parameters["@minWordLength"].Value = minWordLength;
+                }
+
+                if (maxWordLength > 0)
+                {
+                    selectCmd.Parameters.Add("@maxWordLength", SqlDbType.Int);
+                    selectCmd.Parameters["@maxWordLength"].Value = maxWordLength;
+                }
+
+                SqlDataReader reader = selectCmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    result = (int)reader["value"];
+                }
+            }
+            finally
+            {
+                ReleaseConnection(conn);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="selectSql"></param>
+        /// <param name="isFirstExpression"></param>
+        /// <param name="field"></param>
+        /// <param name="patterns"></param>
+        /// <param name="patternValues"></param>
+        /// <returns></returns>
         private static StringBuilder AppendPatterns(StringBuilder selectSql, bool isFirstExpression, string field, string patterns, List<string> patternValues)
         {
             if (isFirstExpression)

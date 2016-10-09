@@ -1,7 +1,5 @@
 ﻿
-
-
-NIPD2013-AllBW-Carroll’s Menagerie
+PD2013-AllBW-Carroll’s Menagerie
 --------------------------------------
 AACCCEJMNN
 ABCCEGIOPQ
@@ -14,5 +12,43 @@ EFFGGHLMPQQ
 GMPQR
 
 EEFGHPPQQ DGGL “DI FGH EIJP”?
-
 --------------------------------------
+JUBJUBBIRD
+JABBERWOCK
+WHITERABBIT
+WHITEKING
+TWEEDLEDEE
+TWEEDLEDUM
+BANDERSNATCH
+CHESHIRECAT
+ALICE
+
+CHARACTER SEEN "ON THE ROAD"?
+--------------------------------------
+
+
+----------------------------
+PD2011-Overnight gear
+----------------------------
+AEST
+BBCEFHINPSS
+CEHHLLRR
+EFFGHLT
+EGH
+EGHI
+FGHLMOS
+HLMPPSS
+KNPRS
+MMPS
+----------------------------
+ROPE
+SLEEPINGBAG
+BACKPACK
+COMPASS
+MAP
+LAMP
+MATCHES
+CANTEEN
+KNIFE
+TENT
+----------------------------

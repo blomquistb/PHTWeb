@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="AnagramSolver.aspx" />
+    <Content Include="api\GetWordCounts.aspx" />
     <Content Include="BaseCalculator.aspx" />
     <Content Include="api\GetWordMatches.aspx" />
     <Content Include="Decoders\ASL.jpg" />
@@ -81,9 +82,9 @@
     <Content Include="Decoders\Semaphore.js" />
     <Content Include="es6-shim.js" />
     <Content Include="GridMarker.png" />
-    <Content Include="Helpers\CryptoAnagramHelper.html" />
     <Content Include="Helpers\CryptogramHelper.html" />
     <Content Include="Helpers\CryptoMathHelper.html" />
+    <Content Include="Helpers\FatFingerHelper.html" />
     <Content Include="Helpers\NgramHelper.html" />
     <Content Include="Helpers\PolyominoHelper.html" />
     <Content Include="Helpers\WordFillHelper.html" />
@@ -95,6 +96,7 @@
     <Content Include="SampleData\CryptoAnagramData.txt" />
     <Content Include="SampleData\CryptogramData.txt" />
     <Content Include="SampleData\CryptoMathData.txt" />
+    <Content Include="SampleData\FatFingerData.txt" />
     <Content Include="SampleData\NgramData.txt" />
     <Content Include="SampleData\PolyominoData.txt" />
     <Content Include="SampleData\WordFillData.txt" />
@@ -104,6 +106,7 @@
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="WordQuery.html" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnagramSolver.aspx.cs">
@@ -112,6 +115,13 @@
     </Compile>
     <Compile Include="AnagramSolver.aspx.designer.cs">
       <DependentUpon>AnagramSolver.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="api\GetWordCounts.aspx.cs">
+      <DependentUpon>GetWordCounts.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\GetWordCounts.aspx.designer.cs">
+      <DependentUpon>GetWordCounts.aspx</DependentUpon>
     </Compile>
     <Compile Include="BaseCalculator.aspx.cs">
       <DependentUpon>BaseCalculator.aspx</DependentUpon>
@@ -165,7 +175,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>3040</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost:57068/</IISUrl>
+          <IISUrl>http://localhost:57069/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

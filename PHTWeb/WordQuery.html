@@ -1,0 +1,343 @@
+﻿<!DOCTYPE html>
+
+<!--
+Featue Todo:
+
+    Add phonetic word searching and show phonetic sounds in output.
+
+-->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title></title>
+    <script src="/es6-shim.js"></script>
+    <script src="/jquery-2.1.4.js"></script>
+    <script src="/Utils.js"></script>
+    <script src="/PHTWords.js"></script>
+
+
+
+    <script type="text/javascript">
+
+
+        var gResults = [];
+
+        function doSearch() {
+            var countElem = document.getElementById("ResultsCount");
+            if (countElem) {
+                countElem.value = "";
+            }
+
+            setDuration(0);
+
+            renderResults([]);      // Clear the results.
+
+            window.setTimeout("doSearchWork();", 1);
+        }
+
+        function doSearchWork() {
+            var startTime = new Date().getTime();
+
+            gResults = PHTWords.GetWordMatches(getWordPatterns(), getAnagramPatterns(), getCryptogramPatterns(), getCryptoAnagramPatterns(), null, getDictionaries(), getMinFrequency(), getMaxResults(), getMinLength(), getMaxLength());
+
+            doSortFrequency();  // calls render solutions after sorting.
+
+            setDuration(new Date().getTime() - startTime);
+
+            beep();
+        }
+
+        function doSortFrequency() {
+            gResults.sort(function (a, b) { return b.frequency - a.frequency; });
+            renderResults(gResults);
+        }
+
+        function doSortAlphabetical() {
+            gResults.sort(function (a, b) { return (a.value > b.value) ? 1 : ((a.value < b.value) ? -1 : 0) });
+            renderResults(gResults);
+        }
+
+        function doSortLength() {
+            gResults.sort(function (a, b) { return b.value.length - a.value.length });
+            renderResults(gResults);
+        }
+
+        function doSelect(event) {
+            var row = event.currentTarget;
+            var table = row.parentElement;
+
+            if (row.style.backgroundColor == "yellow") {
+                row.style.backgroundColor = "";
+                if (gPrevLadder) {
+                    setWordLadder(gPrevLadder, true);
+                    gPrevLadder = null;
+                }
+            }
+            else {
+                for (var i = 0; i < table.rows.length; i++) {
+                    table.rows[i].style.backgroundColor = "";
+                }
+                if (!gPrevLadder) {
+                    gPrevLadder = getWordLadder();
+                }
+                row.style.backgroundColor = "yellow";
+                setWordLadder(gSolutions[row.rowIndex].ladder, false);
+            }
+
+            doUpdateText();
+        }
+
+        function doHandleCR(event) {
+            if (event.keyCode == 13) {
+                doSearch();
+                return false;
+            }
+
+            return true;
+        }
+
+        function doShowAdvancedSearch() {
+            var displayValue = "none";
+            var show = getShowAdvancedSearch();
+
+            if (show) {
+                var elem = document.getElementById("WordPatternsRow");
+                displayValue = elem.style.display;
+            }
+
+            var row_ids = ["AnagramPatterns", "CryptogramPatterns", "CryptoAnagramPatterns"];
+            row_ids.forEach(function (value, index) {
+                var elem = document.getElementById(value+"Row");
+                if (elem) {
+                    elem.style.display = displayValue
+                    if (displayValue == "none") {
+                        elem = document.getElementById(value);
+                        if (elem) {
+                            elem.value = "";
+                        }
+                    }
+                }
+            }
+            );
+        }
+
+        function doGetWordList() {
+            PHTWords.Clear();
+            PHTWords.AddText(getInputValue("WordListText"), getIsChecked("LinesAsWords"), getIsChecked("UseFrequency"));
+        }
+
+        function getDictionaries() {
+            var dictionaries = "";
+
+            var elem = document.getElementById("WordList");
+            if (elem && elem.checked) {
+                dictionaries += "0";
+            }
+
+            elem = document.getElementById("ModernEnglish");
+            if (elem && elem.checked) {
+                dictionaries += "1";
+            }
+
+            elem = document.getElementById("MiddleEnglish");
+            if (elem && elem.checked) {
+                dictionaries += "2";
+            }
+
+            return dictionaries
+        }
+
+        function getMinFrequency() {
+            return getNumericValue("MinFrequency", 0);
+        }
+
+        function getMaxResults() {
+            return getNumericValue("MaxResults", 999);
+        }
+
+        function getMinLength() {
+            return getNumericValue("MinLength", 0);
+        }
+
+        function getMaxLength() {
+            return getNumericValue("MaxLength", 0);
+        }
+
+        function getWordPatterns() {
+            return getInputValue("WordPatterns");
+        }
+
+        function getAnagramPatterns() {
+            return PHTWords.GetAnagramIdx(getInputValue("AnagramPatterns"));
+        }
+
+        function getCryptogramPatterns() {
+            return PHTWords.GetCryptoIdx(getInputValue("CryptogramPatterns"));
+        }
+        
+        function getCryptoAnagramPatterns() {
+            return PHTWords.GetCryptoAnagramIdx(getInputValue("CryptoAnagramPatterns"));
+        }
+
+        function getShowAdvancedSearch() {
+            var elem = document.getElementById("AdvancedSearch");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+        function setDuration(duration) {
+            var elem = document.getElementById("Duration");
+            if (elem) {
+                elem.value = getDurationText(duration);
+            }
+        }
+
+        //------------------------------------------------
+
+        function renderResults(results) {
+
+            var duplicates = 0;
+
+            var table = document.getElementById("ResultsTable");
+            if (table) {
+                table.innerHTML = "";
+                for (var i = 0; i < results.length; i++) {
+                    var r = table.insertRow(-1);
+                    //r.setAttribute("onclick", "doSelect(event);");
+
+                    var c = r.insertCell(-1);
+                    c.innerHTML = "<b>" + results[i].value + "</b>"
+                    c = r.insertCell(-1);
+                    c.style.textAlign = "right";
+                    c.innerHTML = "(" + results[i].frequency + ")";
+                }
+            }
+
+            setInputValue("ResultsCount", results.length);
+        }
+
+
+        //------------------------------------------------
+        //-------------------------------------------------------------------
+
+
+    </script>
+</head>
+<body onload="document.getElementById('WordPatterns').select();">
+    <table style="width:100%;">
+        <tr>
+            <td valign="top" style="width:50%;border-right: 3px solid black;border-left: 3px solid black;padding-left:5px; padding-right:10px;">
+               <table style="width: 100%">
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="2">
+                            <span>Dictionary:</span>
+                            <label><input type="checkbox" id="WordList" checked="checked" value="0" />Word&nbsp;List</label>
+                            <label><input type="checkbox" id="ModernEnglish" checked="checked" value="1" />Modern&nbsp;English</label>
+                            <label><input type="checkbox" id="MiddleEnglish" value="2" />Middle&nbsp;English</label>
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="2">
+                            <label>Min&nbsp;Frequency: <input type="text" id="MinFrequency" size="4" value="" title="Modern English (BNC):
+  0 = 700,000 words
+  1 = 80,000 words
+  15 = 60,000 words
+  50 = 40,000 words
+  200 = 20,000 words
+  500 = 10,000 words
+  1500 = 5,000 words
+  4000 = 2,500 words
+  10000 = 1,000 words
+" /></label>
+                            <label>Min&nbsp;Length: <input type="text" id="MinLength" size="1" value="" title="" /></label>
+                            <label>Max&nbsp;Length: <input type="text" id="MaxLength" size="1" value="" title="" /></label>
+                            <br />
+                            <hr />
+                            <table style="width: 100%">
+                                <tr id="WordPatternsRow">
+                                    <td style="white-space: nowrap;text-align:right;">
+                                        Word Patterns:
+                                    </td>
+                                    <td>
+                                        <input type="text" id="WordPatterns" size="30" value="" title="" onkeydown="return doHandleCR(event);" />
+                                    </td>
+                                    <td style="text-align:right;width:100%;">
+                                        <label><input type="checkbox" id="AdvancedSearch" value="1" onclick="doShowAdvancedSearch();" />Advanced</label>
+                                        <button onclick="doSearch();">Search</button>
+                                    </td>
+                                </tr>
+                                <tr id="AnagramPatternsRow" style="display:none;">
+                                    <td style="white-space: nowrap;text-align:right;">
+                                        Anagram Patterns:
+                                    </td>
+                                    <td>
+                                        <input type="text" id="AnagramPatterns" size="30 value="" title="" onkeydown="return doHandleCR(event);" />
+                                    </td>
+                                </tr>
+                                <tr id="CryptogramPatternsRow" style="display:none;">
+                                    <td style="white-space: nowrap;text-align:right;">
+                                        Cryptogram Patterns:
+                                    </td>
+                                    <td>
+                                        <input type="text" id="CryptogramPatterns" size="30" value="" title="" onkeydown="return doHandleCR(event);" />
+                                    </td>
+                                </tr>
+                                <tr id="CryptoAnagramPatternsRow" style="display:none;">
+                                    <td style="white-space: nowrap;text-align:right;">
+                                        Crytpo / Anagram Patterns:
+                                    </td>
+                                    <td>
+                                        <input type="text" id="CryptoAnagramPatterns" size="30" value="" title="" onkeydown="return doHandleCR(event);" />
+                                    </td>
+                                </tr>
+                            </table>
+                            <hr />
+                        </td>
+                    </tr>
+                </table>
+
+                <span>Word List:</span>
+                <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" value="1" />Lines Are Words</label>
+                <label><input type="checkbox" id="UseFrequency" onclick="doGetWordList();" value="1" />Use BNC Frequency</label>
+                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onchange="doGetWordList();"></textarea>
+            </td>
+            <td valign="top" style="width:50%;">
+                <table style="width: 100%">
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="1">
+                            <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
+                            <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
+                            <label>Max&nbsp;Results: <input type="text" id="MaxResults" size="1" value="999" title="" /></label>
+                        </td>
+                        <td style="white-space: nowrap;text-align:right;">
+                        </td>
+                    </tr>
+                </table>
+
+                <hr />
+
+                <div style="border:1px solid black;">
+                    <table id="ResultsHeader" style="width:100%;">
+                        <tr>
+                            <th style="text-align:left;">
+                                <a href="javascript:void(0)" onclick="doSortAlphabetical();">Alphabetical</a>
+                                <a href="javascript:void(0)" onclick="doSortLength();">Length</a>
+                            </th>
+                            <th style="text-align:right;"><a href="javascript:void(0)" onclick="doSortFrequency();">Frequency</a></th>
+                        </tr>
+                    </table>
+                </div>
+                    <table id="ResultsTable" style="width:100%;"></table>
+                <!-- 
+                <div style="height:460px;overflow-y:auto;border:1px solid black;">
+                -->
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

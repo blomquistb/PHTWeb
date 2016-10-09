@@ -1,20 +1,21 @@
 ﻿<!--
 Featue Todo:
 
-    Seperate out Fat Finger and Vigenere into thier own helper files.
-
-    Add "Use BNC Frequency" to Word List.
-
     Add map change history and ability to undo operations.
+    Add undo/redo buffer to all actions that effect mapping table: setting / locking entry, clicking on word in results, clicking solve button.
 
-    Remove "Enable Stemming" check box
+    The GetWordCounts() method does not combine the counts from local with database properly, it needs to add exclude patterns for all words that match in local
+    to the database query.
 
+    Display a list of all duplicate encrypted words with counts and allow them to be highlighted in decrypted text area.
+
+    Add code for trying to remove 'S' from end if search comes up empty with 'S' similar to how the "'S" code works.
 -->
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>CryptogramHelper</title>
+    <title>Cryptogram Helper</title>
     <script src="/es6-shim.js"></script>
     <script src="/jquery-2.1.4.js"></script>
     <script src="/Utils.js"></script>    
@@ -22,67 +23,17 @@ Featue Todo:
 
     <script type="text/javascript">
 
-
         ////English letter frequency sequence as  "ETAONRISHDLFCMUGYPWBVKJXQZ"
         ////English letter first letter frequency "TASHWIOBMFCLDPNEGRYUVJKQZX"
         ////common doubled letters "LL EE SS OO TT FF RR NN PP CC"
         ////common letter pairs as "TH HE AN RE ER IN ON AT ND ST ES EN OF TE ED OR TI HI AS TO"
-        var gFatFingerMapping = {
-            'A': "QWSZ",
-            'B': "GHNV ",
-            'C': "XDFV ",
-            'D': "ERFSXC",
-            'E': "34WRSD",
-            'F': "RTGDCV",
-            'G': "TYFHVB",
-            'H': "YUGJBN",
-            'I': "89UOJK",
-            'J': "UIHKNM",
-            'K': "IOJLM,",
-            'L': "OPK;",
-            'M': "JKN, ",
-            'N': "HJBM ",
-            'O': "90IPKL",
-            'P': "0-OL",
-            'Q': "12WA",
-            'R': "45ETDF",
-            'S': "WEADZX",
-            'T': "56RYFG",
-            'U': "78YIHJ",
-            'V': "FGCB ",
-            'W': "23QEAS",
-            'X': "SDZC",
-            'Y': "67TUGH",
-            'Z': "ASX",
-            '1': "`2Q",
-            '2': "13QW",
-            '3': "24WE",
-            '4': "35ER",
-            '5': "46RT",
-            '6': "57TY",
-            '7': "68YU",
-            '8': "79UI",
-            '9': "80IO",
-            '0': "9-OP",
-            '-': "0=p[",
-            '=': "-[]",
-            '[': "-=P];'",
-            ']': "=[\'\n",
-            '\\': "]\n",
-            ';': "P[L\'./",
-            '\'': "[];/\n",
-            ',': "KLM. ",
-            '.': "L;,/",
-            '/': ";'.",
-            ' ': "CVBNM,",
-            '\n': "]\\\'"
-        };
 
         var gSearchResults = [];
         var gSearchResultsSort = 1;
         var gSearchMapTry = "";
+        var gSearchCypher = "";
 
-        var gMaping = [];
+        var gMapping = [];
         var gMapSorting = 1;
         var gLastAppliedFreq = function (map) {
             map.sort(function (a, b) { if (b.frequency == a.frequency) { return a.cypher.charCodeAt(0) - b.cypher.charCodeAt(0) } return b.frequency - a.frequency; });
@@ -92,43 +43,23 @@ Featue Todo:
 
         function doEncryptionChanged() {
 
-            gMaping = getNewMapping(gMaping, getOriginalText(), getExcludeText());
+            gMapping = getCharacterMap(getOriginalText(), getIgnoreCase(), getExcludeText(), gMapping);
 
-            renderFatFingerMapping();
-            renderMappingTable(gMaping);
-            renderDecryptedText(gMaping);
-        }
-
-
-        function getDomain() {
-            var result = "";
-
-            var excludeText = getExcludeText();
-            var encryptedText = getOriginalText();
-
-            for (var i = 0; i < encryptedText.length; i++) {
-                var encryptedChar = encryptedText.charAt(i);
-
-                if (getIgnoreCase()) {
-                    encryptedChar = encryptedChar.toUpperCase();
-                }
-
-                if (!excludeText || (excludeText.indexOf(encryptedChar) < 0)) {
-                    var index = result.indexOf(encryptedChar);
-                    if (index < 0) {
-                        result = result + encryptedChar;
-                    }
-                }
+            // Apply last mapping strategy used.
+            //
+            if (getAutoApply()) {
+                gMapping = gLastAppliedFreq(gMapping);
             }
 
-            return result;
+            renderMappingTable(gMapping);
+            renderDecryptedText(gMapping);
         }
 
         function getOriginalText() {
-            return document.getElementById("Encrypted").innerText;
+            return unEscapeHtml(document.getElementById("Encrypted").innerHTML);
         }
 
-        function getNewMapping(oldMap, encryptedText, excludeText) {
+        function getCharacterMap(encryptedText, ignoreCase, excludeText, oldMap) {
             var domainChars = "";
             var newMap = [];
 
@@ -138,7 +69,7 @@ Featue Todo:
             var previousChar = '';
             for (var i = 0; i < encryptedText.length; i++) {
                 var encryptedChar = encryptedText.charAt(i);
-                if (getIgnoreCase()) {
+                if (ignoreCase) {
                     encryptedChar = encryptedChar.toUpperCase();
                 }
 
@@ -172,27 +103,21 @@ Featue Todo:
 
             // Copy any remaining locked mappings from the old map to the new map.
             //
-            for (var i = 0; i < newMap.length; i++) {
-                for (var j = 0; j < oldMap.length; j++) {
-                    if (newMap[i].cypher == oldMap[j].cypher) {
-                        newMap[i].locked = oldMap[j].locked;
-                        newMap[i].key = oldMap[j].key;
-                        break;
+            if (oldMap) {
+                for (var i = 0; i < newMap.length; i++) {
+                    for (var j = 0; j < oldMap.length; j++) {
+                        if (newMap[i].cypher == oldMap[j].cypher) {
+                            newMap[i].locked = oldMap[j].locked;
+                            newMap[i].key = oldMap[j].key;
+                            break;
+                        }
                     }
                 }
-            }
-
-            // Apply last mapping strategy used.
-            //
-            if (getAutoApply()) {
-                return gLastAppliedFreq(newMap);
             }
 
             return newMap;
         }
 
-        ///
-        ///
         function decryptText(cypherText, map) {
             var encryptedWord = "";
             var decryptedWord = "";
@@ -224,8 +149,6 @@ Featue Todo:
             return result;
         }
 
-        ///
-        ///
         function getMapping(cypherChar, map) {
             var result = cypherChar;
 
@@ -250,86 +173,19 @@ Featue Todo:
         }
 
         function getIgnoreCase() {
-            var elem = document.getElementById("IgnoreCase");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return true;
+            return getIsChecked("IgnoreCase", true);
         }
 
-        function getDomainFilter() {
-            var elem = document.getElementById("DomainFilter");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
-        }
-
-        function getCryptoType() {
-            var result = 1; // Default Substitution Cypher
-
-            var elem = document.getElementById("FatFinger");
-            if (elem && elem.checked) {
-                result = 2;
-            }
-
-            elem = document.getElementById("Vigenere");
-            if (elem && elem.checked) {
-                result = 3;
-            }
-
-            return result;
-        }
-
-        function setCryptoType(type) {
-            var substitutionPane = document.getElementById("SubstitutionMapping");
-            var fatFingerPane = document.getElementById("FatFingerMapping");
-            var autoMapping = document.getElementById("AutoMapping");
-
-            switch (type) {
-                case 2:
-                    {
-                        renderFatFingerMapping();
-                        substitutionPane.style.display = "none";
-                        fatFingerPane.style.display = "table-cell";
-                        autoMapping.style.display = "none";
-                        doClearMappingLocks();
-                        renderMappingTable(gMaping);
-                        renderDecryptedText(gMaping);
-                        setAutoApply(false);
-                        break;
-                    }
-                case 3: {
-                }
-                default:
-                    {
-                        substitutionPane.style.display = "table-cell";
-                        fatFingerPane.style.display = "none";
-                        autoMapping.style.display = "table";
-                        setRotateValue(13);
-                        doApplyOccurancyFreq();
-                        setAutoApply(true);
-                        break;
-                    }
-            }
+        function getCryptoAnagram() {
+            return getIsChecked("CryptoAnagram", false);
         }
 
         function getAutoApply() {
-            var elem = document.getElementById("AutoApply");
-            if (elem && elem.checked) {
-                return true;
-            }
-
-            return false;
+            return getIsChecked("AutoApply", false);
         }
 
         function setAutoApply(value) {
-            var elem = document.getElementById("AutoApply");
-            if (elem) {
-                elem.checked = value;
-            }
+            setIsChecked("AutoApply", value);
         }
 
         function setAutoApplyHighlight(title) {
@@ -383,32 +239,18 @@ Featue Todo:
             return map;
         }
 
-
-
-        ///
-        ///
         function getExcludeText() {
-            var excludeEdit = document.getElementById("Exclude");
-            var numCheckbox = document.getElementById("Numbers");
-            var puncCheckbox = document.getElementById("Punctuation");
-            var wsCheckbox = document.getElementById("Whitespace");
+            var result = getInputValue("Exclude");
 
-            var result = "";
-
-            if (excludeEdit && excludeEdit.value) {
-                result = result + excludeEdit.value;
-            }
-
-
-            if (numCheckbox && numCheckbox.checked) {
+            if (getIsChecked("Numbers")) {
                 result = result + PHTWords.Digits;
             }
 
-            if (puncCheckbox && puncCheckbox.checked) {
+            if (getIsChecked("Punctuation")) {
                 result = result + PHTWords.Punctuation;
             }
 
-            if (wsCheckbox && wsCheckbox.checked) {
+            if (getIsChecked("Whitespace")) {
                 result = result + PHTWords.Whitespace;
             }
 
@@ -416,21 +258,15 @@ Featue Todo:
         }
 
         function getOccuranceFreq() {
-            var freqInput = document.getElementById("OccuranceFreq");
-
-            return freqInput.value;
+            return getInputValue("OccuranceFreq");
         }
 
         function getFirstLetterFreq() {
-            var freqInput = document.getElementById("FirstFreq");
-
-            return freqInput.value;
+            return getInputValue("FirstFreq");
         }
 
         function getDoubleFreq() {
-            var freqInput = document.getElementById("DoubleFreq");
-
-            return freqInput.value;
+            return getInputValue("DoubleFreq");
         }
 
         function getRotateValue() {
@@ -441,25 +277,6 @@ Featue Todo:
             setInputValue("RotateValue", value);
         }
 
-        function getNumericValue(id, defaultValue) {
-            var result = defaultValue;
-
-            var elem = document.getElementById(id);
-            if (elem) {
-                result = parseInt(elem.value.trim());
-                if (isNaN(result)) result = defaultValue;
-            }
-
-            return result;
-        }
-
-        function setInputValue(id, value) {
-            var elem = document.getElementById(id);
-            if (elem) {
-                elem.value = value;
-            }
-        }
-
         function doApplyOccurancyFreq() {
             gLastAppliedFreq = function (map) {
                 map.sort(function (a, b) { if (b.frequency == a.frequency) { return a.cypher.charCodeAt(0) - b.cypher.charCodeAt(0) } return b.frequency - a.frequency; });
@@ -467,9 +284,9 @@ Featue Todo:
                 return applyFrequency(map, getOccuranceFreq());
             };
 
-            gLastAppliedFreq(gMaping);
-            renderMappingTable(gMaping);
-            renderDecryptedText(gMaping);
+            gLastAppliedFreq(gMapping);
+            renderMappingTable(gMapping);
+            renderDecryptedText(gMapping);
         }
 
         function doApplyFirstFreq() {
@@ -479,9 +296,9 @@ Featue Todo:
                 return applyFrequency(map, getFirstLetterFreq());
             };
 
-            gLastAppliedFreq(gMaping);
-            renderMappingTable(gMaping);
-            renderDecryptedText(gMaping);
+            gLastAppliedFreq(gMapping);
+            renderMappingTable(gMapping);
+            renderDecryptedText(gMapping);
         }
 
         function doApplyDoubleFreq() {
@@ -491,9 +308,9 @@ Featue Todo:
                 return applyFrequency(map, getDoubleFreq());
             };
 
-            gLastAppliedFreq(gMaping);
-            renderMappingTable(gMaping);
-            renderDecryptedText(gMaping);
+            gLastAppliedFreq(gMapping);
+            renderMappingTable(gMapping);
+            renderDecryptedText(gMapping);
         }
 
         function doApplyRotateN() {
@@ -513,34 +330,34 @@ Featue Todo:
                 return map;
             };
 
-            gLastAppliedFreq(gMaping);
-            renderMappingTable(gMaping);
-            renderDecryptedText(gMaping);
+            gLastAppliedFreq(gMapping);
+            renderMappingTable(gMapping);
+            renderDecryptedText(gMapping);
         }
 
         function doSortByOccurancyFreq() {
             gMapSorting = 1;
-            renderMappingTable(gMaping);
+            renderMappingTable(gMapping);
         }
 
         function doSortByFirstFreq() {
             gMapSorting = 5;
-            renderMappingTable(gMaping);
+            renderMappingTable(gMapping);
         }
 
         function doSortByDoubleFreq() {
             gMapSorting = 2;
-            renderMappingTable(gMaping);
+            renderMappingTable(gMapping);
         }
 
         function doSortByDomain() {
             gMapSorting = 3;
-            renderMappingTable(gMaping);
+            renderMappingTable(gMapping);
         }
 
         function doSortByKey() {
             gMapSorting = 4;
-            renderMappingTable(gMaping);
+            renderMappingTable(gMapping);
         }
 
         function doSortByFrequency() {
@@ -553,11 +370,11 @@ Featue Todo:
             renderSearchResults(gSearchResults);
         }
 
-        function doFlipMapping(row, word, cypher, pattern) {
+        function doFlipMapping(row, word, cypher) {
             if (gSearchMapTry) {
-                for (var j = 0; j < gMaping.length; j++) {
-                    if (gSearchMapTry.indexOf(gMaping[j].cypher) > -1) {
-                        gMaping[j].locked = false;
+                for (var j = 0; j < gMapping.length; j++) {
+                    if (gSearchMapTry.indexOf(gMapping[j].cypher) > -1) {
+                        gMapping[j].locked = false;
                     }
                 }
                 gSearchMapTry = "";
@@ -579,13 +396,52 @@ Featue Todo:
                     row.style.backgroundColor = "yellow";
 
                     // lock the mapping for this word
-                    for (var i = 0; i < word.length; i++) {
-                        for (var j = 0; j < gMaping.length; j++) {
-                            if (cypher[i] == gMaping[j].cypher) {
-                                if (!gMaping[j].locked) {
-                                    gSearchMapTry += gMaping[j].cypher;
-                                    gMaping[j].key = word[i];
-                                    gMaping[j].locked = true;
+                    if (getCryptoAnagram()) {
+                        // This will compare the frequency of characters with their mapping and only lock those values that have a unique
+                        // mapping.
+                        var wordMap = getCharacterMap(word, getIgnoreCase(), getExcludeText());
+                        var encryptedMap = getCharacterMap(cypher, getIgnoreCase(), getExcludeText());
+
+                        for (var i = 0; i < encryptedMap.length; i++) {
+                            for (var j = 0; j < gMapping.length; j++) {
+                                if (gMapping[j].cypher == encryptedMap[i].cypher) {
+                                    if (!gMapping[j].locked) {
+                                        var values = "";
+                                        for (var k = 0; k < wordMap.length; k++) {
+                                            if (wordMap[k].frequency == encryptedMap[i].frequency) {
+                                                var notMapped = true;
+                                                for (var l = 0; l < gMapping.length; l++) {
+                                                    if (gMapping[l].locked && (gMapping[l].key == wordMap[k].cypher)) {
+                                                        notMapped = false;
+                                                        break;
+                                                    }
+                                                }
+
+                                                if (notMapped) {
+                                                    values += wordMap[k].cypher;
+                                                }
+                                            }
+                                        }
+                                        if (values.length == 1) {
+                                            gSearchMapTry += gMapping[j].cypher;
+                                            gMapping[j].key = values;
+                                            gMapping[j].locked = true;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        for (var i = 0; i < word.length; i++) {
+                            for (var j = 0; j < gMapping.length; j++) {
+                                if (cypher[i] == gMapping[j].cypher) {
+                                    if (!gMapping[j].locked) {
+                                        gSearchMapTry += gMapping[j].cypher;
+                                        gMapping[j].key = word[i];
+                                        gMapping[j].locked = true;
+                                    }
                                 }
                             }
                         }
@@ -594,11 +450,11 @@ Featue Todo:
             }
 
             if (getAutoApply()) {
-                gLastAppliedFreq(gMaping);
+                gLastAppliedFreq(gMapping);
             }
 
-            renderMappingTable(gMaping);
-            renderDecryptedText(gMaping);
+            renderMappingTable(gMapping);
+            renderDecryptedText(gMapping);
         }
 
         function renderSearchResults(data, startTime) {
@@ -614,31 +470,10 @@ Featue Todo:
 
             table.innerHTML = '';
 
-            var elem = document.getElementById("ResultsCount");
-            if (elem) {
-                if (data) {
-                    elem.value = data.length;
-                } else {
-                    elem.value = "";
-                }
-            }
-
-            var cypher = "";
-            elem = document.getElementById("SearchCypher");
-            if (elem) {
-                cypher = elem.value;
-            }
-
-            var pattern = "";
-            elem = document.getElementById("SearchPattern");
-            if (elem) {
-                pattern = elem.value;
-            }
-
             for (var i = 0; i < data.length; i++) {
                 var r = table.insertRow(-1);
-                if (cypher) {
-                    r.setAttribute("onclick", "doFlipMapping(this,'" + escapeJSLiterial(data[i].value) + "','" + escapeJSLiterial(cypher) + "','" + escapeJSLiterial(pattern) + "');");
+                if (gSearchCypher) {
+                    r.setAttribute("onclick", "doFlipMapping(this,'" + escapeJSLiterial(data[i].value) + "','" + escapeJSLiterial(gSearchCypher) + "');");
                 }
 
                 var c = r.insertCell(-1);
@@ -649,80 +484,15 @@ Featue Todo:
                 c.innerHTML = data[i].frequency;
             }
 
+
             if (startTime) {
+                setResultsCount(data.length);
                 setDuration(new Date().getTime() - startTime);
                 beep();
             }
-        }
-
-        function renderFatFingerMapping() {
-            var table = document.getElementById("FatFingerMappingTable");
-            table.innerHTML = "<tr><th>Key</th><th>Possibles</th></tr>";
-
-            var domainText = getDomain();
-            var excludeText = getExcludeText();
-            var domainFilter = getDomainFilter();
-
-            // Verify that the mapping table has all the domain characters and add them if they don't already exist.
-            //
-            for (var i = 0; i < domainText.length; i++) {
-                if (typeof (gFatFingerMapping[domainText[i]]) === "undefined") {
-                    gFatFingerMapping[domainText[i]] = "";
-                }
-            }
-
-            for (var key in gFatFingerMapping) {
-                if (!excludeText || (excludeText.indexOf(key) < 0)) {
-                    var rawValues = gFatFingerMapping[key];
-
-                    if (!domainFilter || domainText.indexOf(key) != -1) {
-                        var filteredValues = "";
-                        for (var j = 0; j < rawValues.length; j++) {
-                            if (!excludeText || (excludeText.indexOf(rawValues[j]) < 0)) {
-                                filteredValues += rawValues[j];
-                            }
-                        }
-
-                        var r = table.insertRow(-1);
-
-                        var c = r.insertCell(-1);
-                        c.innerHTML = key;
-
-                        c = r.insertCell(-1);
-                        c.innerHTML = '<input type="edit" size="10" onkeyup="doFatFingerMapChange();" style="" value="' + escapeHtmlAttribute(filteredValues) + '"/>'
-                    }
-                }
-            }
-
-            var countElem = document.getElementById("FatFingerMapCount");
-            if (countElem) {
-                countElem.value = "" + (table.rows.length - 1);
-            }
-
-        }
-
-        function doFatFingerMapChange() {
-            var table = document.getElementById("FatFingerMappingTable");
-
-            if (table) {
-                var excludeText = getExcludeText();
-
-                for (var i = 1, row; row = table.rows[i]; i++) {
-                    var key = row.cells[0].innerText;
-                    var values = row.cells[1].firstChild.value;
-                    if (gFatFingerMapping[key] != values) {
-                        var result = "";
-                        for (var j = 0; j < values.length; j++) {
-                            if (excludeText.indexOf(values[j]) == -1) {
-                                result += values[j];
-                            }
-                        }
-                        if (row.cells[1].firstChild.value != result) {
-                            row.cells[1].firstChild.value = result;
-                        }
-                        gFatFingerMapping[key] = result;
-                    }
-                }
+            else {
+                setInputValue("ResultsCount", "");
+                setDuration(0);
             }
         }
 
@@ -737,10 +507,7 @@ Featue Todo:
                 default: break;
             }
 
-            var countElem = document.getElementById("MapCount");
-            if (countElem) {
-                countElem.value = map.length;
-            }
+            setInputValue("MapCount", map.length);
 
             var RotationAdvisory = '';
             var RotationValue = -1;
@@ -759,9 +526,10 @@ Featue Todo:
                     }
                 }
             }
-            var elem = document.getElementById("MappingTableAdvisory");
-            if (elem) {
-                elem.innerHTML = RotationAdvisory;
+
+            var a = document.getElementById("MappingTableAdvisory");
+            if (a) {
+                a.innerHTML = RotationAdvisory;
             }
 
             var t = document.getElementById("MappingTable");
@@ -802,8 +570,6 @@ Featue Todo:
             decryptedTextArea.innerHTML = decryptText(getOriginalText(), map).replace(/\n/g, '<br />');
         }
 
-
-
         function doMapChange() {
             var table = document.getElementById("MappingTable");
 
@@ -815,9 +581,9 @@ Featue Todo:
                     mapEdit.value = newValue;
                 }
 
-                if (gMaping[i - 1].key != newValue) {
-                    gMaping[i - 1].key = newValue;
-                    gMaping[i - 1].locked = true;
+                if (gMapping[i - 1].key != newValue) {
+                    gMapping[i - 1].key = newValue;
+                    gMapping[i - 1].locked = true;
                 }
             }
 
@@ -829,7 +595,7 @@ Featue Todo:
 
             for (var i = 1, row; row = table.rows[i]; i++) {
                 var mapEdit = row.cells[5].firstChild;
-                gMaping[i - 1].locked = mapEdit.checked;
+                gMapping[i - 1].locked = mapEdit.checked;
             }
 
             doEncryptionChanged();
@@ -841,236 +607,479 @@ Featue Todo:
             for (var i = 1, row; row = table.rows[i]; i++) {
                 var mapEdit = row.cells[5].firstChild;
                 mapEdit.checked = false;
-                gMaping[i - 1].locked = false;
-                gMaping[i - 1].key = gMaping[i - 1].cypher;
+                gMapping[i - 1].locked = false;
+                gMapping[i - 1].key = gMapping[i - 1].cypher;
             }
         }
 
-        function doSearchKeyDown(event) {
-            if (event.keyCode == 13) {
-                doSearch();
-                return false;
+        function doSolve() {
+            var startTime = new Date().getTime();
+
+            // Get the list of tokens that need to be decrypted.
+            //
+            var decryptedTextArea = document.getElementById("Decrypted");
+            var regEx = /doWordClick\(\'([^)]+)\'\)/g;
+            var matches = decryptedTextArea.innerHTML.match(regEx);
+            var words = [];
+            var counts = [];
+            for (var i = 0; i < matches.length; i++) {
+                var word = PHTWords.Trim(unEscapeHtmlAttribute(unEscapeJSLiterial(matches[i].substring(13, matches[i].length - 2))), getExcludeText());
+                if (word) {
+                    var index = words.indexOf(word);
+                    if (index == -1) {
+                        words.push(word);
+                        counts.push(1);
+                    }
+                    else {
+                        counts[index] = counts[index] + 1;
+                    }
+                }
             }
 
-            return true;
+            if (getCryptoAnagram()) {
+                var results = doSolveCryptoAnagram(words, [], getLetterMapping(gMapping));
+            }
+            else {
+                var results = doSolveCryptogram(words, counts);
+            }
+
+            renderMappingTable(gMapping);
+            renderDecryptedText(gMapping);
+            setDuration(new Date().getTime() - startTime);
+            beep();
         }
 
-        function doSearch() {
-            gSearchMapTry = "";
+        function getLetterMapping(map) {
+            var result = {};
 
-            var cypher = "";
-            var searchCypher = document.getElementById("SearchCypher");
-            if (searchCypher) {
-                cypher = searchCypher.value;
+            for (var i = 0; i < map.length; i++) {
+                if (map[i].locked) {
+                    result[map[i].cypher] = map[i].key;
+                }
             }
 
-            var pattern = "";
-            var searchPattern = document.getElementById("SearchPattern");
-            if (searchPattern) {
-                pattern = searchPattern.value;
-            }
-
-            PHTWords.GetWordMatches(pattern, null, PHTWords.GetCryptoIdx(cypher), null, null, getDictionaries(), getMinFrequency(), getMaxResults(), 0, 0, renderSearchResults);
+            return result;
         }
 
-        function doWordClick(encryptedText) {
-            renderSearchResults([]);
+        function doSolveCryptogram(encryptedWords, counts) {
 
-            var pattern = "";
-            var word = PHTWords.TrimPunctuation(encryptedText, getExcludeText());
+            // base case to exit and display possible solution
+            if (encryptedWords.length == 0) {
+                var lockCount = 0;
+                for (var i = 0; i < gMapping.length; i++) {
+                    if (gMapping[i].locked) {
+                        lockCount++;
+                    }
+                }
 
-            switch (getCryptoType()) {
-                case 1: { // Substitution Search
-                    var wildCard = "_";
+                if ((lockCount / gMapping.length) > 0.75) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
 
-                    var mappedCharacter = getExcludeText().trim();
-                    for (var i = 0; i < gMaping.length; i++) {
-                        if (gMaping[i].locked) {
-                            mappedCharacter = mappedCharacter + gMaping[i].key;
+            // find best encrypted token to guess at answer
+            var occurCount = 0;
+            var wordCount = 0;
+            var index = -1;
+
+            for (var i = 0; i < encryptedWords.length; i++) {
+                var encryptedWord = encryptedWords[i];
+
+                var count = PHTWords.GetWordCounts(getCryptogramPatterns(encryptedWord), null, PHTWords.GetCryptoIdx(encryptedWord), null, null, getDictionaries(), getMinFrequency());
+
+                // Check to see if this might be a possesive form or hyphenated word and remove the hypen to check.
+                if (count == 0) {
+                    if ((encryptedWord.length > 2) && ("'’".indexOf(encryptedWord.charAt(encryptedWord.length - 2)) > -1)) {
+                        encryptedWord = encryptedWord.substring(0, encryptedWord.length - 2);
+                        encryptedWords[i] = encryptedWord;
+                        count = PHTWords.GetWordCounts(getCryptogramPatterns(encryptedWord), null, PHTWords.GetCryptoIdx(encryptedWord), null, null, getDictionaries(), getMinFrequency());
+                    }
+                }
+
+                if (count == 1 || count == 0) {
+                    occurCount = counts[i];
+                    wordCount = count;
+                    index = i;
+                    break;
+                }
+
+                if (counts[i] == occurCount) {
+                    if (count < wordCount) {
+                        wordCount = count;
+                        index = i;
+                    }
+                }
+                else if (counts[i] > occurCount) {
+                    occurCount = counts[i];
+                    wordCount = count;
+                    index = i;
+                }
+            }
+
+            // get possible words for selected index and apply the pattern and recurse.
+            if (wordCount == 0) {
+                return doSolveCryptogram(encryptedWords.slice(0, index).concat(encryptedWords.slice(index + 1)), counts.slice(0, index).concat(counts.slice(index + 1)))
+            }
+            else {
+                var wordList = PHTWords.GetWordMatches(getCryptogramPatterns(encryptedWords[index]), null, PHTWords.GetCryptoIdx(encryptedWords[index]), null, null, getDictionaries(), getMinFrequency(), 10, 0, 0);
+
+                var cypher = encryptedWords[index];
+                var mapTry = "";
+                for (var w = 0; w < wordList.length; w++) {
+                    var word = wordList[w].value;
+                    for (var i = 0; i < word.length; i++) {
+                        for (var j = 0; j < gMapping.length; j++) {
+                            if (cypher[i] == gMapping[j].cypher) {
+                                if (!gMapping[j].locked) {
+                                    mapTry += gMapping[j].cypher;
+                                    gMapping[j].key = word[i];
+                                    gMapping[j].locked = true;
+                                }
+                            }
                         }
                     }
 
-                    if (mappedCharacter) {
-                        wildCard = "[^" + PHTWords.EscapeString(mappedCharacter) + "]";
+                    if (doSolveCryptogram(encryptedWords.slice(0, index).concat(encryptedWords.slice(index + 1)), counts.slice(0, index).concat(counts.slice(index + 1)))) {
+                        return true;
                     }
 
-                    for (var i = 0; i < word.length; i++) {
-                        var found = false;
-                        for (var j = 0; j < gMaping.length; j++) {
-                            if (word[i] == gMaping[j].cypher) {
-                                if (gMaping[j].locked) {
-                                    pattern = pattern + PHTWords.EscapeString(gMaping[j].key);
-                                } else {
-                                    pattern = pattern + wildCard;
-                                }
-                                found = true;
+                    if (mapTry) {
+                        for (var j = 0; j < gMapping.length; j++) {
+                            if (mapTry.indexOf(gMapping[j].cypher) > -1) {
+                                gMapping[j].locked = false;
+                            }
+                        }
+                        mapTry = "";
+                    }
+                }
+            }
+
+            return false;
+        }
+
+
+        /**
+         *
+         */
+        function doSolveCryptoAnagram(encryptedWords, decryptedWords, map) {
+
+            // base case to exit and display possible solution
+            if (encryptedWords.length == decryptedWords.length) {
+                var lockCount = 0;
+                for (var i = 0; i < gMapping.length; i++) {
+                    if (gMapping[i].locked) {
+                        lockCount++;
+                    }
+                }
+
+                if ((lockCount / gMapping.length) > 0.75) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+
+            // find the best encrypted word to try next and move it to the front of the list.
+            var index = decryptedWords.length;
+            var encryptedWord = encryptedWords[index];
+            var wordList = PHTWords.GetWordMatches(null, getCryptoAnagramPatterns(encryptedWord), null, PHTWords.GetCryptoAnagramIdx(encryptedWord), null, getDictionaries(), getMinFrequency(), 10, 0, 0);
+            for (var i = index + 1; i < encryptedWords.length; i++) {
+                if (wordList.length < 2) {
+                    break;
+                }
+
+                encryptedWord = encryptedWords[i];
+                var words = PHTWords.GetWordMatches(null, getCryptoAnagramPatterns(encryptedWord), null, PHTWords.GetCryptoAnagramIdx(encryptedWord), null, getDictionaries(), getMinFrequency(), 10, 0, 0);
+                if (words.length < wordList.length) {
+                    index = i;
+                    wordList = words;
+                }
+            }
+
+            encryptedWords = encryptedWords.slice(0, decryptedWords.length).concat(encryptedWords.slice(index, index + 1)).concat(encryptedWords.slice(decryptedWords.length, index)).concat(encryptedWords.slice(index + 1));
+
+
+            // get possible words for selected index and apply the pattern and recurse.            
+
+            wordList.push(new WordInfo("", 0)); // just in case we do not know about this word.
+
+            var encryptFreq = getFrequencyCharMap(encryptedWord);
+
+            for (var j = 0; j < wordList.length; j++) {
+                var mapTry = "";
+                var newMap = map;
+
+                if (wordList[j].value != "") {
+                    // Calculate latest mapping with this word.
+                    newMap = mergeFrequencyMaps(map, encryptFreq, getFrequencyCharMap(wordList[j].value));
+
+                    // make sure that the new map is valid and has no values with no possible mappings or duplicate mappings
+                    var keys = Object.keys(newMap);
+                    var values = [];
+                    var validMap = true;
+                    for (var k = 0; k < keys.length; k++) {
+                        if (newMap[keys[k]].length == 0) {
+                            validMap = false;
+                            break;
+                        }
+                        else if (newMap[keys[k]].length == 1) {
+                            if (values.indexOf(newMap[keys[k]]) > -1) {
+                                validMap = false;
                                 break;
                             }
-                        }
-                        if (!found) {
-                            pattern = pattern + PHTWords.EscapeString(word[i]);
+                            else {
+                                values.push(newMap[keys[k]]);
+                            }
                         }
                     }
+                    if (!validMap) {
+                        break;
+                    }
 
-                    break;
+                    // apply the latest character possibilities to the global crypto map
+                    for (var k = 0; k < gMapping.length; k++) {
+                        if (!gMapping[k].locked) {
+                            if (newMap[gMapping[k].cypher] && (newMap[gMapping[k].cypher].length == 1)) {
+                                mapTry += gMapping[k].cypher;
+                                gMapping[k].key = newMap[gMapping[k].cypher];
+                                gMapping[k].locked = true;
+                            }
+                        }
+                    }
                 }
 
-                case 2: { // Fat Finger Search
+                decryptedWords.push(wordList[j].value)
+                if (doSolveCryptoAnagram(encryptedWords, decryptedWords, newMap)) {
+                    return true;
+                }
+                decryptedWords.pop();
 
-                    word = word.toUpperCase();
-
-                    var excludeText = getExcludeText();
-
-                    for (var i = 0; i < word.length; i++) {
-                        if (excludeText && (excludeText.indexOf(word[i]) >= 0)) {
-                            pattern += word[i];
+                // Undo any mappings applied from this word if any were applied.
+                if (mapTry) {
+                    for (var k = 0; k < gMapping.length; k++) {
+                        if (mapTry.indexOf(gMapping[k].cypher) > -1) {
+                            gMapping[k].locked = false;
                         }
-                        else {
-                            var values = gFatFingerMapping[word[i]];
-                            if (!values) {
-                                values = "";
-                            }
+                    }
+                }
+            }
 
-                            pattern += "[";
-                            for (var j = 0; j < values.length; j++) {
-                                if (!excludeText || (excludeText.indexOf(values[j]) < 0)) {
-                                    pattern += PHTWords.EscapeString(values[j]);
+            return false;
+        }
+
+        /**
+         * Return a new map object that is merged with the possible mappings defined by the encryptFreq and decryptFreq lists.
+         */
+        function mergeFrequencyMaps(map, encryptFreq, decryptFreq) {
+            var result = {};
+
+            // clone existing map.
+            var keys = Object.keys(map);
+            for (var i = 0; i < keys.length; i++) {
+                result[keys[i]] = map[keys[i]];
+            }
+
+            // merge the possible values for each encrypted letter into the existing map
+            for (var i = 0; i < encryptFreq.length; i++) {
+                if (encryptFreq[i]) {
+                    for (var j = 0; j < encryptFreq[i].length; j++) {
+                        var cypher = encryptFreq[i][j];
+                        if (result[cypher]) {
+                            var possibles = "";
+                            for (var k = 0 ; k < result[cypher].length; k++) {
+                                if (decryptFreq[i].indexOf(result[cypher].charAt(k)) > -1) {
+                                    possibles += result[cypher].charAt(k);
                                 }
                             }
-                            pattern += "]";
+                            result[cypher] = possibles;
+                        }
+                        else {
+                            result[cypher] = decryptFreq[i];
                         }
                     }
-
-                    word = "";
-
-                    break;
-                }
-
-                default: {
-                    break;
                 }
             }
 
-
-            var searchCypher = document.getElementById("SearchCypher");
-            if (searchCypher) {
-                searchCypher.value = word;
-            }
-
-            var searchPattern = document.getElementById("SearchPattern");
-            if (searchPattern) {
-                searchPattern.value = pattern;
-            }
-
-            doSearch();
-        }
-
-
-
-
-
-
-
-        function getDictionaries() {
-            var dictionaries = "";
-
-            var elem = document.getElementById("WordList");
-            if (elem && elem.checked) {
-                dictionaries += "0";
-            }
-
-            elem = document.getElementById("ModernEnglish");
-            if (elem && elem.checked) {
-                dictionaries += "1";
-            }
-
-            elem = document.getElementById("MiddleEnglish");
-            if (elem && elem.checked) {
-                dictionaries += "2";
-            }
-
-            return dictionaries
-        }
-
-        function getMinFrequency() {
-            var result = 0;
-
-            var elem = document.getElementById("MinFrequency");
-            if (elem) {
-                result = parseInt(elem.value.trim());
-                if (isNaN(result)) result = 0;
+            // reduce mappings by removing a single mapping from any existing mapping.
+            keys = Object.keys(result);
+            for (var i = 0; i < keys.length; i++) {
+                if (result[keys[i]].length == 1) {
+                    for (var j = 0; j < keys.length; j++) {
+                        if ((result[keys[j]].length > 1) && (result[keys[j]].indexOf(result[keys[i]]) > -1)) {
+                            result[keys[j]] = result[keys[j]].replace(result[keys[i]], "");
+                            if (result[keys[j]].length == 1) {
+                                i = -1;
+                            }
+                        }
+                    }
+                }
             }
 
             return result;
         }
 
-        function getMaxResults() {
-            var result = 25;
+        /**
+         * Return an array of characters that have a unique frequency in the specified word.
+         */
+        function getUniqueFrequencyChars(word) {
+            var result = [];
 
-            var elem = document.getElementById("MaxResults");
-            if (elem) {
-                result = parseInt(elem.value.trim());
-                if (isNaN(result)) result = 25;
+            var map = getFrequencyCharMap(word);
+
+            for (var i = 0; i < map.length; i++) {
+                if (map[i] && (map[i].length == 1)) {
+                    result.push(map[i]);
+                }
             }
 
             return result;
         }
 
-        function setDuration(duration) {
-            var millis = (duration % 1000);
-            var seconds = Math.floor((duration / 1000)) % 60;
-            var minutes = Math.floor((duration / 1000) / 60);
+        /**
+         * Returns an array of strings where the array index equals the number of times the characters in the string
+         * occur in the word.
+         */
+        function getFrequencyCharMap(word) {
+            var result = [];
 
-            var text = ""
-            if (minutes < 10) text += "0";
-            text += minutes;
-            text += ":";
-            if (seconds < 10) text += "0";
-            text += seconds;
-            text += ":";
-            if (millis < 10) {
-                text += "00";
-            } else if (millis < 100) {
-                text += "0";
-            }
-            text += millis;
+            if (word) {
+                var letterCounts = getCharFrequencyMap(word);
 
-            var elem = document.getElementById("Duration");
-            if (elem) {
-                elem.value = text;
+                var keys = Object.keys(letterCounts);
+                for (var i = 0; i < keys.length; i++) {
+                    if (result[letterCounts[keys[i]]]) {
+                        result[letterCounts[keys[i]]] += keys[i];
+                    }
+                    else {
+                        result[letterCounts[keys[i]]] = keys[i];
+                    }
+                }
             }
+
+            return result;
         }
 
-        function doGetWordList() {
-            PHTWords.Clear();
+        /**
+         * Return an object who's keys are characters and values are the number of times that character appears in the word.
+         */
+        function getCharFrequencyMap(word) {
+            var result = {};
 
-            var LinesAsWords = false;
-
-            var elem = document.getElementById("LinesAsWords");
-            if (elem && elem.checked) {
-                LinesAsWords = true;
+            if (word) {
+                for (var i = 0; i < word.length; i++) {
+                    if (result[word.charAt(i)]) {
+                        result[word.charAt(i)]++;
+                    }
+                    else {
+                        result[word.charAt(i)] = 1;
+                    }
+                }
             }
 
-            elem = document.getElementById("WordListText");
-            if (elem) {
-                var text = elem.value.trim();
-                var lines = text.split("\n");
+            return result;
+        }
 
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i].trim().replace(/[\s]+/g, ' ');
 
-                    var words = line.split(" ");
-                    for (var j = 0; j < words.length; j++) {
-                        PHTWords.AddWord(words[j], 7000000);
-                    }
+        /**
+         *
+         */
+        function doWordClick(encryptedText) {
+            encryptedText = PHTWords.Trim(encryptedText, getExcludeText());
 
-                    if (LinesAsWords && (words.length > 1)) {
-                        PHTWords.AddWord(line, 7000100);
-                    }
+            if (encryptedText) {
+                renderSearchResults([]);
+
+                gSearchMapTry = "";
+                gSearchCypher = encryptedText;
+
+                if (getCryptoAnagram()) {
+                    PHTWords.GetWordMatches(null, getCryptoAnagramPatterns(encryptedText), null, PHTWords.GetCryptoAnagramIdx(encryptedText), null, getDictionaries(), 0, getMaxResults(), 0, 0, renderSearchResults, new Date().getTime());
+                }
+                else {
+                    PHTWords.GetWordMatches(getCryptogramPatterns(encryptedText), null, PHTWords.GetCryptoIdx(encryptedText), null, null, getDictionaries(), 0, getMaxResults(), 0, 0, renderSearchResults, new Date().getTime());
                 }
             }
         }
 
+        /**
+         * Return a string that contains pattern list to use as word patterns for a call to PHTWords.GetWordMatches to limit the number
+         * of results returned to those allowed by the mapping.
+         */
+        function getCryptogramPatterns(encryptedText) {
+            var pattern = "";
+
+            var wildCard = "_";
+
+            var mappedCharacter = getExcludeText().trim();
+            for (var i = 0; i < gMapping.length; i++) {
+                if (gMapping[i].locked) {
+                    mappedCharacter = mappedCharacter + gMapping[i].key;
+                }
+            }
+
+            if (mappedCharacter) {
+                wildCard = "[^" + PHTWords.EscapeString(mappedCharacter) + "]";
+            }
+
+            for (var i = 0; i < encryptedText.length; i++) {
+                var found = false;
+                for (var j = 0; j < gMapping.length; j++) {
+                    if (encryptedText[i] == gMapping[j].cypher) {
+                        if (gMapping[j].locked) {
+                            pattern = pattern + PHTWords.EscapeString(gMapping[j].key);
+                        } else {
+                            pattern = pattern + wildCard;
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    pattern = pattern + PHTWords.EscapeString(encryptedText[i]);
+                }
+            }
+
+            return pattern;
+        }
+
+        /**
+         * Return a string that contains pattern list to use as anagram patterns for a call to PHTWords.GetWordMatches to limit the number
+         * of results returned to those allowed by the mapping.
+         */
+        function getCryptoAnagramPatterns(encryptedText) {
+            var result = "";
+
+            var map = getCharFrequencyMap(encryptedText);
+
+            for (var i = 0; i < gMapping.length; i++) {
+                if (gMapping[i].locked) {
+                    var cypher = gMapping[i].cypher;
+                    var pattern = gMapping[i].key;
+                    if (map[cypher]) {
+                        for (var j = 1; j < map[cypher]; j++) {
+                            pattern += pattern.charAt(0);
+                        }
+
+                        if (result) {
+                            result += "&";
+                        }
+                        result += "%" + pattern + "%&!%" + pattern + pattern[0] + "%";
+                    }
+                    else {
+                        if (result) {
+                            result += "&";
+                        }
+                        result += "!%" + pattern + "%";
+                    }
+                }
+            }
+
+            return result;
+        }
 
     </script>
 </head>
@@ -1078,15 +1087,6 @@ Featue Todo:
 
     <table style="width:100%;">
         <tr>
-            <td id="FatFingerMapping" style="vertical-align:top;white-space:nowrap;display:none;">
-                <span>Count:</span>
-                <input type="text" size="5" disabled="disabled" id="FatFingerMapCount" />
-                <label><input type="checkbox" id="DomainFilter" checked="checked" value="1" onchange="renderFatFingerMapping();" />Domain Filter</label>
-                <br />
-                <hr />
-                <table id="FatFingerMappingTable">
-                </table>
-            </td>
             <td id="SubstitutionMapping" style="vertical-align:top;white-space:nowrap;">
                 <span>Count:</span>
                 <input type="text" size="5" disabled="disabled" id="MapCount" />
@@ -1102,17 +1102,8 @@ Featue Todo:
                 <table style="width:100%">
                     <tr>
                         <td style="white-space:nowrap;">
-                            Crypto&nbsp;Type:
-                            <label><input type="radio" name="CryptoType" id="Substitution" checked="checked" value="1" onclick="setCryptoType(1);" />Substitution</label>
-                            <label><input type="radio" name="CryptoType" id="FatFinger" value="2" onclick="setCryptoType(2);" />Fat&nbsp;Finger</label>
-                            <label><input type="radio" name="CryptoType" id="Vigenere" value="3" onclick="setCryptoType(3);" />Vigenère</label>
-                            <hr />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="white-space:nowrap;">
                             <span>Exclude:</span>
-                            <input type="text" id="Exclude" onkeyup="doEncryptionChanged();" value="+-=\/"/>
+                            <input type="text" id="Exclude" onkeyup="doEncryptionChanged();" value="+-=\/_"/>
                             <label><input type="checkbox" id="Numbers" checked="checked" value="Numbers" onchange="doEncryptionChanged();" />Numbers</label>
                             <label><input type="checkbox" id="Punctuation" checked="checked" value="Punctuation" onchange="doEncryptionChanged();" />Punctuation</label>
                             <label><input type="checkbox" id="Whitespace" checked="checked" value="Whitespace" onchange="doEncryptionChanged();" />Whitespace</label>
@@ -1168,32 +1159,24 @@ Featue Todo:
                 </table>
 
                 <span>Decrypted:</span>
-                <div id="Decrypted" style="width:100%;height:250px;overflow-y:scroll;font-family:Courier New, Courier, monospace;font-size:12px;border: 1px solid black;padding:2px;"></div>
+                <button onclick="doSolve()" style="float:right;">Solve</button>
+                <pre id="Decrypted" style="width:100%;height:250px;overflow-y:scroll;font-family:Courier New, Courier, monospace;font-size:12px;border: 1px solid black;padding:2px;"></pre>
                 <span>Encrypted:</span>
-                <label><input type="checkbox" id="IgnoreCase" checked="checked" value="1" onchange="doEncryptionChanged();" />Ignore Case</label>
+                <label><input id="IgnoreCase" type="checkbox" checked="checked" value="1" onchange="doEncryptionChanged();" />Ignore Case</label>
+                <label style="float:right;"><input id="CryptoAnagram" type="checkbox" value="1" onchange="doEncryptionChanged();"/>Crypto Anagram</label>
                 <textarea id="Encrypted" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doEncryptionChanged();"></textarea>
 
             </td>
             <td style="vertical-align:top;">
                 <span>Dictionary:</span>
+                <label><input type="checkbox" id="WordList" checked="checked" value="0" />Word&nbsp;List</label>
                 <label><input type="checkbox" id="ModernEnglish" checked="checked" value="1" />Modern&nbsp;English</label>
                 <label><input type="checkbox" id="MiddleEnglish" value="2" />Middle&nbsp;English</label>
-                <label><input type="checkbox" id="WordList" value="0" />Word&nbsp;List</label>
                 <hr />
                 <table style="width:100%;">
                     <tr>
-                        <td>Cypher:</td>
-                        <td><input type="text" id="SearchCypher" size="50" onkeydown="doSearchKeyDown(event);" /></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td>Pattern:</td>
-                        <td><input type="text" id="SearchPattern" size="50" onkeydown="doSearchKeyDown(event);" /></td>
-                        <td>&nbsp;</td>
-                    </tr>
-                    <tr>
                         <td colspan="2">
-                            <label>Min Frequency: <input type="text" id="MinFrequency" size="10" value="0" onkeydown="doSearchKeyDown(event);" title="Modern English (BNC):
+                            <label>Min Frequency: <input type="text" id="MinFrequency" size="10" value="1" title="Modern English (BNC):
   0 = 700,000 words
   1 = 80,000 words
   15 = 60,000 words
@@ -1204,15 +1187,13 @@ Featue Todo:
   4000 = 2,500 words
   10000 = 1,000 words
 " /></label>
-                            <label title="Attempt to stem word if no matches found."><input type="checkbox" disabled="disabled" id="EnableStemming" value="1" />Enable Stemming</label>
+                            <label>Max Results: <input type="text" maxlength="4" id="MaxResults" size="5" value="200" /></label>
                         </td>
-                        <td style="text-align:right;"><button onclick="doSearch();">Search</button></td>
                     </tr>
                 </table>
                 <hr />
                 <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
                 <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
-                <label>Max Results: <input type="text" maxlength="4" id="MaxResults" size="5" value="999" /></label>
                 <br />
                 <hr />
                 <table id="Table1" style="width:100%;">
@@ -1226,9 +1207,10 @@ Featue Todo:
                     </table>
                 </div>
                <br />
-                <span>Word List:</span>
-                <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" checked="checked" value="1" />Lines Are Words</label>
-                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doGetWordList();"></textarea>
+                <span style="font-weight:bold;">Word List:</span>
+                <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" value="1" />Lines Are Words</label>
+                <label><input type="checkbox" id="UseFrequency" onclick="doGetWordList();" value="1" />Use BNC Frequency</label>
+                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onchange="doGetWordList();"></textarea>
              </td>
         </tr>
     </table>

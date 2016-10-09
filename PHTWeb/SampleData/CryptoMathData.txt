@@ -1,7 +1,7 @@
 ﻿
 PS16: Work-Life Balance
 ----------------------------------
-Base Range: 26
+Base Range: 27, dont allow zero
 
 w+o+r+k > l+i+f+e
 w+o+r+k+f+l+o+w = f+r+i+e+r
@@ -26,10 +26,13 @@ o+f+f+e+r = r+o+l+e
 e+l+f+l+i+k+e = k+o+o+k+i+e+r
 o+w+l+i+e+r = e+e+r+i+e
 
-e = o+o+i+r-4*f
-w = 3*o+2*i+2*r-10*f
+e = w+o+k+l+o+w+0-i+0-r
+i = f+l+o+o+r+0-l+0-l
+r = w+i+l+l+o+w+0-f+0-o+0-k
 k = f+i
 l = f+f
+f = o+o+k+r+0-l+0-l+0-e
+o = e+e+0-w+0-l
 
 ----------------------------------
 
@@ -37,7 +40,6 @@ PD2015: A Lannister Always Pays His Debts
 ----------------------------------
 HORSE + ARMOR = AMULET
 H=8
-M = A + H - 9
 
 HONOR + LION = THREE
 L=8
@@ -58,6 +60,8 @@ N=8
 
 PH16 Queen:Under Pressure
 ----------------------------------
+base: 2-27
+
 [10]nne+jex=yzqy
 [23]syk+zfk=yvuy
 [5]eyhq+yyhq=hhyq
@@ -100,9 +104,192 @@ C=24
 ----------------------------------
 PS16-Office Space Math
 ----------------------------------
+base 10. 
+
 A+B=B
 C*C=BC
 D*D=ED
 D-C=F
 GH+IJ=FED
 IG-HJ=C
+
+
+----------------------------------
+PD2016-Hollwood Walk of Fame
+----------------------------------
+base 2, allow multiple
+
+Y=0
+H=T+0
+I=1-S
+O=1-X
+A=1-C
+N=1-Q
+K=1-U
+A+P+N+H <= 1
+
+A=1&O=1?B=1
+A=1&O=0?B=0
+
+D=1?T+R=1
+D=0?T+R!=1
+
+E=1?F+K > 0
+E=0?F+K = 0
+
+G=1?A+F+K+P+U=0|C+H+M+R+W=0|D+I+N+S+X=0|E+J+O+T+Y=0
+G=0?A+F+K+P+U!=0&C+H+M+R+W!=0&D+I+N+S+X!=0&E+J+O+T+Y!=0
+B+G+L+Q+V != 0
+
+L=1?A+B+C+D+E >= 3
+L=0?A+B+C+D+E < 3
+
+M=1?A+B+C+D+E+F+G+H+I+L+K+L+M+N+O+P+Q+R+S+T+U+V+W+X+Y = 10
+M=0?A+B+C+D+E+F+G+H+I+L+K+L+M+N+O+P+Q+R+S+T+U+V+W+X+Y != 10
+
+U=1?W+R+S+T+Y < 3
+U=0?W+R+S+T+Y >= 3
+
+V=1?W = 1
+V=0?W!=0
+
+W=1?B+G+L+P+Q+V = 6
+W=0?B+G+L+P+Q+V < 6
+
+
+----------------------------------
+PD2015-It Was a Tournament to Remember
+----------------------------------
+base 3 allow duplicates
+
+B!=1
+
+B=0?E!=I&F!=0&I!=0&G!=0&J=0|K=0&L!=0&M!=0&N=0|O=0&N=1|O=1
+B=2?E!=G&G!=2&E!=2&H!=2&J!=2&K!=2&L=2|M=2&N=2|O=2&L=1|M=1
+
+C=0?E!=I&F!=0&I!=0&G!=0&J=0&K!=0&L!=0&M!=0&N=0&O!=0
+C=1?H!=D&G!=1&D!=1&I!=1&J!=1&K!=1&L!=1&M=1&N=1&O!=1
+C=2?E!=G&G!=2&E!=2&H!=2&J!=2&K!=2&L=2&M!=2&N=2&O!=2
+
+A=0?B!=0&C!=0
+A=1?B!=1&C!=1
+A=2?B!=2&C!=2
+
+B=0?A!=0&C!=0
+B=1?A!=1&C!=1
+B=2?A!=2&C!=2
+
+C=0?A!=0&B!=0
+C=1?A!=1&B!=1
+C=2?A!=2&B!=2
+
+
+D=0?E!=0&F!=0
+D=1?E!=1&F!=1
+D=2?E!=2&F!=2
+
+E=0?D!=0&F!=0
+E=1?D!=1&F!=1
+E=2?D!=2&F!=2
+
+F=0?D!=0&E!=0
+F=1?D!=1&E!=1
+F=2?D!=2&E!=2
+
+
+G=0?H!=0&I!=0
+G=1?H!=1&I!=1
+G=2?H!=2&I!=2
+
+H=0?G!=0&I!=0
+H=1?G!=1&I!=1
+H=2?G!=2&I!=2
+
+I=0?G!=0&H!=0
+I=1?G!=1&H!=1
+I=2?G!=2&H!=2
+
+
+J=0?K!=0
+J=1?K!=1
+J=2?K!=2
+
+L=0?M!=0
+L=1?M!=1
+L=2?M!=2
+
+N=0?O!=0
+N=1?O!=1
+N=2?O!=2
+
+J!=0&K!=0?L=0|M=0&N=0|O=0
+L!=0&M!=0?J=0|K=0&N=0|O=0
+N!=0&O!=0?J=0|K=0&L=0|M=0
+L=0|M=0&N=0|O=0?J!=0&K!=0
+J=0|K=0&N=0|O=0?L!=0&M!=0
+J=0|K=0&L=0|M=0?N!=0&O!=0
+
+J!=1&K!=1?L=1|M=1&N=1|O=1
+L!=1&M!=1?J=1|K=1&N=1|O=1
+N!=1&O!=1?J=1|K=1&L=1|M=1
+L=1|M=1&N=1|O=1?J!=1&K!=1
+J=1|K=1&N=1|O=1?L!=1&M!=1
+J=1|K=1&L=1|M=1?N!=1&O!=1
+
+J!=2&K!=2?L=2|M=2&N=2|O=2
+L!=2&M!=2?J=2|K=2&N=2|O=2
+N!=2&O!=2?J=2|K=2&L=2|M=2
+L=2|M=2&N=2|O=2?J!=2&K!=2
+J=2|K=2&N=2|O=2?L!=2&M!=2
+J=2|K=2&L=2|M=2?N!=2&O!=2
+
+----------------------------------
+PS16 - PC LOAD LETTER
+----------------------------------
+
+A PC
+B LOAD
+C LETTER
+D CARTRIDGE
+E FEED
+F PAPER
+G LOW
+H TRAY
+I JAM
+J CHECK
+K TONER
+L DOOR
+M SPOOLING
+
+// base 27 don't allow zero digit
+
+6210=A*B*C
+380=D*E*F
+1540=G*F*H
+4830=B*H*A
+504=I*H*D
+6555=B*A*E
+1400=J*F*H
+2592=K*C*I
+1400=H*J*F
+1800=C*J*F
+6080=E*J*K
+35=L*M*F
+1<=L
+L<M
+M<B
+B<A
+A<=26
+
+A=6210/B*1/C
+D=380/E*1/F
+G=1540/F*1/H
+H=4830/B*1/A
+I=504/H*1/D
+E=6555/B*1/A
+J=1400/F*1/H
+K=2592/C*1/I
+C=1800/J*1/F
+L=35/M*1/F
+
+----------------------------------

@@ -1,6 +1,12 @@
 ﻿<!--
 Featue Todo:
 
+    Add ability to provide multiple equation tables that each can have
+    independent base values.
+
+    Add support for "()" in expressions.
+
+    Bug with "-" operator results a+b-c-d results in a+b-(c-d)
 
 -->
 
@@ -26,6 +32,7 @@ Featue Todo:
         var gMapSorting = 1;
         var gMapping = [];
 
+        var gResults = [];
 
         ////
         // CryptoExpression Class Definition
@@ -35,9 +42,20 @@ Featue Todo:
 
             this.text = text;
 
-            var boolOperators = ['!=', '<=', '>=', '=', '<', '>'];
+            if (this.ParsePredicateExpression(text)) {
+                return;
+            }
+
+            var boolOperators = ['&', '|'];
             for (var i = 0 ; i < boolOperators.length; i++) {
                 if (this.ParseBooleanExpression(boolOperators[i], text)) {
+                    return;
+                }
+            }
+
+            var compareOperators = ['!=', '<=', '>=', '=', '<', '>'];
+            for (var i = 0 ; i < compareOperators.length; i++) {
+                if (this.ParseComparisonExpression(compareOperators[i], text)) {
                     return;
                 }
             }
@@ -65,7 +83,32 @@ Featue Todo:
             this.value = +text; // converts text to number if valid, otherwise this.value becomes NaN.
         }
 
+        CryptoExpression.prototype.ParsePredicateExpression = function (text) {
+            var operator = '?';
+            var index = text.indexOf('?');
+            if (index >= 0) {
+                this.operator = operator;
+                this.left = new CryptoExpression(text.substr(0, index));
+                this.right = new CryptoExpression(text.substr(index + operator.length));
+                return true;
+            }
+
+            return false;
+        }
+
         CryptoExpression.prototype.ParseBooleanExpression = function (operator, text) {
+            var index = text.indexOf(operator);
+            if (index >= 0) {
+                this.operator = operator;
+                this.left = new CryptoExpression(text.substr(0, index));
+                this.right = new CryptoExpression(text.substr(index + operator.length));
+                return true;
+            }
+
+            return false;
+        }
+
+        CryptoExpression.prototype.ParseComparisonExpression = function (operator, text) {
             var exps = text.split(operator);
             if (exps.length > 2) throw ("CryptoExpression: more than one '" + operator + "' in expression.");
             if (exps.length == 2) {
@@ -87,6 +130,7 @@ Featue Todo:
                 this.operator = operator;
                 this.left = new CryptoExpression(leftExp);
                 this.right = new CryptoExpression(rightExp);
+
                 return true;
             }
 
@@ -118,6 +162,14 @@ Featue Todo:
                 return this.left.Value(mapping) <= this.right.Value(mapping);
             } else if (this.operator == '>=') {
                 return this.left.Value(mapping) >= this.right.Value(mapping);
+            } else if (this.operator == '&') {
+                return this.left.Value(mapping) && this.right.Value(mapping);
+            } else if (this.operator == '|') {
+                var l = this.left.Value(mapping);
+                var r = this.right.Value(mapping);
+                return this.left.Value(mapping) || this.right.Value(mapping);
+            } else if (this.operator == '?') {
+                return this.left.Value(mapping) ? this.right.Value(mapping) : true;
             }
             else {
                 throw "CryptoExpression: Invalid operator: " + this.operator;
@@ -155,13 +207,43 @@ Featue Todo:
             return false;
         }
 
+        CryptoExpression.prototype.getDependencies = function () {
+            var results = [];
 
+            if (this.digits) {
+                for (var i = 0; i < this.digits.length; i++) {
+                    if (results.indexOf(this.digits.charAt(i)) < 0) {
+                        results.push(this.digits.charAt(i));
+                    }
+                }
+            }
+
+            if (this.left) {
+                var deps = this.left.getDependencies();
+                for (var i = 0; i < deps.length; i++) {
+                    if (results.indexOf(deps[i]) < 0) {
+                        results.push(deps[i]);
+                    }
+                }
+            }
+
+            if (this.right) {
+                var deps = this.right.getDependencies();
+                for (var i = 0; i < deps.length; i++) {
+                    if (results.indexOf(deps[i]) < 0) {
+                        results.push(deps[i]);
+                    }
+                }
+            }
+
+            return results;
+        }
 
 
         function doSolve() {
-            var startTime = new Date().getTime();
-
-            var results = [];
+            setInputValue("ResultsCount", "");
+            setInputValue("Duration", "");
+            renderResults([]);      // Clear the results.
 
             var text = getOriginalText();
 
@@ -178,6 +260,11 @@ Featue Todo:
 
             for (var i = 0; i < txtExpressions.length; i++) {
                 if (txtExpressions[i].trim() != "") {
+                    // HACK: replace all occurances of '-' with '+0-' to fix precedence problem with evaulation engine.
+                    //txtExpressions[i] = txtExpressions[i].replace(/\-/g, "+0-");
+                    // HACK: replace all occurances of '/' with '*1/' to fix precedence problem with evaulation engine.
+                    //txtExpressions[i] = txtExpressions[i].replace(/\//g, "*1/");
+
                     gExpressions.push(new CryptoExpression(txtExpressions[i]));
                 }
             }
@@ -190,7 +277,7 @@ Featue Todo:
                             if (gExpressions[j].right.value) {
                                 gMapping[i].value = "" + gExpressions[j].right.value;
                                 break;
-                            } else if (!gExpressions[j].right.ContainsDigit(digit)) {
+                            } else {
                                 gMapping[i].value = gExpressions[j].right.text;
                             }
                         }
@@ -199,7 +286,7 @@ Featue Todo:
                             if (gExpressions[j].left.value) {
                                 gMapping[i].value = "" + gExpressions[j].left.value;
                                 break;
-                            } else if (!gExpressions[j].left.ContainsDigit(digit)) {
+                            } else {
                                 gMapping[i].value = gExpressions[j].left.text;
                             }
                         }
@@ -207,7 +294,43 @@ Featue Todo:
                 }
             }
 
+            // Create expressions for all mapping values that have one.
+            //
+            for (var i = 0; i < gMapping.length; i++) {
+                var v = gMapping[i].value.trim();
+                if (v) {
+                    var value = +v;
+                    if (isNaN(value)) {
+                        // HACK: replace all occurances of '-' with '+0-' to fix precedence problem with evaulation engine.
+                        //v = v.replace(/\-/g, "+0-");
+                        // HACK: replace all occurances of '/' with '*1/' to fix precedence problem with evaulation engine.
+                        //v = v.replace(/\//g, "*1/");
+                        gMapping[i].expression = new CryptoExpression(v);
+                    }
+                }
+                else {
+                    gMapping[i].expression = null;
+                }
+            }
+
+            for (var i = 0; i < gMapping.length; i++) {
+                removeCircularDependencies(gMapping[i], {});
+            }
+
             renderMappingTable(gMapping);
+
+
+            window.setTimeout("doSolveWork();", 0);
+        }
+
+        /**
+         *
+         */
+        function doSolveWork() {
+            var startTime = new Date().getTime();
+
+            var results = [];
+
 
             var bases = getBaseRange();
             for (var b = 0; b < bases.length; b++) {
@@ -228,26 +351,31 @@ Featue Todo:
                     var v = gMapping[i].value.trim();
                     if (v) {
                         var value = +v;
-                        if (isNaN(value)) {
-                            gMapping[i].expression = new CryptoExpression(v);
-                        } else {
+                        if (! isNaN(value)) {
                             mapping[gMapping[i].digit] = value;
-                            var index = values.indexOf(value);
-                            if (index >= 0) {
-                                values.splice(index, 1);
+                            if (!getAllowDuplicateValues()) {
+                                var index = values.indexOf(value);
+                                if (index >= 0) {
+                                    values.splice(index, 1);
+                                }
                             }
                         }
-                    } else {
+                    }
+                    else {
                         digits.push(gMapping[i].digit);
                     }
                 }
 
-                if (values.length >= digits.length) {
+
+                // Only try and solve if we have enough values to assign to all the digits or we are allowing
+                // values to be assigned to multiple digits.
+                //
+                if ((values.length >= digits.length) || getAllowDuplicateValues()) {
                     results = results.concat(doSolve2(mapping, digits, values));
                 }
             }
 
-
+            gResults = results;
             renderResults(results);
 
             setDuration(new Date().getTime() - startTime);
@@ -255,6 +383,7 @@ Featue Todo:
 
             return results;
         }
+
 
         function doSolve2(mapping, digits, values) {
             var results = [];
@@ -266,11 +395,13 @@ Featue Todo:
 
                 for (var i = 0; i < gMapping.length; i++) {
                     if (gMapping[i].expression) {
-                        var value = gMapping[i].expression.Value(mapping);
+                        var value = resolveExpression(gMapping[i], mapping);
                         var index = values.indexOf(value);
                         if (index >= 0) {
-                            values.splice(index, 1);
-                            mapping[gMapping[i].digit] = gMapping[i].expression.Value(mapping);
+                            if (!getAllowDuplicateValues()) {
+                                values.splice(index, 1);
+                            }
+                            mapping[gMapping[i].digit] = value;
                         }
                         else {
                             valid = false;
@@ -292,6 +423,13 @@ Featue Todo:
                     results.push(jQuery.extend({}, mapping));
                 }
 
+                // remove the calculated digit values so they get reclaculated next time.
+                for (var i = 0; i < gMapping.length; i++) {
+                    if (gMapping[i].expression) {
+                        delete mapping[gMapping[i].digit];
+                    }
+                }
+
                 return results;
             }
 
@@ -303,7 +441,10 @@ Featue Todo:
             for (var vi = 0; vi < values.length; vi++) {
                 var value = values[vi];
                 if ((value != 0) || !isLeadingDigit || getAllowLeadingZeros()) {
-                    var remainingValues = values.slice(0, vi).concat(values.slice(vi + 1));
+                    var remainingValues = values;
+                    if (!getAllowDuplicateValues()) {
+                        remainingValues = values.slice(0, vi).concat(values.slice(vi + 1));
+                    }
 
                     mapping[digit] = value;
 
@@ -312,6 +453,63 @@ Featue Todo:
             }
 
             return results;
+        }
+
+        /**
+         *
+         */
+        function resolveExpression(mValue, mapping) {
+            if (typeof (mapping[mValue.digit]) == "undefined") {
+                if (mValue.expression) {
+                    var dependencies = mValue.expression.getDependencies();
+                    for (var j = 0; j < dependencies.length; j++) {
+                        if (typeof mapping[dependencies[j]] == "undefined") {
+                            for (var i = 0; i < gMapping.length; i++) {
+                                if (gMapping[i].digit == dependencies[j]) {
+                                    resolveExpression(gMapping[i], mapping);
+                                }
+                            }
+                        }
+                    }
+
+                    mapping[mValue.digit] = mValue.expression.Value(mapping);
+                }
+            }
+
+            return mapping[mValue.digit];
+        }
+
+        /**
+         *
+         */
+        function removeCircularDependencies(mValue, mapping) {
+            if (!mapping[mValue.digit]) {
+                if (mValue.expression) {
+                    mapping[mValue.digit] = 1;  // trying to define
+                    var dependencies = mValue.expression.getDependencies();
+                    for (var j = 0; j < dependencies.length; j++) {
+                        if (mapping[dependencies[j]] == 2) {
+                            // do nothing and check next dependency.
+                        }
+                        else if (mapping[dependencies[j]] == 1) {   // if dependency is in trying state then this is a recursive dependency which needs to be removed.
+                            mValue.value = "";
+                            mValue.expression = null;
+                            break;
+                        }
+                        else {
+                            for (var i = 0; i < gMapping.length; i++) {
+                                if (gMapping[i].digit == dependencies[j]) {
+                                    removeCircularDependencies(gMapping[i], mapping);
+                                }
+                            }
+                        }
+                    }
+                    mapping[mValue.digit] = 2;
+                }
+                else {
+                    mapping[mValue.digit] = 2; // fully resolved
+                }
+            }
         }
 
 
@@ -337,7 +535,15 @@ Featue Todo:
             }
         }
 
+        function doClearMapValues() {
+            var table = document.getElementById("MappingTable");
 
+            for (var i = 1, row; row = table.rows[i]; i++) {
+                var mapEdit = row.cells[1].firstChild;
+                mapEdit.value = "";
+                gMapping[i - 1].value = "";
+            }
+        }
 
         function getAllowDuplicateValues() {
             var elem = document.getElementById("AllowDuplicateValues");
@@ -364,6 +570,15 @@ Featue Todo:
             }
 
             return true;
+        }
+
+        function getShowAllResults() {
+            var elem = document.getElementById("ShowAllResults");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
         }
 
         function getBaseRange() {
@@ -579,7 +794,7 @@ Featue Todo:
                 var t = document.getElementById("ResultsTable");
                 t.innerHTML = '<tr><th><a href="javascript:void(0)" onclick="doSortByDigit();">Base</a></th><th style="text-align:left;"><a href="javascript:void(0)" onclick="doSortByValues();">Values</a></th></tr>';
 
-                if (true) {
+                if (!getShowAllResults()) {
                     // Render accumulated combinatinos for each base.
                     //
                     for (var b = 0; b < bases.length; b++) {
@@ -628,33 +843,6 @@ Featue Todo:
             }
 
 
-            function setDuration(duration) {
-                var millis = (duration % 1000);
-                var seconds = Math.floor((duration / 1000)) % 60;
-                var minutes = Math.floor((duration / 1000) / 60);
-
-                var text = ""
-                if (minutes < 10) text += "0";
-                text += minutes;
-                text += ":";
-                if (seconds < 10) text += "0";
-                text += seconds;
-                text += ":";
-                if (millis < 10) {
-                    text += "00";
-                } else if (millis < 100) {
-                    text += "0";
-                }
-                text += millis;
-
-                var elem = document.getElementById("Duration");
-                if (elem) {
-                    elem.value = text;
-                }
-            }
-
-
-
 
 
             function getNumericValue(id, defaultValue) {
@@ -679,156 +867,15 @@ Featue Todo:
 
 
 
-
-
-
-
-
-
             ///
             ///
             function getExcludeText() {
-                var excludeEdit = document.getElementById("Exclude");
-                var numCheckbox = document.getElementById("Numbers");
-                var puncCheckbox = document.getElementById("Punctuation");
-                var wsCheckbox = document.getElementById("Whitespace");
+                var operators = "+-*/!=<>$&|?:"
 
-                var result = "";
-
-                if (excludeEdit && excludeEdit.value) {
-                    result = result + excludeEdit.value;
-                }
-
-
-                if (numCheckbox && numCheckbox.checked) {
-                    result = result + PHTWords.Digits;
-                }
-
-                if (puncCheckbox && puncCheckbox.checked) {
-                    result = result + PHTWords.Punctuation;
-                }
-
-                if (wsCheckbox && wsCheckbox.checked) {
-                    result = result + PHTWords.Whitespace;
-                }
+                var result = operators + PHTWords.Digits + PHTWords.Punctuation + PHTWords.Whitespace;
 
                 return result
             }
-
-
-
-
-
-
-
-
-
-
-
-
-            function doSortByFrequency() {
-                gSearchResultsSort = 1;
-                renderSearchResults(gSearchResults);
-            }
-
-            function doSortByWords() {
-                gSearchResultsSort = 2;
-                renderSearchResults(gSearchResults);
-            }
-
-            function doFlipMapping(row, word, digit, pattern) {
-                if (gSearchMapTry) {
-                    for (var j = 0; j < gMapping.length; j++) {
-                        if (gSearchMapTry.indexOf(gMapping[j].digit) > -1) {
-                        }
-                    }
-                    gSearchMapTry = "";
-                }
-
-
-                if (row) {
-                    if (row.style.backgroundColor == "yellow") {
-                        row.style.backgroundColor = "inherit";
-                    }
-                    else {
-                        // remove highlight from any other cell
-                        var table = document.getElementById("MappingTable");
-
-                        for (var i = 0; i < row.parentNode.parentNode.rows.length; i++) {
-                            row.parentNode.parentNode.rows[i].style.backgroundColor = "inherit";
-                        }
-
-                        row.style.backgroundColor = "yellow";
-
-                        // lock the mapping for this word
-                        for (var i = 0; i < word.length; i++) {
-                            for (var j = 0; j < gMapping.length; j++) {
-                                if (digit[i] == gMapping[j].digit) {
-                                }
-                            }
-                        }
-                    }
-                }
-
-
-                renderMappingTable(gMapping);
-            }
-
-            function renderSearchResults(data, startTime) {
-
-                switch (gSearchResultsSort) {
-                    case 1: { data.sort(function (a, b) { return b.frequency - a.frequency; }); break; }
-                    case 2: { data.sort(function (a, b) { if (a.value > b.value) { return 1; } else if (a.value < b.value) { return -1; } else { return 0; } }); break; }
-                }
-
-                gSearchResults = data;
-
-                var table = document.getElementById("ResultsTable");
-
-                table.innerHTML = '';
-
-                var elem = document.getElementById("ResultsCount");
-                if (elem) {
-                    if (data) {
-                        elem.value = data.length;
-                    } else {
-                        elem.value = "";
-                    }
-                }
-
-                var digit = "";
-                elem = document.getElementById("SearchCypher");
-                if (elem) {
-                    digit = elem.value;
-                }
-
-                var pattern = "";
-                elem = document.getElementById("SearchPattern");
-                if (elem) {
-                    pattern = elem.value;
-                }
-
-                for (var i = 0; i < data.length; i++) {
-                    var r = table.insertRow(-1);
-                    if (digit) {
-                        r.setAttribute("onclick", "doFlipMapping(this,'" + escapeJSLiterial(data[i].value) + "','" + escapeJSLiterial(digit) + "','" + escapeJSLiterial(pattern) + "');");
-                    }
-
-                    var c = r.insertCell(-1);
-                    c.innerHTML = data[i].value;
-
-                    c = r.insertCell(-1);
-                    c.style.textAlign = "right";
-                    c.innerHTML = data[i].frequency;
-                }
-
-                if (startTime) {
-                    setDuration(new Date().getTime() - startTime);
-                    beep();
-                }
-            }
-
-
 
 
     </script>
@@ -838,8 +885,11 @@ Featue Todo:
     <table style="width:100%;">
         <tr>
             <td id="SubstitutionMapping" style="width:1%;vertical-align:top;white-space:nowrap;">
-                <span>Count:</span>
-                <input type="text" size="5" disabled="disabled" id="MapCount" />
+                <div style="min-width:200px;">
+                    <span>Count:</span>
+                    <input type="text" size="5" disabled="disabled" id="MapCount" />
+                    <button onclick="doClearMapValues()" style="float:right;">Clear</button>
+                </div>
                 <br />
                 <hr />
                 <table id="MappingTable">
@@ -847,34 +897,20 @@ Featue Todo:
             </td>
             <td style="vertical-align:top;border-right: 3px solid black;border-left: 3px solid black;padding-left:5px; padding-right:10px;">
                 
-                <table style="width:100%">
-                    <tr>
-                        <td style="white-space:nowrap;">
-                            <span>Exclude:</span>
-                            <input type="text" id="Exclude" onkeyup="doEncryptionChanged();" value="+-*/!=<>$"/>
-                            <label><input type="checkbox" id="Numbers" checked="checked" value="Numbers" onchange="doEncryptionChanged();" />Numbers</label>
-                            <label><input type="checkbox" id="Punctuation" checked="checked" value="Punctuation" onchange="doEncryptionChanged();" />Punctuation</label>
-                            <label><input type="checkbox" id="Whitespace" checked="checked" value="Whitespace" onchange="doEncryptionChanged();" />Whitespace</label>
-                            <br />
-                            <hr />
-                        </td>
-                    </tr>
-                </table>
-
                 <table id="AutoMapping" style="width:100%">
                     <tr>
                         <td colspan="2">
                             <label><input type="checkbox" id="AllowDuplicateValues" value="1" />Allow Duplicate Values</label>
                             <label><input type="checkbox" id="AllowLeadingZeros" value="1" />Allow Leading Zeros</label>
-                            <label><input type="checkbox" id="AllowZeroDigit" value="1" checked="checked" />Allow Zero Digit</label>
+                            <label><input type="checkbox" id="AllowZeroDigit" value="1" checked="checked" />Allow&nbsp;Zero&nbsp;Digit</label>
                         </td>
                     </tr>
                     <tr>
                         <td id="OccuranceFreqTitle" style="text-align:right;">
-                            Base Range:
+                            Base&nbsp;Range:
                         </td>
                         <td style="white-space:nowrap;">
-                            <input type="text" id="BaseRange" value="10" size="50" />
+                            <input id="BaseRange" type="text" value="10" size="50" title="Examples: 2,3,10,16 or 2-26"/>
                             <button onclick="doSolve()">Solve</button>
                         </td>
                     </tr>
@@ -891,6 +927,7 @@ Featue Todo:
                 <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
                 <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
                 <label>Max Results: <input type="text" maxlength="4" id="MaxResults" size="5" value="999" /></label>
+                <label><input id="ShowAllResults" type="checkbox" value="1" onchange="renderResults(gResults);" />Show&nbsp;All&nbsp;Results</label>
                 <br />
                 <hr />
 

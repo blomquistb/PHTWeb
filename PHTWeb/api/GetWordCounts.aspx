@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" CodeBehind="GetWordCounts.aspx.cs" Inherits="PHTWeb.GetWordCounts" ValidateRequest="false" EnableEventValidation="false" EnableSessionState="False" EnableViewState="false" EnableTheming="false"%>

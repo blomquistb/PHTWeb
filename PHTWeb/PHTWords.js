@@ -4,22 +4,25 @@
 var PHTWords = {};
 
 PHTWords.Digits = "0123456789";
-PHTWords.Punctuation = ";:.,!?[]{}()\"'“”‘’";
+PHTWords.Punctuation = ";:.,!?[]{}()\"'“”‘’`";
 PHTWords.Whitespace = " \f\n\r\t\v";
 
-
-PHTWords.TrimPunctuation = function (word, excludeText) {
-    if (word) {
-        if ((PHTWords.Punctuation.indexOf(word.charAt(word.length - 1)) > -1) && (!excludeText || excludeText.indexOf(word.charAt(word.length - 1)) > -1)) {
-            return PHTWords.TrimPunctuation(word.substring(0, word.length - 1));
+PHTWords.Trim = function (word, trimChars) {
+    if (word && trimChars) {
+        if (trimChars.indexOf(word.charAt(word.length - 1)) > -1) {
+            return PHTWords.Trim(word.substring(0, word.length - 1), trimChars);
         }
 
-        if ((PHTWords.Punctuation.indexOf(word.charAt(0)) > -1) && (!excludeText || excludeText.indexOf(word.charAt(0)) > -1)) {
-            return PHTWords.TrimPunctuation(word.substring(1));
+        if (trimChars.indexOf(word.charAt(0)) > -1) {
+            return PHTWords.Trim(word.substring(1), trimChars);
         }
     }
 
     return word;
+}
+
+PHTWords.TrimPunctuation = function (word) {
+    return PHTWords.Trim(word, PHTWords.Punctuation);
 }
 
 PHTWords.IsWhitespace = function (char) {
@@ -158,6 +161,49 @@ PHTWords.Clear = function () {
     PHTWords.CryptoAnagramIdxHash = {};
 }
 
+PHTWords.AddText = function (text, linesAreWords, useFrequency) {
+
+    if (text) {
+        text = text.trim();
+        var lines = text.split("\n");
+
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim().replace(/[\s]+/g, ' ');
+
+            var words = line.split(" ");
+            for (var j = 0; j < words.length; j++) {
+                if (useFrequency) {
+                    var wi = PHTWords.GetWordMatches(words[j], null, null, null, null, "1");
+                    if (wi.length) {
+                        PHTWords.AddWord(words[j], wi[0].frequency);
+                    }
+                    else {
+                        PHTWords.AddWord(words[j], 0);
+                    }
+                }
+                else {
+                    PHTWords.AddWord(words[j], 7000000);
+                }
+            }
+
+            if (linesAreWords && (words.length > 1)) {
+                if (useFrequency) {
+                    var wi = PHTWords.GetWordMatches(line, null, null, null, null, "1");
+                    if (wi.length) {
+                        PHTWords.AddWord(line, wi[0].frequency);
+                    }
+                    else {
+                        PHTWords.AddWord(line, 0);
+                    }
+                }
+                else {
+                    PHTWords.AddWord(line, 7000100);
+                }
+            }
+        }
+    }
+}
+
 PHTWords.AddWord = function (word, frequency) {
     var entry = new DictionaryEntry(word, frequency);
 
@@ -181,7 +227,7 @@ PHTWords.AddWordToHash = function (hash, idx, entry) {
 
 PHTWords.GetWordIdx = function (word) {
     if (word) {
-        word = PHTWords.TrimPunctuation(word.trim()).replace(/[\s]+/g, "").toUpperCase();
+        word = PHTWords.TrimPunctuation(word.replace(/[\s]+/g, "").toUpperCase());
     }
 
     return word;
@@ -265,9 +311,84 @@ PHTWords.GetCryptoAnagramIdx = function (word) {
     return word;
 };
 
+PHTWords.GetWordCounts = function (wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns,
+                                   dictionaries, minFrequency, minWordLength, maxWordLength, callback, callbackData) {
+    var asyncCall = false;
 
-PHTWords.GetWordMatches = function (wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength, callback) {
-    var startTime = new Date().getTime();
+    if (!wordPatterns) {
+        wordPatterns = "";
+    }
+
+    if (!anagramPatterns) {
+        anagramPatterns = "";
+    }
+
+    if (!cryptogramPatterns) {
+        cryptogramPatterns = "";
+    }
+
+    if (!cryptoAnagramPatterns) {
+        cryptoAnagramPatterns = "";
+    }
+
+    if (!phoneticPatterns) {
+        phoneticPatterns = "";
+    }
+
+    if (!dictionaries) {
+        dictionaries = ""
+    }
+
+    if (!minFrequency) {
+        minFrequency = 0;
+    }
+
+    if (!minWordLength) {
+        minWordLength = 0;
+    }
+
+    if (!maxWordLength) {
+        maxWordLength = 0;
+    }
+
+    if (callback) {
+        asyncCall = true;
+    }
+
+    var count = 0;
+    //var count = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength).length;
+
+    if (dictionaries != "0") {
+        $.ajax({
+            url: '/api/GetWordCounts.aspx?dictionaries=' + encodeURIComponent(dictionaries) + "&minFrequency=" + encodeURIComponent(minFrequency) + "&minWordLength=" + encodeURIComponent(minWordLength) + "&maxWordLength=" + encodeURIComponent(maxWordLength)
+                + "&wordPatterns=" + encodeURIComponent(wordPatterns) + "&anagramPatterns=" + encodeURIComponent(anagramPatterns) + "&cryptogramPatterns=" + encodeURIComponent(cryptogramPatterns) + "&cryptoAnagramPatterns=" + encodeURIComponent(cryptoAnagramPatterns) + "&phoneticPatterns=" + encodeURIComponent(phoneticPatterns),
+            type: 'GET',
+            dataType: 'json',
+            contentType: "text/json; charset=utf-8",
+            success: function (data) {
+                count = data;
+
+                if (callback) {
+                    callback(count, callbackData);
+                }
+            },
+            async: asyncCall,
+        });
+    }
+    else {
+        count = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, dictionaries, minFrequency, 9999, minWordLength, maxWordLength).length;
+        if (callback) {
+            callback(count, callbackData);
+        }
+    }
+
+    return count;
+}
+
+/**
+ *
+ */
+PHTWords.GetWordMatches = function (wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength, callback, callbackData) {
     var asyncCall = false;
 
     if (!wordPatterns) {
@@ -316,39 +437,41 @@ PHTWords.GetWordMatches = function (wordPatterns, anagramPatterns, cryptogramPat
 
     var results = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength);
 
-    if (dictionaries != "0") {
-        if (results.length < maxResults) {
-            $.ajax({
-                url: '/api/GetWordMatches.aspx?dictionaries=' + encodeURIComponent(dictionaries) + "&minFrequency=" + encodeURIComponent(minFrequency) + "&maxResults=" + encodeURIComponent(maxResults) + "&minWordLength=" + encodeURIComponent(minWordLength) + "&maxWordLength=" + encodeURIComponent(maxWordLength)
-                    + "&wordPatterns=" + encodeURIComponent(wordPatterns) + "&anagramPatterns=" + encodeURIComponent(anagramPatterns) + "&cryptogramPatterns=" + encodeURIComponent(cryptogramPatterns) + "&cryptoAnagramPatterns=" + encodeURIComponent(cryptoAnagramPatterns) + "&phoneticPatterns=" + encodeURIComponent(phoneticPatterns),
-                type: 'GET',
-                dataType: 'json',
-                contentType: "text/json; charset=utf-8",
-                success: function (data) {
-                    var localCount = results.length;
-                    for (var i = 0; i < data.length; i++) {
-                        var j = 0;
-                        for (; j < localCount; j++) {
-                            if (results[j].value == data[i].value) {
-                                break;
-                            }
+    if ((dictionaries != "0") && (results.length < maxResults)) {
+        $.ajax({
+            url: '/api/GetWordMatches.aspx?dictionaries=' + encodeURIComponent(dictionaries) + "&minFrequency=" + encodeURIComponent(minFrequency) + "&maxResults=" + encodeURIComponent(maxResults) + "&minWordLength=" + encodeURIComponent(minWordLength) + "&maxWordLength=" + encodeURIComponent(maxWordLength)
+                + "&wordPatterns=" + encodeURIComponent(wordPatterns) + "&anagramPatterns=" + encodeURIComponent(anagramPatterns) + "&cryptogramPatterns=" + encodeURIComponent(cryptogramPatterns) + "&cryptoAnagramPatterns=" + encodeURIComponent(cryptoAnagramPatterns) + "&phoneticPatterns=" + encodeURIComponent(phoneticPatterns),
+            type: 'GET',
+            dataType: 'json',
+            contentType: "text/json; charset=utf-8",
+            success: function (data) {
+                var localCount = results.length;
+                for (var i = 0; i < data.length; i++) {
+                    var j = 0;
+                    for (; j < localCount; j++) {
+                        if (results[j].value == data[i].value) {
+                            break;
                         }
-                        if (j >= localCount) {
-                            results.push(data[i]);
-                        }
+                    }
+                    if (j >= localCount) {
+                        results.push(data[i]);
                     }
 
-                    if (callback) {
-                        callback(results, startTime);
+                    if (results.length >= maxResults) {
+                        break;
                     }
-                },
-                async: asyncCall,
-            });
-        }
+                }
+
+                if (callback) {
+                    callback(results, callbackData);
+                }
+            },
+            async: asyncCall,
+        });
     }
     else {
         if (callback) {
-            callback(results, startTime);
+            callback(results, callbackData);
         }
     }
 

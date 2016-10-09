@@ -1,6 +1,15 @@
 ﻿<!--
 Featue Todo:
 
+    Implement UniquePaths checkbox to make sure that any hole path has only one way to navigate through it for the select path type.
+    This should reduce (PH-16 Queen-Crazy Little Thing Called Love) to a reasonable number of possible solutions.
+
+    Implemement CoverLetters functionality checkbox.(PS-16:Corporate Reorganization)
+
+    Improve storage and access of the field holes by adding the concept of an offset from the upper left to the field objects.
+
+    Fix TODO in Field.Equals() method to check the number of shapes and their locations for validity instead of just what parts
+    of the grid are filled up.
 
 -->
 
@@ -64,14 +73,31 @@ Featue Todo:
         var gAllowRotations = false;
         var gAllowFlips = false;
 
-        ////
-        // Tile Class Definition
-        ////
+        /**
+         * A Polyomino Tile. 
+         *
+         * @constructor
+         */
         function Tile(grid) {
             this.grid = grid;
-            this.flips = [];            // 2 - hoirzontal and vertical flips
-            this.rotations = [];        // 3 - rotations of the original shape
-            this.fliprotations = [];    // 2 - 90 deg rotations of the horiz and vertical flips
+
+            /**
+             * Array containing Tiles that are the horizontal and vertical flips of this Tile.
+             * @private {Array<Tile>}
+             */
+            this.flips = [];
+
+            /**
+             * Array containing Tiles that are the 90, 180 and 270 degree rotations of this Tile.
+             * @private {Array<Tile>}
+             */
+            this.rotations = [];
+
+            /**
+             * Array containing Tiles that are the 90 degree rotations of the horizontial and vertical flips of this Tile.
+             * @private {Array<Tile>}
+             */
+            this.fliprotations = [];
 
             this.height = grid.length;
             this.width = grid[0].length;
@@ -557,9 +583,79 @@ Featue Todo:
                         if (hole == null || hole.space != this.holes[i].size) {
                             return false;
                         }
+                        else {
+                            switch (getFieldHolePath()) {
+                                case 1: if (!hole.isSnakePath(this.holes[i].row, this.holes[i].col)) return false; break;
+                                case 2: if (!hole.isBogglePath(this.holes[i].row, this.holes[i].col)) return false; break;
+                                default: break;
+                            }
+                        }
                     }
                 }
                 return true;
+            }
+
+            return false;
+        }
+
+        Field.prototype.isSnakePath = function (row, col, visited) {
+            if (typeof(visited) == "undefined") {
+                visited = [];
+            }
+
+            if (this.getValue(row, col) != '*') {
+                return false;
+            }
+
+            var loc = "[" + row + "," + col +"]";
+            
+            if (visited.findIndex(function(item) { return item == loc; }) != -1) {
+                return false;
+            }
+
+            visited.push(loc);
+
+            if (visited.length == this.space) {
+                return true;
+            }
+
+            if (this.isSnakePath(row + 1, col, visited) || this.isSnakePath(row - 1, col, visited) || this.isSnakePath(row, col + 1, visited) || this.isSnakePath(row, col - 1, visited)) {
+                return true;
+            }
+            else {
+                visited.pop();
+            }
+
+            return false;
+        }
+
+        Field.prototype.isBogglePath = function (row, col) {
+            if (typeof (visited) == "undefined") {
+                visited = [];
+            }
+
+            if (this.getValue(row, col) != '*') {
+                return false;
+            }
+
+            var loc = "[" + row + "," + col + "]";
+
+            if (visited.findIndex(function (item) { return item == loc; }) != -1) {
+                return false;
+            }
+
+            visited.push(loc);
+
+            if (visited.length == this.space) {
+                return true;
+            }
+
+            if (this.isBogglePath(row + 1, col, visited) || this.isBogglePath(row + 1, col + 1, visited) || this.isBogglePath(row, col + 1, visited) || this.isBogglePath(row - 1, col + 1, visited) ||
+                this.isBogglePath(row - 1, col, visited) || this.isBogglePath(row - 1, col - 1, visited) || this.isBogglePath(row, col - 1, visited) || this.isBogglePath(row + 1, col - 1, visited)) {
+                return true;
+            }
+            else {
+                visited.pop();
             }
 
             return false;
@@ -700,65 +796,64 @@ Featue Todo:
             return results;
         }
 
+        /**
+         * 
+         */
+        function getFieldHolePath() {
+            var pathTypeIds = ["HolePathNone", "HolePathSnake", "HolePathBoggle"];
+            for (var i = 0; i < pathTypeIds.length; i++) {
+                if (getIsChecked(pathTypeIds[i], false)) {
+                    return i;
+                }
+            }
+        }
+
+        /**
+         * Get the state of the UI checkbox controlling wether case of the letters specified in the tiles or field are respected or made to all
+         * be uppercase.
+         */
         function getIgnoreCase() {
-            var elem = document.getElementById("IgnoreCase");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return true;
+            return getIsChecked("IgnoreCase", true);
         }
 
+        /**
+         * Get the state of the UI checkbox controlling wether tiles should overlape matching letters in the field or letters in the field should
+         * be concidered obsticles that the tiles need to be placed around.
+         */
+        function getCoverLetters() {
+            return getIsChecked("CoverLetters", false);
+        }
+
+        /**
+         * Get the state of the UI checkbox controlling wether tiles are allowed to be rotated for placement into the field.
+         */
         function getAllowRotations() {
-            var elem = document.getElementById("AllowRotations");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
+            return getIsChecked("AllowRotations", false);
         }
 
+        /**
+         * Get the state of the UI checkbox controlling wether tiles are allowed to be flipped for placement into the field.
+         *
+         * @return {Boolean}
+         */
         function getAllowFlips() {
-            var elem = document.getElementById("AllowFlips");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
+            return getIsChecked("AllowFlips", false);
         }
 
+        /**
+         * Get the state of the UI checkbox controlling wether the content of a tile should be taken into account when determining if a particular
+         * rotation or flip of a tile is a duplicate and should be eliminated.
+         */
         function getIgnoreContent() {
-            var elem = document.getElementById("IgnoreContent");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
+            return getIsChecked("IgnoreContent", false);
+            getDu
         }
 
+        /**
+         * Sets the UI Duration display field to the specified value.
+         */
         function setDuration(duration) {
-            var millis = (duration % 1000);
-            var seconds = Math.floor((duration / 1000)) % 60;
-            var minutes = Math.floor((duration / 1000) / 60);
-
-            var text = ""
-            if (minutes < 10) text += "0";
-            text += minutes;
-            text += ":";
-            if (seconds < 10) text += "0";
-            text += seconds;
-            text += ":";
-            if (millis < 10) {
-                text += "00";
-            } else if (millis < 100) {
-                text += "0";
-            }
-            text += millis;
-
-            var elem = document.getElementById("Duration");
-            if (elem) {
-                elem.value = text;
-            }
+            setInputValue("Duration", getDurationText(duration));
         }
 
         ///
@@ -1087,6 +1182,12 @@ Featue Todo:
                 <br />
                 <label>Holes: <input type="text" id="Holes" size="24" value="" title="S1-R1,C1;S2-R2,C2" onchange="doFieldChanged();" /></label>
                 <br />
+                Hole Paths: 
+                <label><input type="radio" id="HolePathNone" name="HolePath" value="HolePathNone" />None</label>
+                <label><input type="radio" id="HolePathSnake" name="HolePath" value="HolePathSnake" checked="checked" />Snake</label>
+                <label><input type="radio" id="HolePathBoggle" name="HolePath" value="HolePathBoggle" />Boggle</label>
+                <label><input type="checkbox" id="UniquePaths" value="1" checked="checked" />Unique Paths Only</label>
+                <br />
                 <textarea id="FieldText" onchange="doFieldChanged();" style="width:30em;height:15em;font-family:Courier New, Courier, monospace;font-size:12px;"></textarea>
                 <br />
                 <hr />
@@ -1095,10 +1196,10 @@ Featue Todo:
                 <label><input type="checkbox" id="AllowRotations" value="1" />Allow Rotations</label>
                 <label><input type="checkbox" id="AllowFlips" />Allow Flips</label>
                 <label><input type="checkbox" id="IgnoreContent" />Ignore Content</label>
-                <button onclick="doSolve();" style="float: right;">Solve</button>
                 <hr />
                 <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
                 <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
+                <button onclick="doSolve();" style="float: right;">Solve</button>
                 <br />
                 <hr />
                 <table id="ResultsList" class="TileList" style="width:100%;">
