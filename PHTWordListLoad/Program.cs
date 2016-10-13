@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using PHTWords;
 using System.IO;
+using System.Web;
 
 namespace PHTWordListLoad
 {
@@ -20,33 +22,34 @@ namespace PHTWordListLoad
         {
             DateTime start = DateTime.Now;
 
-            // Single Test Filed: ProcessFile(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\WordSources\scow-20150518-words\american-abbreviations.70", 1);
-            //ProccessCMUDict(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\cmudict_test.txt", 1);
+            ProccessCMUDict(@"..\..\WordSources\cmudict-0.7b.txt", 1);          // 2 hours to load
+            ProccessCMUDict(@"..\..\WordSources\cmudict_brian_adds.txt", 1);
 
-            ProccessCMUDict(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\cmudict_brian_adds.txt", 1);
-            ProccessCMUDict(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\cmudict-0.7b.txt", 1);
-            /*
 
-            ProcessDirectory(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\WordSources\scow-20150518-words", 1);
+            ProcessFile(@"..\..\WordSources\wordlist.txt", 1);  // 23 minutes
 
-            ProcessDirectory(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\WordSources\scow-20150518-words", 1);
+            ProcessDirectory(@"..\..\WordSources\scow-20150518-words", 1);    // 5 hours 50 minutes
+            ProcessFile(@"..\..\WordSources\UKACD17.txt", 1);
 
-            ProcessFile(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\WordSources\wordlist.txt", 1);
+            ProcessDirectory(@"..\..\WordSources\Categories", 1);   // 3 minutes
 
-            ProcessFile(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\WordSources\UKACD17.txt", 1);
 
-            ProcessFile(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\WordSources\AliceInWonderland.txt", 1);
+            ProccessBNCFreqFile(@"..\..\WordSources\bnc-corpus-freq-list.txt", 1);  // 51 minutes
 
-            ProcessFile(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\WordSources\BrianCutomWords.txt", 1);
-            
-            ProccessBNCFreqFile(@"C:\Users\brianblo\Documents\Visual Studio 2012\Projects\PHTWordListLoad\WordSources\bnc-corpus-freq-list.txt", 1);
-            */
 
+            ProcessXMLDirectory(@"..\..\WordSources\Middle English\Middle English Dictionary", 2, "//b[@class=\"entry\"]"); // 7 minutes
 
             TimeSpan duration = DateTime.Now.Subtract(start);
 
             WriteLine("");
             WriteLine("Duration=" + duration);
+            WriteLine("");
+            WriteLine("TotalLines: " + TotalLinesProcessed);
+            WriteLine("TotalWords: " + TotalWordsProccessed);
+            WriteLine("TotalPhrases: " + TotalPhrasesProccessed);
+            WriteLine("TotalDuplicates: " + TotalDuplicates);
+
+            PHTWords.PHTWords.UpdateStatistics();
 
             // Suspend the screen.
             WriteLine("");
@@ -58,6 +61,9 @@ namespace PHTWordListLoad
         static void ProccessCMUDict(string fileName, int domain)
         {
             int lineCounter = 0;
+            int wordCounter = 0;
+            int phraseCounter = 0;
+            int duplicateCount = 0;
 
             string line;
 
@@ -111,7 +117,7 @@ namespace PHTWordListLoad
                                 }
                                 pronunciation = string.Join("|", phonems) + "|";
 
-                                //ProcessWord(word, ref wordCounter, ref phraseCounter, ref duplicateCount, domain, pronunciation);
+                                ProcessWord(word, ref wordCounter, ref phraseCounter, ref duplicateCount, domain);
 
                                 PHTWords.PHTWords.AddPronunciation(word, pronunciation);
                             }
@@ -125,8 +131,16 @@ namespace PHTWordListLoad
                 }
             }
 
+            TotalLinesProcessed += lineCounter;
+            TotalWordsProccessed += wordCounter;
+            TotalPhrasesProccessed += phraseCounter;
+            TotalDuplicates += duplicateCount;
+
             WriteLine("");
             WriteLine("Lines: " + lineCounter);
+            WriteLine("Words: " + wordCounter);
+            WriteLine("Phrases: " + phraseCounter);
+            WriteLine("Duplicates: " + duplicateCount);
             WriteLine("");
         }
 
@@ -140,12 +154,6 @@ namespace PHTWordListLoad
             {
                 ProcessFile(file, domain);
             }
-
-            WriteLine("");
-            WriteLine("TotalLines: " + TotalLinesProcessed);
-            WriteLine("TotalWords: " + TotalWordsProccessed);
-            WriteLine("TotalPhrases: " + TotalPhrasesProccessed);
-            WriteLine("TotalDuplicates: " + TotalDuplicates);
         }
 
         static void ProcessFile(string fileName, int domain)
@@ -192,8 +200,108 @@ namespace PHTWordListLoad
             WriteLine("");
         }
 
+        static void ProcessXMLDirectory(string path, int domain, string xslSelector)
+        {
+            string[] files = Directory.GetFiles(path);
+
+            foreach (var file in files)
+            {
+                ProcessXMLFile(file, domain, xslSelector);
+            }
+        }
+
+        static void ProcessXMLFile(string fileName, int domain, string xslSelector)
+        {
+            int lineCounter = 0;
+            int wordCounter = 0;
+            int phraseCounter = 0;
+            int duplicateCount = 0;
+
+            Console.WriteLine("Processing File: " + fileName);
+
+            HtmlDocument doc = new HtmlDocument();
+            doc.Load(fileName);
+            HtmlNodeCollection nodes = doc.DocumentNode.SelectNodes(xslSelector);
+
+            foreach (var node in nodes)
+            {
+                string[] lines = HttpUtility.HtmlDecode(node.InnerText).Replace("\r", "").Replace("\n", "").Replace("\t", " ").Split(',');
+                foreach (var l in lines)
+                {
+                    lineCounter++;
+
+                    var line = l.Trim();
+
+                    if (line.Length > 0)
+                    {
+                        if (line.Contains(' '))
+                        {
+                            if (PHTWords.PHTWords.AddWord(line, domain))
+                            {
+                                phraseCounter++;
+                            }
+                            else
+                            {
+                                duplicateCount++;
+                            }
+
+                            string[] words = line.Split(' ');
+
+                            foreach (var word in words)
+                            {
+                                if (PHTWords.PHTWords.AddWord(line, domain))
+                                {
+                                    wordCounter++;
+                                }
+                                else
+                                {
+                                    duplicateCount++;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (PHTWords.PHTWords.AddWord(line, domain))
+                            {
+                                wordCounter++;
+                            }
+                            else
+                            {
+                                duplicateCount++;
+                            }
+                        }
+                    }
+
+                    if (lineCounter % 100 == 0)
+                    {
+                        Console.Write(".");
+                    }
+                }
+
+            }
+
+            TotalLinesProcessed += lineCounter;
+            TotalWordsProccessed += wordCounter;
+            TotalPhrasesProccessed += phraseCounter;
+            TotalDuplicates += duplicateCount;
+
+            Console.WriteLine("");
+            Console.WriteLine("Lines: " + lineCounter);
+            Console.WriteLine("Words: " + wordCounter);
+            Console.WriteLine("Phrases: " + phraseCounter);
+            Console.WriteLine("Duplicates: " + duplicateCount);
+            Console.WriteLine("");
+        }
+
         static void ProcessWord(string word, ref int wordCounter, ref int phraseCounter, ref int duplicateCount, int domain)
         {
+            int index = word.IndexOf('|');
+            string written_out = "";
+            if (index > -1) {
+                written_out = word.Substring(index + 1);
+                word = word.Substring(0, index);
+            }
+
             if (word.Contains(' '))
             {
                 ProcessCompoundWord(word, " ", ref wordCounter, ref phraseCounter, ref duplicateCount, domain);
@@ -226,24 +334,28 @@ namespace PHTWordListLoad
                 ProcessWord(sub_word, ref wordCounter, ref phraseCounter, ref duplicateCount, domain);
             }
             
-            if (PHTWords.PHTWords.AddWord(word, domain))
+            if (!seperator.Equals(" ")) // don't add phrases or full names with spaces but do add hyphenated words.
             {
-                phraseCounter++;
-            }
-            else
-            {
-                duplicateCount++;
-            }
+                PHTWords.PHTWords.AddWord(word, domain);
 
-            // TODO: leaving compound words out for now.
-            //PHTWords.PHTWords.AddWord(word, domain);
+                if (PHTWords.PHTWords.AddWord(word, domain))
+                {
+                    phraseCounter++;
+                }
+                else
+                {
+                    duplicateCount++;
+                }
+
+
+                // TODO: when we add compound words then try and calculate the pronunciation of them if we can.
+                //string pronunciation = PHTWords.PHTWords.GetPronunciation(word, seperator);
+                //if (!string.IsNullOrEmpty(pronunciation))
+                //{
+                //    PHTWords.PHTWords.AddPronunciation(word, pronunciation);
+                //}
+            }
             
-            // TODO: when we add compound words then try and calculate the pronunciation of them if we can.
-            //string pronunciation = PHTWords.PHTWords.GetPronunciation(word, seperator);
-            //if (!string.IsNullOrEmpty(pronunciation))
-            //{
-            //    PHTWords.PHTWords.AddPronunciation(word, pronunciation);
-            //}
         }
 
         static void ProccessBNCFreqFile(string fileName, int domain)

@@ -9,7 +9,6 @@ Airsuperiority blue
 Alabama crimson
 Alabaster
 Alice blue
-AlienArmpit
 Alizarin crimson
 Alloy orange
 Almond
@@ -52,62 +51,42 @@ Azure
 Azuremist
 Azureish white
 Baby blue
-Baby blueeyes
 Baby pink
 Baby powder
-Baker-Miller pink
 Ball blue
 Banana Mania
 Banana yellow
 Bangladesh green
-Barbie pink
 Barn red
-BatteryCharged Blue
 Battleship grey
 Bazaar
 Beau blue
-Beaver
 Begonia
 Beige
-B'dazzled blue
-Bigdip o’ruby
-BigFootFeet
 Bisque
 Bistre
 Bistre brown
 Bitter lemon
 Bitter lime
-Bittersweet
-Bittersweet shimmer
 Black
-Blackbean
 Black Coral
-Blackleatherjacket
-Black olive
-BlackShadows
 Blanched almond
 Blast-off bronze
-BleudeFrance
-Blizzard Blue
 Blond
 Blue
 BlueBell
 BlueBolt
 Blue-gray
 Blue-green
-BlueJeans
-BlueLagoon
 Blue-magenta violet
 Blue sapphire
 Blue-violet
-Blueyonder
 Blueberry
 Bluebonnet
 Blush
 Bole
 Bondi blue
 Bone
-BoogerBuster
 BostonUniversity Red
 Bottle green
 Boysenberry
@@ -139,8 +118,6 @@ Brunswick green
 Bubblegum
 Bubbles
 Bud green
-Buff
-Bulgarian rose
 Burgundy
 Burlywood
 Burnished Brown
@@ -193,8 +170,6 @@ Cerise pink
 Cerulean
 Cerulean blue
 Cerulean frost
-CG Blue
-CG Red
 Chamoisee
 Champagne
 Champagne pink
@@ -1196,7 +1171,6 @@ Vivid tangerine
 Vivid vermilion
 Vivid violet
 Vivid yellow
-Volt
 Wageningen Green
 Warm black
 Waterspout
@@ -1212,7 +1186,6 @@ Wild watermelon
 Willpower orange
 Windsor tan
 Wine
-Wine dregs
 Winter Sky
 Winter Wizard
 Wintergreen Dream

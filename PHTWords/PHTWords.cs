@@ -97,6 +97,7 @@ namespace PHTWords
         public static void ResetFrequencies(int dictionary)
         {
             var conn = GetConnection();
+
             try
             {
                 string updateSql = "UPDATE Dictionary SET frequency=@frequency";
@@ -116,6 +117,7 @@ namespace PHTWords
                     updateCmd.Parameters["@domain"].Value = dictionary;
                 }
 
+                updateCmd.CommandTimeout = 60 * 5;   // wait up to five minutes to reset frequencies.
                 updateCmd.ExecuteNonQuery();
             }
             finally
@@ -194,6 +196,26 @@ namespace PHTWords
                     insertCmd.Parameters["@pronunciation"].Value = pronunciation;
                     insertCmd.ExecuteNonQuery();
                 }
+            }
+            finally
+            {
+                ReleaseConnection(conn);
+            }
+        }
+
+        public static void UpdateStatistics()
+        {
+            var conn = GetConnection();
+
+            try
+            {
+                string updateSql = "sp_updatestats";
+
+                SqlCommand updateCmd = new SqlCommand(updateSql, conn);
+                updateCmd.CommandType = CommandType.StoredProcedure;
+
+                updateCmd.CommandTimeout = 60 * 5;   // wait up to five minutes for update statistics to complete.
+                updateCmd.ExecuteNonQuery();
             }
             finally
             {
@@ -334,6 +356,8 @@ namespace PHTWords
                 }
 
                 selectSql.Append(" ORDER BY frequency DESC");
+
+                selectSql.Append(" OPTION (RECOMPILE)");    // Azure SqlServer v12 needs this for better query plan
 
                 SqlCommand selectCmd = new SqlCommand(selectSql.ToString(), conn);
 
@@ -500,6 +524,8 @@ namespace PHTWords
                 }
 
                 selectSql.Append(") AS c");
+
+                selectSql.Append(" OPTION (RECOMPILE)");    // Azure SqlServer v12 needs this for better query plan
 
                 SqlCommand selectCmd = new SqlCommand(selectSql.ToString(), conn);
 
@@ -807,7 +833,8 @@ namespace PHTWords
 
         private static SqlConnection GetConnection()
         {
-            SqlConnection result = new SqlConnection(@"Data Source=.; Initial Catalog=pht; Integrated Security=True");
+            //SqlConnection result = new SqlConnection(@"Data Source=.; Initial Catalog=pht; Integrated Security=True");
+            SqlConnection result = new SqlConnection(@"Server=tcp:pht.database.windows.net,1433;Initial Catalog=PHT;Persist Security Info=False;User ID=pht_user;Password=puzzleData1;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
             result.Open();
 
             return result;

@@ -39,10 +39,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Grid.cs" />
-    <Compile Include="GridCell.cs" />
-    <Compile Include="GridPosition.cs" />
-    <Compile Include="GridSolution.cs" />
     <Compile Include="PHTWords.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WordInfo.cs" />

@@ -16,7 +16,7 @@ CREATE TABLE [dbo].[Dictionary](
 	[anagram_idx] [nvarchar](256) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL,
 	[crypto_idx] [nvarchar](256) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL,
 	[crypto_anagram_idx] [nvarchar](256) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL,
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+) ON [PRIMARY]
 
 GO
 
@@ -30,6 +30,20 @@ CREATE NONCLUSTERED INDEX [IX_Dictionary_Crypto] ON [dbo].[Dictionary]
 (
 	[crypto_idx] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Dictionary_DomainCrypto] ON [dbo].[Dictionary]
+(
+	[domain] ASC,
+	[crypto_idx] ASC
+)
+INCLUDE (
+ 	[frequency],
+	[word_idx]
+) 
+WITH (
+	PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON
+)
 GO
 
 CREATE NONCLUSTERED INDEX [IX_Dictionary_CryptoAnagram] ON [dbo].[Dictionary]
@@ -48,5 +62,23 @@ CREATE NONCLUSTERED INDEX [IX_Dictionary_WordLength] ON [dbo].[Dictionary]
 (
 	[length] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+GO
+
+CREATE TABLE [dbo].[Pronunciations](
+	[word_idx] [nvarchar](256) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL,
+	[pronunciation] [nvarchar](450) COLLATE SQL_Latin1_General_CP437_BIN2 NOT NULL
+) ON [PRIMARY]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Pronunciations_Pronunciation] ON [dbo].[Pronunciations]
+(
+	[pronunciation] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_Pronunciations_Word_idx] ON [dbo].[Pronunciations]
+(
+	[word_idx] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 GO
 
