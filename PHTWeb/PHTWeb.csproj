@@ -94,15 +94,15 @@
     <Content Include="Index.html" />
     <Content Include="jquery-2.1.4.js" />
     <Content Include="PHTWords.js" />
-    <Content Include="SampleData\CryptoAnagramData.txt" />
-    <Content Include="SampleData\CryptogramData.txt" />
-    <Content Include="SampleData\CryptoMathData.txt" />
-    <Content Include="SampleData\FatFingerData.txt" />
-    <Content Include="SampleData\NgramData.txt" />
-    <Content Include="SampleData\PolyominoData.txt" />
-    <Content Include="SampleData\WordFillData.txt" />
-    <Content Include="SampleData\WordLadderData.txt" />
-    <Content Include="SampleData\WordSearchData.txt" />
+    <None Include="SampleData\CryptoAnagramData.txt" />
+    <None Include="SampleData\CryptogramData.txt" />
+    <None Include="SampleData\CryptoMathData.txt" />
+    <None Include="SampleData\FatFingerData.txt" />
+    <None Include="SampleData\NgramData.txt" />
+    <None Include="SampleData\PolyominoData.txt" />
+    <None Include="SampleData\WordFillData.txt" />
+    <None Include="SampleData\WordLadderData.txt" />
+    <None Include="SampleData\WordSearchData.txt" />
     <Content Include="Utils.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
@@ -147,6 +147,7 @@
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
+    <None Include="Properties\PublishProfiles\phtools.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
