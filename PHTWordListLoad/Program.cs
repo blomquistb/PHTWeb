@@ -39,6 +39,8 @@ namespace PHTWordListLoad
 
             ProcessXMLDirectory(@"..\..\WordSources\Middle English\Middle English Dictionary", 2, "//b[@class=\"entry\"]"); // 7 minutes
 
+            // Total load into Azure took 8 hours and 12 minutes
+
             TimeSpan duration = DateTime.Now.Subtract(start);
 
             WriteLine("");
