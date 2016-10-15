@@ -3,8 +3,6 @@
 <!--
 Featue Todo:
 
-    Add "Select All" and "Deselect All" Buttons
-
     Clear Selection and search results when new maze data pasted.
 
     Add 3D overlay grids to support 3D word search.
@@ -24,7 +22,7 @@ Featue Todo:
 -->
 
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head id="Head1" runat="server">
+<head>
     <title>Word Search Helper</title>
 
     <script src="/es6-shim.js"></script>
@@ -49,9 +47,6 @@ Featue Todo:
     </style>
 
     <script type="text/javascript">
-
-        var englishLangFreq = "ETAOINSHRDLCUMWFGYPBVKJXQZ";
-
 
         var gSolutions = [];
         var gSelected = [];
@@ -182,6 +177,20 @@ Featue Todo:
         function doGetWordList() {
             PHTWords.Clear();
             PHTWords.AddText(getInputValue("WordListText"), getIsChecked("LinesAsWords"), getIsChecked("UseFrequency"));
+        }
+
+        function doSelectAll() {
+            gSelected = gSolutions.slice(0);
+
+            renderSolutions();
+            renderGrid();
+        }
+
+        function doDeselectAll() {
+            gSelected = [];
+
+            renderSolutions();
+            renderGrid();
         }
 
         function doClearSolutions(keepSelected) {
@@ -1645,6 +1654,8 @@ Featue Todo:
                             <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
                         </td>
                         <td style="white-space: nowrap;text-align:right;">
+                            <button onclick="doSelectAll();">Select&nbsp;All</button>
+                            <button onclick="doDeselectAll();">Deselect&nbsp;All</button>
                             <button onclick="doClearSolutions(true);">Clear&nbsp;Unselected</button>
                             <button onclick="doClearSolutions(false);">Clear&nbsp;All</button>
                         </td>
