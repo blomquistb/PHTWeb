@@ -22,13 +22,14 @@ namespace PHTWordListLoad
         {
             DateTime start = DateTime.Now;
 
-            ProccessCMUDict(@"..\..\WordSources\cmudict-0.7b.txt", 1);          // 2 hours to load
+            ProccessCMUDict(@"..\..\WordSources\cmudict-0.7b.txt", 1);          // 2 hours to load            
             ProccessCMUDict(@"..\..\WordSources\cmudict_brian_adds.txt", 1);
 
 
             ProcessFile(@"..\..\WordSources\wordlist.txt", 1);  // 23 minutes
 
             ProcessDirectory(@"..\..\WordSources\scow-20150518-words", 1);    // 5 hours 50 minutes
+
             ProcessFile(@"..\..\WordSources\UKACD17.txt", 1);
 
             ProcessDirectory(@"..\..\WordSources\Categories", 1);   // 3 minutes
@@ -41,17 +42,18 @@ namespace PHTWordListLoad
 
             // Total load into Azure took 8 hours and 12 minutes
 
-            TimeSpan duration = DateTime.Now.Subtract(start);
-
-            WriteLine("");
-            WriteLine("Duration=" + duration);
             WriteLine("");
             WriteLine("TotalLines: " + TotalLinesProcessed);
             WriteLine("TotalWords: " + TotalWordsProccessed);
             WriteLine("TotalPhrases: " + TotalPhrasesProccessed);
             WriteLine("TotalDuplicates: " + TotalDuplicates);
 
+            WriteLine("");
+            WriteLine("Updating Statistics...");
             PHTWords.PHTWords.UpdateStatistics();
+
+            WriteLine("");
+            WriteLine("Total Duration=" + DateTime.Now.Subtract(start));
 
             // Suspend the screen.
             WriteLine("");
@@ -62,6 +64,8 @@ namespace PHTWordListLoad
         static Regex CMUWordVariation = new Regex(@".+\(\d\)", RegexOptions.Compiled);
         static void ProccessCMUDict(string fileName, int domain)
         {
+            DateTime sectionStart = DateTime.Now;
+
             int lineCounter = 0;
             int wordCounter = 0;
             int phraseCounter = 0;
@@ -144,10 +148,14 @@ namespace PHTWordListLoad
             WriteLine("Phrases: " + phraseCounter);
             WriteLine("Duplicates: " + duplicateCount);
             WriteLine("");
+            WriteLine("Duration=" + DateTime.Now.Subtract(sectionStart));
+            WriteLine("");
         }
 
         static void ProcessDirectory(string path, int domain)
         {
+            DateTime sectionStart = DateTime.Now;
+
             WriteLine("Processing Directory: " + path);
 
             string[] files = Directory.GetFiles(path);
@@ -156,10 +164,15 @@ namespace PHTWordListLoad
             {
                 ProcessFile(file, domain);
             }
+
+            WriteLine("Directory Duration=" + DateTime.Now.Subtract(sectionStart));
+            WriteLine("");
         }
 
         static void ProcessFile(string fileName, int domain)
         {
+            DateTime sectionStart = DateTime.Now;
+
             int lineCounter = 0;
             int wordCounter = 0;
             int phraseCounter = 0;
@@ -200,20 +213,29 @@ namespace PHTWordListLoad
             WriteLine("Phrases: " + phraseCounter);
             WriteLine("Duplicates: " + duplicateCount);
             WriteLine("");
+            WriteLine("Duration=" + DateTime.Now.Subtract(sectionStart));
+            WriteLine("");
         }
 
         static void ProcessXMLDirectory(string path, int domain, string xslSelector)
         {
+            DateTime sectionStart = DateTime.Now;
+
             string[] files = Directory.GetFiles(path);
 
             foreach (var file in files)
             {
                 ProcessXMLFile(file, domain, xslSelector);
             }
+
+            WriteLine("Directory Duration=" + DateTime.Now.Subtract(sectionStart));
+            WriteLine("");
         }
 
         static void ProcessXMLFile(string fileName, int domain, string xslSelector)
         {
+            DateTime sectionStart = DateTime.Now;
+
             int lineCounter = 0;
             int wordCounter = 0;
             int phraseCounter = 0;
@@ -293,6 +315,8 @@ namespace PHTWordListLoad
             Console.WriteLine("Phrases: " + phraseCounter);
             Console.WriteLine("Duplicates: " + duplicateCount);
             Console.WriteLine("");
+            WriteLine("Duration=" + DateTime.Now.Subtract(sectionStart));
+            WriteLine("");
         }
 
         static void ProcessWord(string word, ref int wordCounter, ref int phraseCounter, ref int duplicateCount, int domain)
