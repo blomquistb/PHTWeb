@@ -17,7 +17,7 @@ Featue Todo:
 
     FindWordSearchSolutions only uses first value from Word Breaks box.
 
-    FindLtrSkipSolutions only uses the first value from the Word Breaks box.
+    FindLtrSkipSolutions does not respect "has spaces" or "search from end".
 
 -->
 
@@ -1332,28 +1332,87 @@ Featue Todo:
         Grid.prototype.FindLtrSkipSolutions = function (row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
             var solutions = [];
 
-            if (wordLengths && wordLengths[0]) {
-                minWordLength = wordLengths[0];
-                maxWordLength = wordLengths[0];
+            var wordLengthTotal = 0;
+            if (wordLengths && wordLengths.length) {
+                for (var i = 0; i < wordLengths.length; i++) {
+                    wordLengthTotal += wordLengths[i];
+                }
+            }
+            else {
+                wordLengthTotal = minWordLength;
             }
 
             if ((row >= 0) && (col >= 0)) {
                 if (getHorizontalSearch()) {
-                    for (var i = col; i < this.width; i++) {
-                        solutions = solutions.concat(this.FindLtrSkipSearchWords("", row, i, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                    if (wordLengths && wordLengths.length) {
+                        var wordSolutions = [];
+
+                        for (var i = col; i < (this.width - wordLengthTotal) ; i++) {
+                            wordSolutions = wordSolutions.concat(this.FindLtrSkipSearchWords("", row, i, +0, +1, searchBackwards, hasSpaces, wordLengths[0], wordLengths[0], dictionaries, minFrequency));
+                        }
+
+                        if (wordLengths.length > 1) {
+                            var finalSolutions = [];
+                            for (var i = 0; i < wordSolutions.length; i++) {
+                                var colStart = wordSolutions[i].grid.positions[wordSolutions[i].grid.positions.length - 1].col + 1;
+                                var tempSolutions = this.FindLtrSkipSolutions(row, colStart, searchBackwards, wordLengths.slice(1), hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency);
+                                for (var j = 0; j < tempSolutions.length; j++) {
+                                    // Merge wordSolutions[i] with all tempSolutions and then add them to finalSolutions.
+                                    tempSolutions[j].grid.positions = wordSolutions[i].grid.positions.concat(tempSolutions[j].grid.positions);
+                                    tempSolutions[j].word.value = wordSolutions[i].word.value + tempSolutions[j].word.value;
+                                    tempSolutions[j].word.frequency = Math.floor((wordSolutions[i].word.frequency + tempSolutions[j].word.frequency) / 2);
+                                }
+                                finalSolutions = finalSolutions.concat(tempSolutions);
+                            }
+                            wordSolutions = finalSolutions;
+                        }
+
+                        solutions = solutions.concat(wordSolutions);
+                    }
+                    else {
+                        for (var i = col; i < (this.width - wordLengthTotal) ; i++) {
+                            solutions = solutions.concat(this.FindLtrSkipSearchWords("", row, i, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                        }
                     }
                 }
 
                 if (getVerticalSearch()) {
-                    for (var i = row; i < this.height; i++) {
-                        solutions = solutions.concat(this.FindLtrSkipSearchWords("", i, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                    if (wordLengths && wordLengths.length) {
+                        var wordSolutions = [];
+
+                        for (var i = row; i < (this.height - wordLengthTotal) ; i++) {
+                            wordSolutions = wordSolutions.concat(this.FindLtrSkipSearchWords("", i, col, +1, +0, searchBackwards, hasSpaces, wordLengths[0], wordLengths[0], dictionaries, minFrequency));
+                        }
+
+                        if (wordLengths.length > 1) {
+                            var finalSolutions = [];
+                            for(var i = 0; i < wordSolutions.length; i++) {
+                                var rowStart = wordSolutions[i].grid.positions[wordSolutions[i].grid.positions.length - 1].row + 1;
+                                var tempSolutions = this.FindLtrSkipSolutions(rowStart, col, searchBackwards, wordLengths.slice(1), hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency);
+                                for (var j = 0; j < tempSolutions.length; j++) {
+                                    // Merge wordSolutions[i] with all tempSolutions and then add them to finalSolutions.
+                                    tempSolutions[j].grid.positions = wordSolutions[i].grid.positions.concat(tempSolutions[j].grid.positions);
+                                    tempSolutions[j].word.value = wordSolutions[i].word.value + tempSolutions[j].word.value;
+                                    tempSolutions[j].word.frequency = Math.floor((wordSolutions[i].word.frequency + tempSolutions[j].word.frequency) / 2);
+                                }
+                                finalSolutions = finalSolutions.concat(tempSolutions);
+                            }
+                            wordSolutions = finalSolutions;
+                        }
+
+                        solutions = solutions.concat(wordSolutions);
+                    }
+                    else {
+                        for (var i = row; i < (this.height - wordLengthTotal) ; i++) {
+                            solutions = solutions.concat(this.FindLtrSkipSearchWords("", i, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                        }
                     }
                 }
             }
             else {
                 if (getHorizontalSearch()) {
                     for (var row = 0; row < this.height; row++) {
-                        for (var col = 0; col < this.width; col++) {
+                        for (var col = 0; col < this.width - wordLengthTotal; col++) {
                             solutions = solutions.concat(this.FindLtrSkipSearchWords("", row, col, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
                         }
                     }
@@ -1361,7 +1420,7 @@ Featue Todo:
 
                 if (getVerticalSearch()) {
                     for (var col = 0; col < this.width; col++) {
-                        for (var row = 0; row < this.height; row++) {
+                        for (var row = 0; row < this.height - wordLengthTotal; row++) {
                             solutions = solutions.concat(this.FindLtrSkipSearchWords("", row, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
                         }
                     }
