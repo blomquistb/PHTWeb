@@ -1,0 +1,197 @@
+﻿
+PS17 - Newt Scamander's Suitcase
+--------------------------------------
+AD BUS C CENT
+CHI CORE CUBE DRY
+G GOAL HARP INK
+KNEE LIP M MAN
+MARE ON PEA PICK
+PRICK PSI PYRE R
+RAH TICK VAN WREN
+
+CENTAUR
+CHIMERA
+DRYAD
+GENIE
+GOLEM
+HARPY
+INCUBUS
+LEPRECHAUN
+MANTICORE
+PIXIE
+SIREN
+VAMPIRE
+--------------------------------------
+
+--------------------------------------
+PS16 - Phil, Prince of Insufficient Light
+--------------------------------------
+
+Chef microwave alert: COOK BEEPING → BOOKKEEPING 
+A sense ascend: SIGHT RISE → RIGHTSIZE 
+Vehicle encountered: CAR MET → MARKET 
+Parent swear: MOM CURSE → COMMERCE 
+Head covering body joint: HAIR SHOULDER → SHAREHOLDER 
+Toss call brass woodwind: TAILS SAX → SALES TAX 
+Listen to accelerated: HEAR SPED → SPEARHEAD 
+Flatfish icy precipitation: SOLE HAIL → WHOLESALE 
+Store luggage mall patron: STOW SHOPPER → SHOW STOPPER 
+Hot beverage dynasty: TEA MING → MEETING
+
+
+--------------------------------------
+
+
+PH17 -  A Spoonful of Sugar
+--------------------------------------
+
+left side: BELLY LOU PERRY ROT BAR CUR NAY BOOT BUM DOT COP BEE NUT BRAT WEE RARE RIGHT CHEETAH NASAL BOAST KISS MAO TAN BUCKLE CHALK FRACK GAG BEAT
+right side: JEANS GOSH CHAI POST GONZO TEE DISH REAR GO HOG PORN SASS CHI FLED KEY CUT WEISS PIPS HUT REEF BRIT CHAIN PLANE HARRY BOY JUTE BET MALL
+
+BAGUETTE
+BOK CHOY
+BRISKET
+CARROT
+CHERRY PIE
+CHOW MEIN
+CHUTNEY
+DANISH
+FLATBREAD
+GARBANZO
+GOULASH
+GUMBO
+HAZELNUT
+HOT DOG
+HUCKLEBERRY
+JACK FRUIT
+JELLY BEANS
+KIWI
+MEATBALL
+PITA CHIPS
+PLANTAIN
+POPCORN
+POT ROAST
+ROAST BEEF
+ROOT BEER
+SEA BASS
+TURKEY
+WHITE RICE
+
+BEIGNET
+
+
+JELLY BEANS - belly jeans
+GOULASH - lou gosh
+CHERRY PIE - perry chai
+POT ROAST - rot post
+GARBANZO - bar gonzo
+TURKEY - cur tee
+DANISH - nay dish
+ROOT BEER - boot rear
+GUMBO - bum go
+HOT DOG - dot hog
+POPCORN - cop porn
+SEA BASS - bee sass
+CHUTNEY - nut chi
+FLATBREAD - brat fled
+KIWI - wee key
+CARROT - rare cut
+WHITE RICE - right weiss
+PITA CHIPS - cheetah pips
+HAZELNUT - nasal hut
+ROAST BEEF - boast reef
+BRISKET - kiss brit
+CHOW MEIN - mao chain
+PLANTAIN - tan plane
+HUCKLEBERRY - buckle harry
+BOK CHOY - chalk boy
+JACK FRUIT - frack jute
+BAGUETTE - gag bet
+MEATBALL - beat mall
+
+BEIGNET - yen bay
+
+--------------------------------------
+
+----------------------------------------
+NIPD 2017 - CELL LESS TEE AWL BAUD EASE
+----------------------------------------
+Create phonetic "word" search helper 
+
+MEAT TEA OAR GEM STAR SOUP
+MILK SIR PERM TRON IN TIE
+CAN KEY NEWT RYE TIN EYE
+ASS LIGHT WEIGH GEL YO SEW
+JUICE ILL BEET SIEVE LIPS CAP
+EWE SAT MITT KAA RICK PI
+ROPE BLACK URN CORN LIST SEAS
+AH MAD DRUM AND COAL TOE
+
+ANDROMEDA
+BETELGEUSE
+CALLISTO
+CALYPSO
+CANCER
+CAPRICORN
+COMET
+EUROPA
+GEMINI
+IO
+METEOR
+MILKY WAY
+NEUTRON STAR
+PISCES
+RIGEL
+SATELLITE
+SATURN
+TITAN
+
+SUPER MASSIVE BLACK HOLE
+SOUP PERM ASS SIEVE BLACK COAL
+----------------------------------------
+
+
+
+    Phoneme Example Translation
+    ------- ------- -----------
+    AA	odd     AA D
+    AE	at	AE T
+    AH	hut	HH AH T
+    AO	ought	AO T
+    AW	cow	K AW
+    AY	hide	HH AY D
+    B 	be	B IY
+    CH	cheese	CH IY Z
+    D 	dee	D IY
+    DH	thee	DH IY
+    EH	Ed	EH D
+    ER	hurt	HH ER T
+    EY	ate	EY T
+    F 	fee	F IY
+    G 	green	G R IY N
+    HH	he	HH IY
+    IH	it	IH T
+    IY	eat	IY T
+    JH	gee	JH IY
+    K 	key	K IY
+    L 	lee	L IY
+    M 	me	M IY
+    N 	knee	N IY
+    NG	ping	P IH NG
+    OW	oat	OW T
+    OY	toy	T OY
+    P 	pee	P IY
+    R 	read	R IY D
+    S 	sea	S IY
+    SH	she	SH IY
+    T 	tea	T IY
+    TH	theta	TH EY T AH
+    UH	hood	HH UH D
+    UW	two	T UW
+    V 	vee	V IY
+    W 	we	W IY
+    Y 	yield	Y IY L D
+    Z 	zee	Z IY
+    ZH	seizure	S IY ZH ER
+--------------------------------------
+

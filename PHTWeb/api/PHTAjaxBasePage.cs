@@ -21,7 +21,7 @@ namespace PHTWeb
                 if (this.dictionaries == null)
                 {
                     List<int> dictionaries = new List<int>();
-                    string dictionariesStr = Request.QueryString["dictionaries"];
+                    string dictionariesStr = Request.Params["dictionaries"];
                     if (!String.IsNullOrEmpty(dictionariesStr))
                     {
                         for (int i = 0; i < dictionariesStr.Length; i++)
@@ -48,7 +48,7 @@ namespace PHTWeb
                 if (this.maxResults < 0)
                 {
                     int maxResults;
-                    if (int.TryParse(Request.QueryString["maxResults"], out maxResults))
+                    if (int.TryParse(Request.Params["maxResults"], out maxResults))
                     {
                         this.maxResults = maxResults;
                     }
@@ -70,7 +70,7 @@ namespace PHTWeb
                 if (this.minFrequency < 0)
                 {
                     int minFrequency;
-                    if (int.TryParse(Request.QueryString["minFrequency"], out minFrequency))
+                    if (int.TryParse(Request.Params["minFrequency"], out minFrequency))
                     {
                         this.minFrequency = minFrequency;
                     }
@@ -92,7 +92,7 @@ namespace PHTWeb
                 if (this.minWordLength < 0)
                 {
                     int minWordLength;
-                    if (int.TryParse(Request.QueryString["minWordLength"], out minWordLength))
+                    if (int.TryParse(Request.Params["minWordLength"], out minWordLength))
                     {
                         this.minWordLength = minWordLength;
                     }
@@ -114,7 +114,7 @@ namespace PHTWeb
                 if (this.maxWordLength < 0)
                 {
                     int maxWordLength;
-                    if (int.TryParse(Request.QueryString["maxWordLength"], out maxWordLength))
+                    if (int.TryParse(Request.Params["maxWordLength"], out maxWordLength))
                     {
                         this.maxWordLength = maxWordLength;
                     }
@@ -126,6 +126,20 @@ namespace PHTWeb
                 }
 
                 return this.maxWordLength;
+            }
+        }
+
+        public bool GetPronunciation
+        {
+            get
+            {
+                bool result = false;
+                if (bool.TryParse(Request.Params["getPronunciation"], out result))
+                {
+                    return result;
+                }
+
+                return false;
             }
         }
 

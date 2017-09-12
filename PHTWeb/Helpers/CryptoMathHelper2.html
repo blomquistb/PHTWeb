@@ -1,0 +1,638 @@
+﻿<!--
+Featue Todo:
+
+    Highlight a token whos value is the same through all results.
+
+    Add ability to provide multiple equation tables that each can have
+    independent base values.
+
+    Add support for "()" in expressions.
+
+    Bug with "-" operator results a+b-c-d results in a+b-(c-d)
+
+    Add ability to have names as digits with " " as seperator.
+
+-->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>CryptoMath Helper</title>
+    <script src="/es6-shim.js"></script>
+    <script src="/jquery-2.1.4.js"></script>
+    <script src="/Utils.js"></script>
+
+    <script type="text/javascript">
+
+        var gExpressions = [];
+        var gLeadingDigits = "";
+        var gMapSorting = 1;
+        var gMapping = [];
+
+        var gResults = [];
+
+
+
+        function getNewMapping(oldMap, text) {
+            var newMap = getMapping(text, getIgnoreCase(), getWordsAreTokens());
+
+            return newMap;
+        }
+
+
+        /**
+         *
+         */
+        function getMapping(text, ignoreCase, wordsAreTokens) {
+            var tokens = [];
+            var result = [];
+            result.expressions = [];
+
+            if (ignoreCase) {
+                text = text.toUpperCase();
+            }
+
+            text = text.replace(/(\t| |\r|\n)+/g, '');          // remove tabs, spaces, line feed, and carriage return characters
+            text = text.replace(/([^!=><])=([^=])/g, "$1==$2"); // replace assignment operator with equality comparison operator
+
+            // find all the tokens and create the initial mapping object.
+            tokens = getTokens(text, wordsAreTokens);
+
+            for (var i = 0; i < tokens.length; i++) {
+                result.push({ token: tokens[i], value: "", expression: "", dependencies: [], resolved: 0 });
+            }
+
+            //
+            var rawExpressions = text.split(';');
+            for (var i = 0; i < rawExpressions.length; i++) {
+                expression = rawExpressions[i];
+                result.expressions.push(transformExpression(expression, wordsAreTokens));
+
+                if (expression.indexOf('?') < 0) {
+                    var index = expression.indexOf('==');
+                    if (index >= 0) {
+                        var token;
+                        var assignment;
+                        var left = expression.substring(0, index);
+                        var right = expression.substring(index + 2);
+
+                        var tokenIndex = tokens.indexOf(left);
+                        if (tokenIndex > -1) {
+                            result[tokenIndex].value = right;
+                            result[tokenIndex].dependencies = getTokens(right, wordsAreTokens);
+                            result[tokenIndex].expression = transformExpression(right, wordsAreTokens);
+                        }
+                        else {
+                            tokenIndex = tokens.indexOf(right);
+                            if (tokenIndex > -1) {
+                                result[tokenIndex].value = left;
+                                result[tokenIndex].dependencies = getTokens(left, wordsAreTokens);
+                                result[tokenIndex].expression = transformExpression(left, wordsAreTokens);
+                            }
+                        }
+                    }
+                }
+            }
+
+            //
+            for (var i = 0; i < result.length; i++) {
+                removeCircularDependencies(result[i], result);
+            }
+
+            return result;
+        }
+
+        /**
+         *
+         */
+        function getTokens(text, wordsAreTokens) {
+            var tokens = [];
+
+            if (wordsAreTokens) {   // every grouping of letters is a token
+                var regex = /([A-Z]|[a-z])+/g;
+                var tList = text.match(regex);
+                for (var i = 0; i < tList.length; i++) {
+                    if (tokens.indexOf(tList[i]) < 0) {
+                        tokens.push(tList[i]);
+                    }
+                }
+            }
+            else {                  // every letter is a token
+                for (var i = 0; i < text.length; i++) {
+                    var c = text.charAt(i);
+                    if (((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) && (tokens.indexOf(c) < 0)) {
+                        tokens.push(c);
+                    }
+                }
+            }
+
+            return tokens;
+        }
+
+        /**
+         *
+         */
+        function transformExpression(expression, wordsAreTokens) {
+            var result = expression;
+
+            if (wordsAreTokens) {
+                var regex = /([A-Z]|[a-z])+/g;
+                var result = expression.replace(regex, function (t) { return "map." + t; });
+            }
+            else {
+                var regex = /([A-Z]|[a-z])+/g;
+                var result = expression.replace(regex, function (t) {
+                    var r = "(";
+                    for (var i = 0; i < t.length; i++) {
+                        var power = t.length - i - 1;
+                        r = r + "map." + t.charAt(i);
+                        if (power != 0) {
+                            r = r + "*power[map.$][" + power + "]+";
+                        }
+                    }
+                    r = r + ")";
+                    return r;
+                });
+            }
+
+            return result;
+        }
+
+        /**
+         *
+         */
+        function getMappingValue(token, mappings) {
+            for (var i = 0; i < mappings.length; i++) {
+                if (mappings[i].token == token) {
+                    return mappings[i];
+                }
+            }
+
+            return null;
+        }
+
+        /**
+         *
+         */
+        function removeCircularDependencies(mValue, mappings) {
+            if (!mValue.resolved) {
+                if (mValue.expression) {
+                    mValue.resolved = 1;  // trying to resolve
+                    var dependencies = mValue.dependencies;
+                    for (var i = 0; i < dependencies.length; i++) {
+                        var dValue = getMappingValue(dependencies[i], mappings);
+                        if (dValue.resolved == 2) {
+                            // do nothing and check next dependency.
+                        }
+                        else if (dValue.resolved == 1) {   // if dependency is in trying state then this is a recursive dependency which needs to be removed.
+                            mValue.value = "";
+                            mValue.expression = "";
+                            mValue.dependencies = [];
+                            break;
+                        }
+                        else {
+                            removeCircularDependencies(dValue, mappings);
+                        }
+                    }
+                    mValue.resolved = 2; // fully resolved
+                }
+                else {
+                    mValue.resolved = 2; // fully resolved
+                }
+            }
+        }
+
+        /**
+         *
+         */
+        function renderMappingTable(map) {
+
+            switch (gMapSorting) {
+                case 1: map.sort(function (a, b) { return a.token.charCodeAt(0) - b.token.charCodeAt(0) }); break;
+                case 2: map.sort(function (a, b) { if (b.value.charCodeAt(0) == a.value.charCodeAt(0)) { return a.token.charCodeAt(0) - b.token.charCodeAt(0) } return a.value.charCodeAt(0) - b.value.charCodeAt(0) }); break;
+                default: break;
+            }
+
+            var countElem = document.getElementById("MapCount");
+            if (countElem) {
+                countElem.value = map.length;
+            }
+
+            var t = document.getElementById("MappingTable");
+            t.innerHTML = '<tr><th><a href="javascript:void(0)" onclick="doSortByToken();">Token</a></th><th><a href="javascript:void(0)" onclick="doSortByValue();">Value</a></th></tr>';
+
+            for (var i = 0; i < map.length; i++) {
+                var r = t.insertRow(-1);
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "center";
+                c.innerHTML = map[i].token;
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "center";
+                c.innerHTML = '<input type="edit" disabled="disabled" size="20" style="text-align: center;" value="' + map[i].value + '"/>'
+            }
+        }
+
+        function doSortByToken() {
+            gMapSorting = 1;
+            renderMappingTable(gMapping);
+        }
+
+        function doSortByValue() {
+            gMapSorting = 2;
+            renderMappingTable(gMapping);
+        }
+
+
+        /**
+         *
+         */
+        function doSolveWork() {
+            var startTime = new Date().getTime();
+
+            var results = [];
+
+
+            var bases = getBaseRange();
+            for (var b = 0; b < bases.length; b++) {
+                var base = bases[b];
+
+                var digits = [];
+                var values = [];
+
+                var mapping = { "base": base };
+
+                for (var i = 0; i < base; i++) {
+                    if (i != 0 || getAllowZeroDigit()) {
+                        values.push(i);
+                    }
+                }
+
+                for (var i = 0; i < gMapping.length; i++) {
+                    var v = gMapping[i].value.trim();
+                    if (v) {
+                        var value = +v;
+                        if (! isNaN(value)) {
+                            mapping[gMapping[i].token] = value;
+                            if (!getAllowDuplicateValues()) {
+                                var index = values.indexOf(value);
+                                if (index >= 0) {
+                                    values.splice(index, 1);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        digits.push(gMapping[i].token);
+                    }
+                }
+
+
+                // Only try and solve if we have enough values to assign to all the digits or we are allowing
+                // values to be assigned to multiple digits.
+                //
+                if ((values.length >= digits.length) || getAllowDuplicateValues()) {
+                    results = results.concat(doSolve2(mapping, digits, values));
+                }
+            }
+
+            gResults = results;
+            renderResults(results);
+
+            setDuration(new Date().getTime() - startTime);
+            beep();
+
+            return results;
+        }
+
+
+        function doSolve2(mapping, digits, values) {
+            var results = [];
+
+            // base case check if mapping makes the provided expressions valid.
+            //
+            if (digits.length == 0) {
+                var valid = true;
+
+                for (var i = 0; i < gMapping.length; i++) {
+                    if (gMapping[i].expression) {
+                        var value = resolveExpression(gMapping[i], mapping);
+                        var index = values.indexOf(value);
+                        if (index >= 0) {
+                            if (!getAllowDuplicateValues()) {
+                                values.splice(index, 1);
+                            }
+                            mapping[gMapping[i].token] = value;
+                        }
+                        else {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (valid) {
+                    for (var i = 0; i < gExpressions.length; i++) {
+                        if (!gExpressions[i].Value(mapping)) {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (valid) {
+                    results.push(jQuery.extend({}, mapping));
+                }
+
+                // remove the calculated digit values so they get reclaculated next time.
+                for (var i = 0; i < gMapping.length; i++) {
+                    if (gMapping[i].expression) {
+                        delete mapping[gMapping[i].token];
+                    }
+                }
+
+                return results;
+            }
+
+            var di = 0;
+            var digit = digits[di];
+            var remainingDigits = digits.slice(0, di).concat(digits.slice(di + 1));
+            var isLeadingDigit = gLeadingDigits.indexOf(digit) >= 0;
+
+            for (var vi = 0; vi < values.length; vi++) {
+                var value = values[vi];
+                if ((value != 0) || !isLeadingDigit || getAllowLeadingZeros()) {
+                    var remainingValues = values;
+                    if (!getAllowDuplicateValues()) {
+                        remainingValues = values.slice(0, vi).concat(values.slice(vi + 1));
+                    }
+
+                    mapping[digit] = value;
+
+                    results = results.concat(doSolve2(mapping, remainingDigits, remainingValues));
+                }
+            }
+
+            return results;
+        }
+
+        /**
+         *
+         */
+        function resolveExpression(mValue, mapping) {
+            if (typeof (mapping[mValue.token]) == "undefined") {
+                if (mValue.expression) {
+                    var dependencies = mValue.expression.getDependencies();
+                    for (var j = 0; j < dependencies.length; j++) {
+                        if (typeof mapping[dependencies[j]] == "undefined") {
+                            for (var i = 0; i < gMapping.length; i++) {
+                                if (gMapping[i].token == dependencies[j]) {
+                                    resolveExpression(gMapping[i], mapping);
+                                }
+                            }
+                        }
+                    }
+
+                    mapping[mValue.token] = mValue.expression.Value(mapping);
+                }
+            }
+
+            return mapping[mValue.token];
+        }
+
+
+
+
+
+
+        function doSolve() {
+            setInputValue("ResultsCount", "");
+            setInputValue("Duration", "");
+            renderResults([]);      // Clear the results.
+
+            var text = getOriginalText();
+
+            if (getIgnoreCase()) {
+                text = text.toUpperCase();
+            }
+
+            text = text.replace(/(\t| |\r|\n)+/g, '');          // remove tabs, spaces, line feed, and carriage return characters
+            text = text.replace(/([^!=><])=([^=])/g, "$1==$2"); // replace assignment operator with equality comparison operator
+            var tokens = getTokens(text, getWordsAreTokens());                       // get list of all tokens
+            var txtExpressions = text.split(";");               // get each seperate expression
+
+            gExpressions = [];
+            gLeadingDigits = "";
+
+            for (var i = 0; i < txtExpressions.length; i++) {
+                if (txtExpressions[i].trim() != "") {
+                    gExpressions.push(transformExpression(i));
+                }
+            }
+
+            for (var i = 0; i < gMapping.length; i++) {
+                var digit = gMapping[i].token;
+                for (var j = 0; j < gExpressions.length; j++) {
+                    if (gExpressions[j].operator == '=') {
+                        if (gExpressions[j].left.tokens == digit) {
+                            if (gExpressions[j].right.value) {
+                                gMapping[i].value = "" + gExpressions[j].right.value;
+                                break;
+                            } else {
+                                gMapping[i].value = gExpressions[j].right.text;
+                            }
+                        }
+
+                        if (gExpressions[j].right.tokens == digit) {
+                            if (gExpressions[j].left.value) {
+                                gMapping[i].value = "" + gExpressions[j].left.value;
+                                break;
+                            } else {
+                                gMapping[i].value = gExpressions[j].left.text;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Create expressions for all mapping values that have one.
+            //
+            for (var i = 0; i < gMapping.length; i++) {
+                var v = gMapping[i].value.trim();
+                if (v) {
+                    var value = +v;
+                    if (isNaN(value)) {
+                        gMapping[i].expression = new CryptoExpression(v);
+                    }
+                }
+                else {
+                    gMapping[i].expression = null;
+                }
+            }
+
+            for (var i = 0; i < gMapping.length; i++) {
+                removeCircularDependencies(gMapping[i], {});
+            }
+
+            renderMappingTable(gMapping);
+
+
+            window.setTimeout("doSolveWork();", 0);
+        }
+
+        function doEncryptionChanged() {
+            gMapping = getNewMapping(gMapping, getOriginalText());
+            renderMappingTable(gMapping);
+        }
+
+        function doClearMapValues() {
+            var table = document.getElementById("MappingTable");
+
+            for (var i = 1, row; row = table.rows[i]; i++) {
+                var mapEdit = row.cells[1].firstChild;
+                mapEdit.value = "";
+                gMapping[i - 1].value = "";
+            }
+        }
+
+        function getOriginalText() {
+            return document.getElementById("Encrypted").innerText;
+        }
+
+        function getIgnoreCase() {
+            return getIsChecked("IgnoreCase", true);
+        }
+
+        function getWordsAreTokens() {
+            return getIsChecked("WordsAreTokens", false);
+        }
+
+        function getAllowDuplicateValues() {
+            return getIsChecked("AllowDuplicateValues", false);
+        }
+
+        function getAllowLeadingZeros() {
+            return getIsChecked("AllowLeadingZeros", false);
+        }
+
+        function getAllowZeroDigit() {
+            return getIsChecked("AllowZeroDigit", true);
+        }
+
+        function getShowAllResults() {
+            return getIsChecked("AllowZeroDigit", false);
+        }
+
+        function getBaseRange() {
+            var result = [];
+            var text = document.getElementById("BaseRange").value
+
+            var basesArray = [];
+            var bases = text.split(",");
+
+            for (var i = 0; i < bases.length; i++) {
+                var base = bases[i].trim();
+                if (base.indexOf("-") > 0) {
+                    var range = base.split("-");
+                    if (range.length != 2) {
+                        throw "Invalid number of bases in range (" + base + ")";
+                    }
+
+                    var rStart = parseInt(range[0].trim());
+                    var rEnd = parseInt(range[1].trim());
+                    if (rStart > rEnd) {
+                        var temp = rStart;
+                        rStart = rEnd;
+                        rEnd = temp;
+                    }
+
+                    if (isNaN(rStart) || isNaN(rEnd) || rStart < 2 || rEnd > 256) {
+                        throw "Invalid base range (" + base + ")";
+                    }
+
+                    for (var j = rStart; j <= rEnd; j++) {
+                        basesArray[j] = j;
+                    }
+                }
+                else {
+                    var value = parseInt(base);
+                    if (isNaN(value) || value < 2 || value > 256) {
+                        throw "Invalid base (" + base + ")";
+                    }
+                    basesArray[value] = value;
+                }
+            }
+
+            for (var i = 0; i < basesArray.length; i++) {
+                if (basesArray[i]) {
+                    result.push(i);
+                }
+            }
+
+            return result;
+        }
+
+
+    </script>
+</head>
+<body onload="doEncryptionChanged();">
+
+    <table style="width:100%;">
+        <tr>
+            <td id="SubstitutionMapping" style="width:1%;vertical-align:top;white-space:nowrap;">
+                <div style="min-width:200px;">
+                    <span>Count:</span>
+                    <input type="text" size="5" disabled="disabled" id="MapCount" />
+                    <button onclick="doClearMapValues()" style="float:right;">Clear</button>
+                </div>
+                <br />
+                <hr />
+                <table id="MappingTable"></table>
+            </td>
+            <td style="vertical-align:top;border-right: 3px solid black;border-left: 3px solid black;padding-left:5px; padding-right:10px;">
+
+                <table id="AutoMapping" style="width:100%">
+                    <tr>
+                        <td colspan="2">
+                            <label><input type="checkbox" id="AllowDuplicateValues" value="1" />Allow Duplicate Values</label>
+                            <label><input type="checkbox" id="AllowLeadingZeros" value="1" />Allow Leading Zeros</label>
+                            <label><input type="checkbox" id="AllowZeroDigit" value="1" checked="checked" />Allow&nbsp;Zero&nbsp;Digit</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td id="OccuranceFreqTitle" style="text-align:right;">
+                            Base&nbsp;Range:
+                        </td>
+                        <td style="white-space:nowrap;">
+                            <input id="BaseRange" type="text" value="10" size="50" title="Examples: 2,3,10,16 or 2-26" />
+                            <button onclick="doSolve()">Solve</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><hr /></td>
+                    </tr>
+                </table>
+
+                <span>Equations:</span>
+                <label><input type="checkbox" id="IgnoreCase" checked="checked" value="1" onchange="doEncryptionChanged();" />Ignore Case</label>
+                <label><input type="checkbox" id="WordsAreTokens" value="1" onchange="doEncryptionChanged();" />Words Are Tokens</label>
+                <span style="color:blue;">&nbsp;&nbsp;&nbsp;(seperate equations with ";" characters)</span>
+                <br />
+                <textarea id="Encrypted" style="width:100%;height:175px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doEncryptionChanged();"></textarea>
+
+                <hr />
+                <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
+                <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
+                <label><input id="ShowAllResults" type="checkbox" value="1" onchange="renderResults(gResults);" />Show&nbsp;All&nbsp;Results</label>
+                <br />
+                <hr />
+
+                <table id="ResultsTable" style="width:100%;font-family: monospace;"></table>
+
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

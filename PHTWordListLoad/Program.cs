@@ -22,23 +22,23 @@ namespace PHTWordListLoad
         {
             DateTime start = DateTime.Now;
 
-            ProccessCMUDict(@"..\..\WordSources\cmudict-0.7b.txt", 1);          // 2 hours to load            
+            //ProccessCMUDict(@"..\..\WordSources\cmudict-0.7b.txt", 1);          // 2 hours to load            
             ProccessCMUDict(@"..\..\WordSources\cmudict_brian_adds.txt", 1);
 
 
-            ProcessFile(@"..\..\WordSources\wordlist.txt", 1);  // 23 minutes
+            //ProcessFile(@"..\..\WordSources\wordlist.txt", 1);  // 23 minutes
 
-            ProcessDirectory(@"..\..\WordSources\scow-20150518-words", 1);    // 5 hours 50 minutes
+            //ProcessDirectory(@"..\..\WordSources\scow-20150518-words", 1);    // 5 hours 50 minutes
 
-            ProcessFile(@"..\..\WordSources\UKACD17.txt", 1);
+            //ProcessFile(@"..\..\WordSources\UKACD17.txt", 1);
 
-            ProcessDirectory(@"..\..\WordSources\Categories", 1);   // 3 minutes
-
-
-            ProccessBNCFreqFile(@"..\..\WordSources\bnc-corpus-freq-list.txt", 1);  // 51 minutes
+            //ProcessDirectory(@"..\..\WordSources\Categories", 1);   // 3 minutes
 
 
-            ProcessXMLDirectory(@"..\..\WordSources\Middle English\Middle English Dictionary", 2, "//b[@class=\"entry\"]"); // 7 minutes
+            //ProccessBNCFreqFile(@"..\..\WordSources\bnc-corpus-freq-list.txt", 1);  // 51 minutes
+
+
+            //ProcessXMLDirectory(@"..\..\WordSources\Middle English\Middle English Dictionary", 2, "//b[@class=\"entry\"]"); // 7 minutes
 
             // Total load into Azure took 8 hours and 12 minutes
 
@@ -118,10 +118,10 @@ namespace PHTWordListLoad
 
                                     if (phonems[i].Length < 2)
                                     {
-                                        phonems[i] = phonems[i] + " ";
+                                        phonems[i] = phonems[i] + "*";
                                     }
                                 }
-                                pronunciation = string.Join("|", phonems) + "|";
+                                pronunciation = string.Join("", phonems);
 
                                 ProcessWord(word, ref wordCounter, ref phraseCounter, ref duplicateCount, domain);
 

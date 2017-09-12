@@ -13,7 +13,7 @@ PS-16:New Employee Orientation
 -----------------------------
 PD2015 - You Are Over-Encumbered
 -----------------------------
-8x5 and 3x5
+8x5 and 3x5 (allow rotations)
 
 ******R* ***
 *****CO* ***

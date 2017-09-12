@@ -168,7 +168,132 @@ Featue Todo:
         }
 
         function getAnagramPatterns() {
-            return PHTWords.GetAnagramIdx(getInputValue("AnagramPatterns"));
+            var patterns = getInputValue("AnagramPatterns").toUpperCase();
+
+            if (patterns) {
+                var wildCardsRegx = /(%)|(_)|(\[[^\]]*\])/g;
+                var tokensRegx = /(\[[^\]]*\])|(.)/g;
+
+                var tokens = patterns.match(tokensRegx);
+                var len = tokens.length;
+
+                wordPatterns = getWordPatterns();
+                if (wordPatterns) {
+                    var wordTokens = wordPatterns.match(tokensRegx);
+                    if (wordTokens.indexOf('%') < 0) {
+                        len = wordTokens.length;
+                    }
+                }
+
+                var finalResults = [];
+                if (len > tokens.length) {
+                    patterns = [tokens];
+                }
+                else {
+                    patterns = getCombinations(tokens, len);
+                }
+
+                for (var i = 0; i < patterns.length; i++) {
+                    var pattern = patterns[i].join("");
+
+                    var wildCards = pattern.match(wildCardsRegx)
+                    pattern = PHTWords.GetAnagramIdx(pattern.replace(wildCardsRegx, ""));
+
+                    if (wildCards && wildCards.length > 0) {
+                        var results = [];
+
+                        if (wildCards.indexOf("%") >= 0) {
+                            var result = "%";
+                            for (var j = 0; j < pattern.length; j++) {
+                                result = result + pattern.charAt(j) + '%';
+                            }
+                            results.push(result);
+                        }
+                        else {
+                            var results = [pattern];
+                            for (var j = 0; j < wildCards.length; j++) {
+                                var newResults = []
+                                for (var k = 0; k < results.length; k++) {
+                                    newResults = newResults.concat(insertAnagramWildCard(results[k], wildCards[j]))
+                                }
+                                results = newResults;
+                            }
+                            results = deDupArray(results);
+                        }
+
+                        finalResults = finalResults.concat(results);
+                    }
+                    else {
+                        finalResults.push(pattern);
+                    }
+                }
+
+                finalResults = deDupArray(finalResults);
+
+                patterns = finalResults.join("|");
+            }
+
+            return patterns;
+        }
+
+        function deDupArray(origArray) {
+            var result = [];
+            for (var i = 0; i < origArray.length; i++) {
+                if (result.indexOf(origArray[i]) == -1) {
+                    result.push(origArray[i]);
+                }
+            }
+            return result;
+        }
+
+        function getAnagramPatternsList(tokens, size) {
+
+        }
+
+        function insertAnagramWildCard(pattern, wildCard) {
+            var result = [];
+            var split = pattern.match(/(\[[^\]]*\])|(.)/g);
+
+            for (var i = 0; i < split.length; i++) {
+                var value = "";
+                for (var j = 0; j < split.length; j++) {
+                    if (i == j) {
+                        value = value + wildCard;
+                    }
+                    value = value + split[j];
+                }
+                result.push(value);
+            }
+
+            result.push(pattern + wildCard);
+
+            return result;
+        }
+
+        function getCombinations(tokens, size, index, group, results) {
+            if (index === undefined) {
+                index = 0;
+            }
+
+            if (group === undefined) {
+                group = new Array(size);
+            }
+
+            if (results === undefined) {
+                results = [];
+            }
+
+            if (size == 0) {
+                results.push([].concat(group));
+                return results;
+            }
+
+            for (var i = index; i <= tokens.length - size; i++) {
+                group[group.length - size] = tokens[i];
+                results = getCombinations(tokens, size - 1, i + 1, group, results);
+            }
+
+            return results;
         }
 
         function getCryptogramPatterns() {
@@ -257,6 +382,11 @@ Featue Todo:
                             <label>Max&nbsp;Length: <input type="text" id="MaxLength" size="1" value="" title="" /></label>
                             <br />
                             <hr />
+                            '_' = single char, '%' = zero or more chars, '[ab]' = one of chars, '[^ab]' = not one of chars
+                            <br />
+                            '!pattern' = not pattern, 'patA|patB = pattern A or B, 'patA&patB = pattern A and B
+                            <br />
+                            <hr />
                             <table style="width: 100%">
                                 <tr id="WordPatternsRow">
                                     <td style="white-space: nowrap;text-align:right;">
@@ -331,7 +461,7 @@ Featue Todo:
                         </tr>
                     </table>
                 </div>
-                    <table id="ResultsTable" style="width:100%;"></table>
+                    <table id="ResultsTable" style="width:100%;font-family: monospace;"></table>
                 <!-- 
                 <div style="height:460px;overflow-y:auto;border:1px solid black;">
                 -->

@@ -238,7 +238,7 @@ namespace PHTWords
         /// <param name="maxWordLength"></param>
         /// <returns></returns>
         public static List<WordInfo> GetWordMatches(string wordPatterns, string anagramPatterns, string cryptogramPatterns, string cryptoAnagramPatterns, string phoneticPatterns,
-                                                    int[] dictionaries, int maxResults = 25, int minFrequency = 0, int minWordLength = 0, int maxWordLength = 0)
+                                                    int[] dictionaries, int maxResults = 25, int minFrequency = 0, int minWordLength = 0, int maxWordLength = 0, bool getPronunciation = false)
         {
             List<WordInfo> results = new List<WordInfo>();
 
@@ -252,11 +252,22 @@ namespace PHTWords
             {
                 bool isFirstExpression = true;
                 List<string> patternValues = new List<string>();
-                StringBuilder selectSql = new StringBuilder("SELECT DISTINCT TOP ").Append(maxResults).Append(" d.word_idx as word_idx, d.frequency as frequency FROM Dictionary d");
+                StringBuilder selectSql = new StringBuilder("SELECT DISTINCT TOP ").Append(maxResults).Append(" d.word_idx as word_idx, d.frequency as frequency");
 
+                if (getPronunciation)
+                {
+                    selectSql.Append(", p.pronunciation as pronunciation");
+                }
+
+                selectSql.Append(" FROM Dictionary d");
+
+                if (getPronunciation || !String.IsNullOrEmpty(phoneticPatterns))
+                {
+                    selectSql.Append(" LEFT OUTER JOIN Pronunciations p on p.word_idx = d.word_idx");
+                }
+                
                 if (!String.IsNullOrEmpty(phoneticPatterns))
                 {
-                    selectSql.Append(" left outer join Pronunciations p on p.word_idx = d.word_idx");
                     AppendPatterns(selectSql, isFirstExpression, "p.pronunciation", phoneticPatterns, patternValues);
                     isFirstExpression = false;
                 }
@@ -388,7 +399,14 @@ namespace PHTWords
                 SqlDataReader reader = selectCmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    results.Add(new WordInfo((string)reader["word_idx"], (int)reader["frequency"]));
+                    if (getPronunciation && reader["pronunciation"] != DBNull.Value)
+                    {
+                        results.Add(new WordInfo((string)reader["word_idx"], (int)reader["frequency"], (string)reader["pronunciation"]));
+                    }
+                    else
+                    {
+                        results.Add(new WordInfo((string)reader["word_idx"], (int)reader["frequency"]));
+                    }
                 }
             }
             finally
@@ -833,9 +851,7 @@ namespace PHTWords
 
         private static SqlConnection GetConnection()
         {
-            //
             SqlConnection result = new SqlConnection(@"Data Source=.; Initial Catalog=pht; Integrated Security=True");
-            //SqlConnection result = new SqlConnection(@"Server=tcp:pht.database.windows.net,1433;Initial Catalog=PHT;Persist Security Info=False;User ID=pht_user;Password=xxx;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
             result.Open();
 
             return result;

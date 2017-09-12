@@ -152,6 +152,7 @@ PHTWords.WordIdxHash = {};
 PHTWords.AnagramIdxHash = {};
 PHTWords.CryptoIdxHash = {};
 PHTWords.CryptoAnagramIdxHash = {};
+PHTWords.PronuciationIdxHash = {};
 
 PHTWords.Clear = function () {
     PHTWords.Dictionary = []
@@ -159,9 +160,10 @@ PHTWords.Clear = function () {
     PHTWords.AnagramIdxHash = {};
     PHTWords.CryptoIdxHash = {};
     PHTWords.CryptoAnagramIdxHash = {};
+    PHTWords.PronuciationIdxHash = {};
 }
 
-PHTWords.AddText = function (text, linesAreWords, useFrequency) {
+PHTWords.AddText = function (text, linesAreWords, useFrequency, usePronunciation) {
 
     if (text) {
         text = text.trim();
@@ -170,42 +172,48 @@ PHTWords.AddText = function (text, linesAreWords, useFrequency) {
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim().replace(/[\s]+/g, ' ');
 
-            var words = line.split(" ");
-            for (var j = 0; j < words.length; j++) {
-                if (useFrequency) {
-                    var wi = PHTWords.GetWordMatches(words[j], null, null, null, null, "1");
-                    if (wi.length) {
-                        PHTWords.AddWord(words[j], wi[0].frequency);
+            if (line.indexOf(";;") != 0) {  // comment line
+                var words = line.split(" ");
+                for (var j = 0; j < words.length; j++) {
+                    if (useFrequency) {
+                        var wi = PHTWords.GetWordMatches(words[j], null, null, null, null, "1", 0, 25, 0, 0, null, null, usePronunciation);
+                        if (wi.length) {
+                            for (var k = 0; k < wi.length; k++) {
+                                PHTWords.AddWord(wi[k].value, wi[k].frequency, wi[k].pronunciation);
+                            }
+                        }
+                        else {
+                            PHTWords.AddWord(words[j], 0);
+                        }
                     }
                     else {
-                        PHTWords.AddWord(words[j], 0);
+                        PHTWords.AddWord(words[j], 7000000);
                     }
                 }
-                else {
-                    PHTWords.AddWord(words[j], 7000000);
-                }
-            }
 
-            if (linesAreWords && (words.length > 1)) {
-                if (useFrequency) {
-                    var wi = PHTWords.GetWordMatches(line, null, null, null, null, "1");
-                    if (wi.length) {
-                        PHTWords.AddWord(line, wi[0].frequency);
+                if (linesAreWords && (words.length > 1)) {
+                    if (useFrequency) {
+                        var wi = PHTWords.GetWordMatches(line, null, null, null, null, "1", 0, 25, 0, 0, null, null, usePronunciation);
+                        if (wi.length) {
+                            for (var k = 0; k < wi.length; k++) {
+                                PHTWords.AddWord(wi[k].value, wi[k].frequency, wi[k].pronunciation);
+                            }
+                        }
+                        else {
+                            PHTWords.AddWord(line, 0);
+                        }
                     }
                     else {
-                        PHTWords.AddWord(line, 0);
+                        PHTWords.AddWord(line, 7000100);
                     }
-                }
-                else {
-                    PHTWords.AddWord(line, 7000100);
                 }
             }
         }
     }
 }
 
-PHTWords.AddWord = function (word, frequency) {
-    var entry = new DictionaryEntry(word, frequency);
+PHTWords.AddWord = function (word, frequency, pronunciation) {
+    var entry = new DictionaryEntry(word, frequency, pronunciation);
 
     if (entry.word_idx && !PHTWords.WordIdxHash[entry.word_idx]) {
         PHTWords.Dictionary.push(entry);
@@ -213,15 +221,20 @@ PHTWords.AddWord = function (word, frequency) {
         PHTWords.AddWordToHash(PHTWords.AnagramIdxHash, entry.anagram_idx, entry);
         PHTWords.AddWordToHash(PHTWords.CryptoIdxHash, entry.crypto_idx, entry);
         PHTWords.AddWordToHash(PHTWords.CryptoAnagramIdxHash, entry.crypto_anagram_idx, entry);
+        if (pronunciation) {
+            PHTWords.AddWordToHash(PHTWords.PronuciationIdxHash, entry.pronunciation.replace(/\*/g, "\\*", entry));
+        }
     }
 }
 
 PHTWords.AddWordToHash = function (hash, idx, entry) {
-    if (hash[idx]) {
-        hash[idx].push(entry);
-    }
-    else {
-        hash[idx] = [entry];
+    if (idx) {
+        if (hash[idx]) {
+            hash[idx].push(entry);
+        }
+        else {
+            hash[idx] = [entry];
+        }
     }
 }
 
@@ -356,7 +369,7 @@ PHTWords.GetWordCounts = function (wordPatterns, anagramPatterns, cryptogramPatt
     }
 
     var count = 0;
-    //var count = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength).length;
+    //var count = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength).length;
 
     if (dictionaries != "0") {
         $.ajax({
@@ -376,7 +389,7 @@ PHTWords.GetWordCounts = function (wordPatterns, anagramPatterns, cryptogramPatt
         });
     }
     else {
-        count = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, dictionaries, minFrequency, 9999, minWordLength, maxWordLength).length;
+        count = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns, dictionaries, minFrequency, 9999, minWordLength, maxWordLength).length;
         if (callback) {
             callback(count, callbackData);
         }
@@ -388,7 +401,7 @@ PHTWords.GetWordCounts = function (wordPatterns, anagramPatterns, cryptogramPatt
 /**
  *
  */
-PHTWords.GetWordMatches = function (wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength, callback, callbackData) {
+PHTWords.GetWordMatches = function (wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength, callback, callbackData, getPronunciation) {
     var asyncCall = false;
 
     if (!wordPatterns) {
@@ -431,19 +444,25 @@ PHTWords.GetWordMatches = function (wordPatterns, anagramPatterns, cryptogramPat
         maxWordLength = 0;
     }
 
+    if (!getPronunciation) {
+        getPronunciation = false;
+    }
+
     if (callback) {
         asyncCall = true;
     }
 
-    var results = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength);
+    var results = PHTWords.GetWordMatchesLocal(wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength);
 
     if ((dictionaries != "0") && (results.length < maxResults)) {
         $.ajax({
-            url: '/api/GetWordMatches.aspx?dictionaries=' + encodeURIComponent(dictionaries) + "&minFrequency=" + encodeURIComponent(minFrequency) + "&maxResults=" + encodeURIComponent(maxResults) + "&minWordLength=" + encodeURIComponent(minWordLength) + "&maxWordLength=" + encodeURIComponent(maxWordLength)
-                + "&wordPatterns=" + encodeURIComponent(wordPatterns) + "&anagramPatterns=" + encodeURIComponent(anagramPatterns) + "&cryptogramPatterns=" + encodeURIComponent(cryptogramPatterns) + "&cryptoAnagramPatterns=" + encodeURIComponent(cryptoAnagramPatterns) + "&phoneticPatterns=" + encodeURIComponent(phoneticPatterns),
-            type: 'GET',
+            url: '/api/GetWordMatches.aspx',
+            type: 'POST',
             dataType: 'json',
-            contentType: "text/json; charset=utf-8",
+            processData: false,
+            data: 'dictionaries=' + encodeURIComponent(dictionaries) + "&minFrequency=" + encodeURIComponent(minFrequency) + "&maxResults=" + encodeURIComponent(maxResults) + "&minWordLength=" + encodeURIComponent(minWordLength) + "&maxWordLength=" + encodeURIComponent(maxWordLength) + "&getPronunciation=" + getPronunciation
+                + "&wordPatterns=" + encodeURIComponent(wordPatterns) + "&anagramPatterns=" + encodeURIComponent(anagramPatterns) + "&cryptogramPatterns=" + encodeURIComponent(cryptogramPatterns) + "&cryptoAnagramPatterns=" + encodeURIComponent(cryptoAnagramPatterns) + "&phoneticPatterns=" + encodeURIComponent(phoneticPatterns),
+            error: function (jqXHR, status, error) { window.alert("GetWordMatches call failed: " + status +" - " + error); },
             success: function (data) {
                 var localCount = results.length;
                 for (var i = 0; i < data.length; i++) {
@@ -478,7 +497,7 @@ PHTWords.GetWordMatches = function (wordPatterns, anagramPatterns, cryptogramPat
     return results;
 }
 
-PHTWords.GetWordMatchesLocal = function (wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength) {
+PHTWords.GetWordMatchesLocal = function (wordPatterns, anagramPatterns, cryptogramPatterns, cryptoAnagramPatterns, phoneticPatterns, dictionaries, minFrequency, maxResults, minWordLength, maxWordLength) {
     var results = [];
 
     if ((dictionaries == "") || (dictionaries.indexOf("0") > -1)) {
@@ -486,11 +505,13 @@ PHTWords.GetWordMatchesLocal = function (wordPatterns, anagramPatterns, cryptogr
         var anagramMatchTests = [];
         var cryptogramMatchTests = [];
         var cryptoAnagramMatchTests = [];
+        var phoneticMatchTests = [];
 
         PHTWords.AppendPatterns(wordPatterns, wordMatchTests);
         PHTWords.AppendPatterns(anagramPatterns, anagramMatchTests);
         PHTWords.AppendPatterns(cryptogramPatterns, cryptogramMatchTests);
         PHTWords.AppendPatterns(cryptoAnagramPatterns, cryptoAnagramMatchTests);
+        PHTWords.AppendPatterns(phoneticPatterns, phoneticMatchTests);
 
         for (var i = 0; i < PHTWords.Dictionary.length && results.length < maxResults; i++) {
             if ((PHTWords.Dictionary[i].length >= minWordLength) && (!maxWordLength || (PHTWords.Dictionary[i].length <= maxWordLength)) && (PHTWords.Dictionary[i].frequency >= minFrequency)) {
@@ -520,8 +541,14 @@ PHTWords.GetWordMatchesLocal = function (wordPatterns, anagramPatterns, cryptogr
                     }
                 }
 
+                for (var j = 0; j < phoneticMatchTests.length && include; j++) {
+                    if (phoneticMatchTests[j].regex.test(PHTWords.Dictionary[i].pronunciation) != phoneticMatchTests[j].result) {
+                        include = false;
+                    }
+                }
+
                 if (include) {
-                    results.push(new WordInfo(PHTWords.Dictionary[i].word_idx, PHTWords.Dictionary[i].frequency));
+                    results.push(new WordInfo(PHTWords.Dictionary[i].word_idx, PHTWords.Dictionary[i].frequency, PHTWords.Dictionary[i].pronunciation));
                 }
             }
         }
@@ -532,7 +559,9 @@ PHTWords.GetWordMatchesLocal = function (wordPatterns, anagramPatterns, cryptogr
 
 PHTWords.AppendPatterns = function (patterns, patternMatches) {
     if (patterns) {
-        patterns = patterns.toUpperCase().replace(/\s/g, "").replace(/_/g, ".").replace(/%/g, ".*"); // TODO: does not handle escaped of "%" characters properly.
+        // TODO: does not handle escaped of "%" characters properly.
+        patterns = patterns.toUpperCase().replace(/\s/g, "").replace(/\*/g, "\\*").replace(/_/g, ".").replace(/%/g, ".*");
+        
 
         var andClauses = patterns.split('&');
 
@@ -554,8 +583,14 @@ PHTWords.AppendPatterns = function (patterns, patternMatches) {
 ///
 /// DictionaryEntry object definition
 ///
-function DictionaryEntry(word, frequency) {
+function DictionaryEntry(word, frequency, pronunciation) {
     this.frequency = frequency;
+    if (typeof (pronunciation) == "undefineds") {
+        this.pronunciation = "";
+    }
+    else {
+        this.pronunciation = pronunciation;
+    }
     this.word_idx = PHTWords.GetWordIdx(word);
     this.anagram_idx = PHTWords.GetAnagramIdx(this.word_idx);
     this.crypto_idx = PHTWords.GetCryptoIdx(this.word_idx);
@@ -567,8 +602,14 @@ function DictionaryEntry(word, frequency) {
 ///
 /// WordInfo object definition
 ///
-function WordInfo(word, frequency) {
+function WordInfo(word, frequency, pronunciation) {
     this.value = word;
     this.frequency = frequency;
+    if (typeof (pronunciation) == "undefined") {
+        this.pronunciation = "";
+    }
+    else {
+        this.pronunciation = pronunciation;
+    }
 }
 

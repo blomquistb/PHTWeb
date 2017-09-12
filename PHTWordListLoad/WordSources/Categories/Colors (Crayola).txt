@@ -1,0 +1,262 @@
+Red
+Maroon
+Scarlet
+Brick Red
+English Vermilion
+English Vermillion
+Madder Lake
+Permanent Geranium Lake
+Maximum Red
+Indian Red
+Orange-Red
+Sunset Orange
+Bittersweet
+Dark Venetian Red
+Venetian Red
+Light Venetian Red
+Vivid Tangerine
+Middle Red
+Burnt Orange
+Red-Orange
+Orange
+Macaroni and Cheese
+Middle Yellow Red
+Mango Tango
+Yellow-Orange
+Maximum Yellow Red
+Banana Mania
+Maize
+Orange-Yellow
+Goldenrod
+Dandelion
+Yellow
+Green-Yellow
+Middle Yellow
+Olive Green
+Spring Green
+Maximum Yellow
+Canary
+Lemon Yellow
+Maximum Green Yellow
+Middle Green Yellow
+Inchworm
+Light Chrome Green
+Yellow-Green
+Maximum Green
+Asparagus
+Granny Smith Apple
+Fern
+Middle Green
+Green
+Medium Chrome Green
+Forest Green
+Sea Green
+Shamrock
+Mountain Meadow
+Jungle Green
+Caribbean Green
+Tropical Rain Forest
+Middle Blue Green
+Pine Green
+Maximum Blue Green
+Robin's Egg Blue
+Teal Blue
+Light Blue
+Aquamarine
+Turquoise Blue
+Outer Space
+Sky Blue
+Middle Blue
+Blue-Green
+Pacific Blue
+Cerulean
+Maximum Blue
+Blue (I)
+Cerulean Blue
+Cornflower
+Green-Blue
+Midnight Blue
+Navy Blue
+Denim
+Blue (III)
+Cadet Blue
+Periwinkle
+Blue (II)
+Wild Blue Yonder
+Indigo
+Manatee
+Cobalt Blue
+Celestial Blue
+Blue Bell
+Maximum Blue Purple
+Violet-Blue
+Blue-Violet
+Ultramarine Blue
+Middle Blue Purple
+Purple Heart
+Royal Purple
+Violet (II)
+Medium Violet
+Wisteria
+Lavender (I)
+Vivid Violet
+Maximum Purple
+Purple Mountains' Majesty
+Fuchsia
+Pink Flamingo
+Violet (I)
+Brilliant Rose
+Orchid
+Plum
+Medium Rose
+Thistle
+Mulberry
+Red-Violet
+Middle Purple
+Maximum Red Purple
+Jazzberry Jam
+Eggplant
+Magenta
+Cerise
+Wild Strawberry
+Lavender (II)
+Cotton Candy
+Carnation Pink
+Violet-Red
+Razzmatazz
+Pig Pink
+Carmine
+Blush
+Tickle Me Pink
+Mauvelous
+Salmon
+Middle Red Purple
+Mahogany
+Melon
+Pink Sherbert
+Burnt Sienna
+Brown
+Sepia
+Fuzzy Wuzzy
+Beaver
+Tumbleweed
+Raw Sienna
+Van Dyke Brown
+Tan
+Desert Sand
+Peach
+Burnt Umber
+Apricot
+Almond
+Raw Umber
+Shadow
+Raw Sienna (I)
+Timberwolf
+Gold (I)
+Gold (II)
+Silver
+Copper
+Antique Brass
+Black
+Charcoal Gray
+Gray
+Blue-Gray
+White
+
+;; In 1972, Binney & Smith introduced eight Crayola fluorescent crayons, designed to fluoresce under black light. The following year, they were added to the 72-count box, in place of the duplicate colors. These crayons remained steady until 1990, when all eight were renamed, and eight more were added, for a total of sixteen fluorescent crayons. One of the new colors, Hot Magenta, shared a name with one of the original colors, now Razzle Dazzle Rose. For some reason, two of the original eight fluorescent crayons have the same color as two of the newer crayons. In 1992, the fluorescent colors were added to the new No. 96 box, becoming part of the standard lineup. When four new crayons were added to the No. 96 assortment in 2003, four existing colors were discontinued, including two of the fluorescents. Also beginning in 1993, packs of fluorescent crayons were regularly labeled "neon" or "neons".[2]
+Radical Red
+Wild Watermelon
+Outrageous Orange
+Atomic Tangerine
+Neon Carrot
+Sunglow
+Laser Lemon
+Unmellow Yellow
+Electric Lime
+Screamin' Green
+Magic Mint
+Blizzard Blue
+Shocking Pink
+Razzle Dazzle Rose
+Hot Magenta
+Purple Pizzazz
+
+;; In 1987, Crayola released a pack of 16 metallic crayons in Canada. 4 of the colors are named after 4 of the standard colors. Also, one of the colors is named before a Metallic FX color.
+Aged Copper
+Aztec Gold
+Bluetonium
+Brass
+Bronze
+Cadmium Red
+Cast Iron
+Cobalt Blue
+Copper
+Gold
+Kryptonite
+Rust
+Silver
+Steel Blue
+Tarnished Gold
+Titanium
+
+;;In 1990, Crayola released the Silver Swirls, a pack of 24 silvery colors
+Aztec Gold
+Burnished Brown
+Cerulean Frost
+Cinnamon Satin
+Copper Penny
+Cosmic Cobalt
+Glossy Grape
+Granite Gray
+Green Sheen
+Lilac Luster
+Misty Moss
+Mystic Maroon
+Pearly Purple
+Pewter Blue
+Polished Pine
+Quick Silver
+Rose Dust
+Rusty Red
+Shadow Blue
+Shiny Shamrock
+Steel Teal
+Sugar Plum
+Twilight Lavender
+Wintergreen Dream
+
+;; In 1994, Crayola released the Gem Tones, a pack of 16 crayons modeled after precious stones.
+Amethyst
+Citrine
+Emerald
+Jade
+Jasper
+Lapis Lazuli
+Malachite
+Moonstone
+Onyx
+Peridot
+Pink Pearl
+Rose Quartz
+Ruby
+Sapphire
+Smokey Topaz
+Tiger's Eye
+
+;; In 1997, Crayola released a 16-pack of Pearl Brite crayons: These were designed to give soft pearlescent colors. These had a new wrapper design, black with a white oval Crayola logo and white text.
+Aqua Pearl
+Black Coral Pearl
+Caribbean Green Pearl
+Cultured Pearl
+Key Lime Pearl
+Mandarin Pearl
+Midnight Pearl
+Mystic Pearl
+Ocean Blue Pearl
+Ocean Green Pearl
+Orchid Pearl
+Rose Pearl
+Salmon Pearl
+Sunny Pearl
+Sunset Pearl
+Turquoise Pearl

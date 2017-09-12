@@ -1,0 +1,333 @@
+﻿
+Fullerene - 
+Graphene - 
+Graphite - 
+Intumescent - 
+Lonsdaleite - 
+Plumbago - 
+Pyrolytic carbon -
+Bituminous coal - 
+Alabaster -
+Gypsum - 
+Calcite -
+Onyx - 
+
+Adakite - a class of intermediate to felsic rocks containing low amounts of yttrium and ytterbium
+Andesite - an intermediate volcanic rock
+Alkali feldspar granite - a granitoid in which at least 90% of the total feldspar is in the form of alkali feldspar
+Anorthosite - a mafic intrusive igneous rock composed predominantly of plagioclase
+Aplite - a very fine-grained intrusive igneous rock composed of quartz and feldspar, similar composition to granite but with grains <1mm
+Basalt - a volcanic rock of mafic composition 
+A'a - basaltic lava with a crumpled appearance
+Pahoehoe - basaltic lava with a flowing, often ropy appearance
+Hawaiite - a type of basalt, typically formed by ocean island (hot spot) volcanism
+Basanite - a volcanic rock of mafic composition; essentially a silica-undersaturated basalt
+Blairmorite - a rare volcanic rock
+Boninite - a magnesium-rich basalt dominated by pyroxene
+Carbonatite - a rare igneous rock composed of >50% carbonate minerals
+Charnockite - a type of granite containing orthopyroxene 
+Enderbite - a variety of charnockite
+Dacite - a felsic to intermediate volcanic rock containing hornblende and with more plagioclase than orthoclase
+Diabase or dolerite - an intrusive mafic rock forming dykes or sills
+Diorite - a coarse-grained intermediate plutonic rock composed of plagioclase, pyroxene and/or amphibole 
+Napoleonite - a variety of diorite which is characterized by orbicular structure. Also called corsite.
+Dunite - a phaneritic ultramafic rock composed of more than 90% olivine
+Essexite - a silica-undersaturated mafic plutonic rock (essentially a feldspathoid-bearing gabbro)
+Foidolite - a plutonic igneous rock composed of >90% feldspathoid minerals
+Gabbro - a coarse-grained plutonic rock composed of pyroxene and plagioclase basically equivalent to basalt
+Granite - a coarse-grained plutonic rock composed of orthoclase, plagioclase and quartz
+Granodiorite - a granitic plutonic rock with more plagioclase than orthoclase
+Granophyre - a subvolcanic intrusive rock of granitic composition
+Harzburgite - a variety of peridotite; an ultramafic cumulate rock
+Hornblendite - a mafic or ultramafic cumulate rock dominated by >90% hornblende
+Hyaloclastite - a volcanic rock composed primarily of glasses and glassy tuff
+Icelandite - an iron-rich, aluminium-poor andesite
+Ignimbrite - a fragmental volcanic rock
+Ijolite - a very rare silica-undersaturated plutonic rock
+Kimberlite - a rare ultramafic, ultrapotassic volcanic rock and a source of diamonds
+Diamond - (Kimberlite)
+Komatiite - an ultramafic volcanic rock with very high magnesium content
+Lamproite - an ultrapotassic volcanic rock
+Lamprophyre - an ultramafic, ultrapotassic intrusive rock dominated by mafic phenocrysts in a feldspar groundmass
+Latite - a silica-undersaturated form of andesite
+Lherzolite - an ultramafic rock, essentially a peridotite
+Monzogranite - a silica-undersaturated granite with <5% normative quartz
+Monzonite - a plutonic rock with <5% normative quartz
+Nepheline syenite - a silica-undersaturated plutonic rock of nepheline and alkali feldspar
+Nephelinite - a silica-undersaturated plutonic rock with >90% nepheline
+Norite - a hypersthene-bearing gabbro
+Obsidian - a type of volcanic glass
+Pegmatite - an igneous rock (or metamorphic) rock with crystals >1 inch, usually granitic
+Peridotite - a plutonic or cumulate ultramafic rock composed of olivine and pyroxene
+Phonolite - a silica-undersaturated volcanic rock; essentially similar to nepheline syenite
+Picrite - an olivine-bearing basalt
+Porphyry - a rock, usually granitic, with a porphyritic texture
+Pumice - a fine grained, vesicular volcanic rock
+Pyroxenite - a coarse grained plutonic rock composed of >90% pyroxene
+Quartz diorite - a diorite with >5% modal quartz
+Quartz monzonite - an intermediate plutonic rock, essentially a monzonite with 5-10% modal quartz
+Quartzolite - an intrusive rock composed mostly of quartz
+Rhyodacite - a felsic volcanic rock which is intermediate between a rhyolite and a dacite
+Rhyolite - a felsic volcanic rock 
+Comendite - a peralkaline rhyolite
+Pantellerite - an alkaline rhyolite-rhyodacite with amphibole phenocrysts
+Scoria - an extremely vesicular mafic volcanic rock
+Sovite - a coarse-grained carbonatite rock
+Syenite - a plutonic rock dominated by orthoclase feldspar; a type of granitoid
+Tachylyte - essentially a basaltic glass
+Tephrite - a silica-undersaturated volcanic rock
+Tonalite - a plagioclase-dominant granitoid
+Trachyandesite - an alkaline intermediate volcanic rock 
+Benmoreite - sodic trachyandesite
+Basaltic trachyandesite 
+Mugearite - sodic basaltic trachyandesite
+Shoshonite - potassic basaltic trachyandesite
+Trachyte - a silica-undersaturated volcanic rock; essentially a feldspathoid-bearing rhyolite
+Troctolite - a plutonic ultramafic rock containing olivine, pyroxene and plagioclase
+Trondhjemite - a form of tonalite where plagioclase-group feldspar is oligoclase
+Tuff - a fine-grained volcanic rock formed from volcanic ash
+Websterite - a type of pyroxenite, composed of clinoproxene and orthopyroxene
+Wehrlite - an ultramafic plutonic or cumulate rock, a type of peridotite, composed of olivine and clinopyroxene
+Argillite - a sedimentary rock composed primarily of clay-sized particles
+Arkose - a sandstone with <25% feldspar crystals
+Banded iron formation - a fine-grained chemical sedimentary rock composed of iron oxide minerals
+Breccia - a sedimentary or tectonic rock composed of fragments of other, broken rocks
+Calcarenite - a sedimentary rock composed of > 50% detrital carbonate grains
+Chalk - a sedimentary rock composed primarily of coccolith fossils
+Chert - a fine-grained chemical sedimentary rock composed of silica
+Claystone - a sedimentary rock formed from clay
+Coal - a sedimentary rock formed from organic matter
+Conglomerate - a sedimentary rock composed of large rounded fragments of other rocks
+Coquina - a sedimentary carbonate rock formed by accumulation of abundant shell fossils and fragments
+Diamictite - a lithified sedimentary deposit with a wide range of grain sizes
+Diatomite - sedimentary rock formed from diatom fossils
+Dolomite - a carbonate rock composed of the mineral dolomite +/- calcite
+dolostone - a carbonate rock composed of the mineral dolomite +/- calcite (Dolomite)
+Evaporite - chemical sedimentary rock formed by accumulation of minerals after evaporation; varieties include rock salt (halitite) and rock gypsum
+Flint - a form of chert
+Geyserite - opaline silica deposit formed around hot springs and geysers
+Greywacke - a type of sandstone with quartz, feldspar and rock fragments within a clay matrix
+Gritstone - essentially a coarse sandstone formed from small pebbles
+Itacolumite - porous, yellow-orange sandstone which is flexible if cut into thin strips
+Jaspillite - an iron-rich chemical sedimentary rock similar to chert or banded iron formation
+Laterite - residual sedimentary rock formed from a parent rock under tropical conditions
+Lignite - sedimentary rock composed of 60%- 70% organic material; otherwise known as brown coal
+Limestone - composed primarily of carbonate minerals
+Marl - limestone with a considerable proportion of silicate material
+Mudstone - clastic sedimentary rock that contains a mixture of silt- and clay-sized particles
+Oil shale - sedimentary rock composed dominantly of organic material
+Oolite - chemical sedimentary limestone formed from ooids, spherical grains composed of concentric layers
+Sandstone - clastic sedimentary rock defined by its grain size (0.0625 mm to 2 mm)
+Shale - clastic, fissile sedimentary rock defined by clay-sized particles
+Siltstone - clastic sedimentary rock defined by 50% or greater silt-sized particles
+Tillite - lithified glacial till
+Travertine - sedimentary rock containing calcite and iron oxides
+Tufa - porous limestone formed by the precipitation of carbonate minerals from ambient temperature water bodies
+Turbidite - particular sequence of sedimentary rocks which form within the deep ocean environment
+Wackestone - matrix-supported carbonate sedimentary rock.
+Anthracite - metamorphosed coal, between 92% - 98% organic matter
+Amphibolite - a metamorphic rock composed primarily of amphibole
+Blueschist - a metamorphic rock composed of sodic amphiboles with a distinct blue color
+Cataclasite - a rock formed by faulting
+Eclogite - an ultra-high grade metamorphosed basalt or gabbro; also a facies of metamorphic rocks
+Gneiss - a high grade coarse grained metamorphic rock with light and dark alternating bands
+Granulite - a high grade metamorphic rock formed from basalt; also a facies of metamorphic rocks
+Greenschist - a mafic metamorphic rock dominated by green amphiboles
+Hornfels - a metamorphic rock formed by heating by an igneous rock
+Litchfieldite - nepheline syenite gneiss
+Marble - a metamorphosed limestone
+Migmatite - a high grade metamorphic rock verging upon melting into a magma
+Mylonite - a metamorphic rock formed by shearing
+Metapelite - a metamorphic rock with a protolith of clay-rich (siltstone) sedimentary rock
+Metapsammite - a metamorphic rock with a protolith of quartz-rich (sandstone) sedimentary rock
+Phyllite - a low grade metamorphic rock composed mostly of micaceous minerals
+Pseudotachylite - a glass formed by melting within a fault via friction
+Quartzite - a metamorphosed sandstone typically composed of >95% quartz
+Schist - a low to medium grade metamorphic rock
+Serpentinite - a metamorphosed ultramafic rock dominated by serpentine minerals
+Skarn - a metasomatic rock
+Slate - a low grade metamorphic rock formed from shale or silts
+Suevite - a rock formed by partial melting during a meteorite impact
+Talc carbonate - a metamorphosed ultramafic rock with talc as an essential constituent; similar to a serpentinite 
+Soapstone - essentially a talc schist
+Whiteschist - a high pressure metamorphic rock containing talc and kyanite
+Adamellite - a variety of quartz monzonite
+Appinite - a group of varieties of lamprophyre, mostly rich in hornblende
+Aphanite - an aphanitic felsic volcanic rock which confounds identification via optical means
+Borolanite - a variety of nepheline syenite from Loch Borralan, Scotland
+Blue Granite - essentially larvikite, a monzonite
+Epidosite - a type of metasomatite; essentially altered basalt
+Felsite - an aphanitic felsic volcanic rock which confounds identification via optical means
+Flint - typically a form of chert, jasper, or tuff
+Ganister - a Cornish term for a lithified E horizon of a palaeosol formed from sandy soil
+Gossan - the product of the weathering of a sulfide rock or ore body
+Hyaloclastite - volcanic glass with basaltic composition
+Ijolite - a silica-undersaturated plutonic rock associated with nepheline syenites
+Jadeitite - a very rare rock formed by concentration of jadeite pyroxene; a form of serpentinite
+Jasperoid - a hematite-silica metasomatite analogous to a skarn
+Kenyte - a variety of phonolite, first found on Mount Kenya
+Lapis lazuli - a rock composed of lazulite and other minerals
+Larvikite - a variety of monzonite with microperthitic ternary feldspars from Larvik, Norway
+Litchfieldite - a metamorphosed nepheline syenite occurrence near Litchfield, Maine
+Llanite - a hypabyssal rhyolite with microcline and blue quartz phenocrysts from the Llano Uplift in Texas
+Luxullianite - a tourmaline-bearing granite with a peculiar texture, occurring at Luxulyan, Cornwall, England
+Mangerite - a hypersthene-bearing monzonite
+Minette - a variety of lamprophyre
+Novaculite - a type of chert found in Oklahoma, Arkansas and Texas
+Pyrolite - a chemical analogue considered to theoretically represent the earth's upper mantle
+Rapakivi granite - a granite containing crystals of orthoclase, which are mantled by oligoclase
+Rhomb porphyry - a type of latite with euhedral rhombic phenocrysts of feldspar
+Shonkinite - melitilic and kalsititic rocks
+Taconite - banded iron formation, primarily used in the United States of America
+Tachylite - basaltic volcanic glass
+Teschenite - a silica undersaturated, analcime bearing gabbro
+Theralite - a nepheline gabbro
+Unakite - an altered granite
+Variolite - devitrified glass
+Vogesite - a variety of lamprophyre
+Wad - rock rich in manganese oxide or manganese hydroxide
+
+;; silicate minerals
+
+Feldspar - 
+Zeolite - 
+Scapolite -  
+Garnet - 
+
+Phenakite - Be2SiO4
+Willemite - Zn2SiO4
+Olivine group 
+Forsterite - Mg2SiO4
+Fayalite - Fe2SiO4
+Tephroite - Mn2SiO4
+Pyrope - Mg3Al2(SiO4)3
+Almandine - Fe3Al2(SiO4)3
+Spessartine - Mn3Al2(SiO4)3
+Grossular - Ca3Al2(SiO4)3
+Andradite - Ca3Fe2(SiO4)3
+Uvarovite - Ca3Cr2(SiO4)3
+Hydrogrossular - Ca3Al2Si2O8(SiO4)3−m(OH)4m
+Zircon - ZrSiO4
+Thorite - (Th,U)SiO4
+Hafnon - (Hf,Zr)SiO4
+Andalusite - Al2SiO5
+Kyanite - Al2SiO5
+Sillimanite - Al2SiO5
+Dumortierite - Al6.5–7BO3(SiO4)3(O,OH)3
+Topaz - Al2SiO4(F,OH)2
+Staurolite - Fe2Al9(SiO4)4(O,OH)2
+Humite group - (Mg,Fe)7(SiO4)3(F,OH)2 
+Norbergite - Mg3(SiO4)(F,OH)2
+Chondrodite - Mg5(SiO4)2(F,OH)2
+Humite - Mg7(SiO4)3(F,OH)2
+Clinohumite - Mg9(SiO4)4(F,OH)2
+Datolite - CaBSiO4(OH)
+Titanite - CaTiSiO5
+Chloritoid - (Fe,Mg,Mn)2Al4Si2O10(OH)4
+Mullite - Al6Si2O13
+Porcelainite - Al6Si2O13
+Hemimorphite - Zn4(Si2O7)(OH)2·H2O
+calamine - Zn4(Si2O7)(OH)2·H2O
+Lawsonite - CaAl2(Si2O7)(OH)2·H2O
+Axinite - (Ca,Fe,Mn)3Al2(BO3)(Si4O12)(OH)
+Ilvaite - CaFeII2FeIIIO(Si2O7)(OH)
+Epidote - Ca2(Al,Fe)3O(SiO4)(Si2O7)(OH)
+Zoisite - Ca2Al3O(SiO4)(Si2O7)(OH) 
+Tanzanite - Ca2Al3O(SiO4)(Si2O7)(OH)
+Clinozoisite - Ca2Al3O(SiO4)(Si2O7)(OH)
+Allanite - Ca(Ce,La,Y,Ca)Al2(FeII,FeIII)O(SiO4)(Si2O7)(OH)
+Dollaseite - CaCeMg2AlSi3O11F(OH)
+Vesuvianite - Ca10(Mg,Fe)2Al4(SiO4)5(Si2O7)2(OH)4
+idocrase - Ca10(Mg,Fe)2Al4(SiO4)5(Si2O7)2(OH)4
+Benitoite - BaTi(Si3O9)
+Beryl - Be3Al2(Si6O18)
+Bazzite - Be3Sc2(Si6O18)
+Sugilite - KNa2(Fe,Mn,Al)2Li3Si12O30
+Tourmaline - (Na,Ca)(Al,Li,Mg)3−(Al,Fe,Mn)6(Si6O18(BO3)3(OH)4
+Pezzottaite - Cs(Be2Li)Al2Si6O18
+Milarite - K2Ca4Al2Be4(Si24O60)H2O
+Osumilite - (K,Na)(Fe,Mg)2(Al,Fe)3(Si,Al)12O30
+Cordierite - (Mg, Fe)2Al4Si5O18
+Sekaninaite - (Fe+2, Mg)2Al4Si5O18
+Cyclosilicate - 6-membered single rings, beryl (red: Si, blue: O)
+Enstatite - orthoferrosilite series 
+Enstatite - MgSiO3
+Ferrosilite - FeSiO3
+Pigeonite - Ca0.25(Mg,Fe)1.75Si2O6
+Diopside - hedenbergite series 
+Diopside - CaMgSi2O6
+Hedenbergite - CaFeSi2O6
+Augite - (Ca,Na)(Mg,Fe,Al)(Si,Al)2O6
+Jadeite - NaAlSi2O6
+Aegirine - NaFeIIISi2O6
+Acmite - NaFeIIISi2O6
+Spodumene - LiAlSi2O6
+Wollastonite - CaSiO3
+Rhodonite - MnSiO3
+Pectolite - NaCa2(Si3O8)(OH)
+Anthophyllite - (Mg,Fe)7Si8O22(OH)2
+Cummingtonite - Fe2Mg5Si8O22(OH)2
+Grunerite - Fe7Si8O22(OH)2
+Tremolite - Ca2Mg5Si8O22(OH)2
+Actinolite - Ca2(Mg,Fe)5Si8O22(OH)2
+Hornblende - (Ca,Na)2–3(Mg,Fe,Al)5Si6(Al,Si)2O22(OH)2
+Glaucophane - Na2Mg3Al2Si8O22(OH)2
+Riebeckite - Na2FeII3FeIII2Si8O22(OH)2
+asbestos - Na2FeII3FeIII2Si8O22(OH)2
+Arfvedsonite - Na3(Fe,Mg)4FeSi8O22(OH)2
+Antigorite - Mg3Si2O5(OH)4
+Chrysotile - Mg3Si2O5(OH)4
+Lizardite - Mg3Si2O5(OH)4
+Halloysite - Al2Si2O5(OH)4
+Kaolinite - Al2Si2O5(OH)4
+Illite - (K,H3O)(Al,Mg,Fe)2(Si,Al)4O10[(OH)2,(H2O)]
+Montmorillonite - (Na,Ca)0.33(Al,Mg)2Si4O10(OH)2·nH2O
+Vermiculite - (MgFe,Al)3(Al,Si)4O10(OH)2·4H2O
+Talc - Mg3Si4O10(OH)2
+Sepiolite - Mg4Si6O15(OH)2·6H2O
+Palygorskite - (Mg,Al)2Si4O10(OH)·4(H2O)
+attapulgite - (Mg,Al)2Si4O10(OH)·4(H2O)
+Pyrophyllite - Al2Si4O10(OH)2
+Biotite - K(Mg,Fe)3(AlSi3)O10(OH)2
+Fuchsite - K(Al,Cr)2(AlSi3O10)(OH)2
+Muscovite - KAl2(AlSi3)O10(OH)2
+Phlogopite - KMg3(AlSi3)O10(OH)2
+Lepidolite - K(Li,Al)2–3(AlSi3)O10(OH)2
+Margarite - CaAl2(Al2Si2)O10(OH)2
+Glauconite - (K,Na)(Al,Mg,Fe)2(Si,Al)4O10(OH)2
+Chlorite - (Mg,Fe)3(Si,Al)4O10(OH)2·(Mg,Fe)3(OH)6
+Quartz - SiO2
+Tridymite - SiO2
+Cristobalite - SiO2
+Coesite - SiO2
+Stishovite - SiO2
+Moganite - SiO2
+Chalcedony - SiO2
+Microcline - KAlSi3O8
+Orthoclase - KAlSi3O8
+Anorthoclase - (Na,K)AlSi3O8
+Sanidine - KAlSi3O8
+Albite - NaAlSi3O8
+Oligoclase - (Na,Ca)(Si,Al)4O8     (Na:Ca 4:1)
+Andesine - (Na,Ca)(Si,Al)4O8     (Na:Ca 3:2)
+Labradorite - (Ca,Na)(Si,Al)4O8     (Na:Ca 2:3)
+Bytownite - (Ca,Na)(Si,Al)4O8     (Na:Ca 1:4)
+Anorthite - CaAl2Si2O8
+Nosean - Na8Al6Si6O24(SO4)
+Cancrinite - Na6Ca2(CO3,Al6Si6O24).2H2O
+Leucite - KAlSi2O6
+Nepheline - (Na,K)AlSiO4
+Sodalite - Na8(AlSiO4)6Cl2 
+Hauyne - (Na,Ca)4–8Al6Si6(O,S)24(SO4,Cl)1–2
+Lazurite - (Na,Ca)8(AlSiO4)6(SO4,S,Cl)2
+Petalite - LiAlSi4O10
+Marialite - Na4(AlSi3O8)3(Cl2,CO3,SO4)
+Meionite - Ca4(Al2Si2O8)3(Cl2CO3,SO4)
+Analcime - NaAlSi2O6·H2O
+Natrolite - Na2Al2Si3O10·2H2O
+Erionite - (Na2,K2,Ca)2Al4Si14O36·15H2O
+Chabazite - CaAl2Si4O12·6H2O
+Heulandite - CaAl2Si7O18·6H2O
+Stilbite - NaCa2Al5Si13O36·17H2O
+Scolecite - CaAl2Si3O10·3H2O
+Mordenite - (Ca,Na2,K2)Al2Si10O24·7H2O

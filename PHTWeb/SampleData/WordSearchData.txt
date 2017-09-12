@@ -423,7 +423,7 @@ These words feed into four word latters:
     11 rungs ends with "MESS"
 
 
-SF15: Portal 2
+PS15: Portal 2
 ------------------------------------------------
 # # # # # # # # C
 # # # # # # # # S
@@ -445,4 +445,124 @@ ALIVE DELICIOUS LEARNINGS PBODY SATI-SFACTION TRACK-SUIT ATLAS FISSION
 MIS-TAKE PREF-ER SIM-ULA-TIONS TRIUMPH APER-TURE INSIDE MOIST RESEARCH
 STEAM TURRET BECAU-SE INTELL-IGENCE MOMENTUM RETR-ANSMIT STILL USEFUL
 CHELL WALLS
+
+PS17-R2: D & D  (Snake Search 4-12)
+------------------------------------------------
+
+N O I T S E U Q
+S E A R C H S F
+E I T S E R T B
+R O F I T R A R
+A R D R A D N E
+B P S G N I K A
+E M S I D A S T
+R C R O M B I E
+
+&
+
+E V E D M S I R
+L N E N T E H E
+O A N S A R C C
+P R H W L I O U
+M O C E O N S P
+E O T R S G A E
+N P I M S E M R
+T S F N O I T A
+
+C ABERCROMBIE & FITCH
+R STANDARD & POOR
+E RESEARCH & DEVELOPMENT
+A SADISM & MASOCHISM
+T REST & RECUPERATION
+O PROFIT & LOSS
+R BREAKING & ENTERING
+S QUESTION & ANSWER
+
+FIRST NAMES
+
+GARY & DAVE
+
+------------------------------------------------
+PD2017 - Star Search
+------------------------------------------------
+
+* B E T E L G E U * P
+S T R I Z * O P G U S
+D C E S A I O I R R I
+R O G N E C N Y O O R
+A P M U R H L T B S A
+N E A * N A S M * H L
+R R I A I A G D D C O
+A N A R C O L K A I P
+B I U A L I R A T S Y
+L C I U Y U S I V A A
+N * D E A H X A I * M
+
+STAR B E T E L G E U SE P
+S T R I Z AR O P G U S
+D C E S A I O I R R I
+R O G N E C N Y O O R
+A P M U R H L T B S A
+N E A CH N A S M UN H L
+R R I A I A G D D C O
+A N A R C O L K A I P
+B I U A L I R A T S Y
+L C I U Y U S I V A A
+N US D E A H X A I ED M
+
+ANCHA 
+ARICH 
+CHARA 
+BARNARDSSTAR 
+BETELGEUSE
+BUNDA 
+CASTOR 
+COPERNICUS 
+EDASICH
+GARNETSTAR
+HAEDUS
+IZAR
+MAIA
+MEDIA
+POLARIS
+SEGIN
+YILDUN
+
+P R O P U S 
+A O R G E Y 
+O U L S M I 
+O K U L R A 
+T Y L I U U 
+S I V A N X 
+
+NAVI
+OGMA
+OKUL
+POLLUX
+PROPUS
+TYL
+
+------------------------------------------------
+PS17 - Medusa
+------------------------------------------------
+Hex word search  (Snake search)
+
+      E T I H P A
+     E S T O S L R
+    B A R S P U N G
+   S S E L H U C E N
+  A L T A K A M C A Z
+ E A S H H E L I I A T
+A T A C O B S I D G R R
+ L B N D S T O N E A A 
+  A A D L I M E S N U
+   S I N T R M T I Q
+    O L E N A O T E
+     S F L R N E T
+      R I B E K E
+
+-
+PUMICE SLATE SANDSTONE SHALE QUARTZ GRANITE LIMESTONE 
+OBSIDIAN MARBLE ALABASTER FLINT CHALK GRAPHITE ASBESTOS
+
 

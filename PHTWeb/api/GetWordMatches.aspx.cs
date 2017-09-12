@@ -14,16 +14,17 @@ namespace PHTWeb
         protected void Page_Load(object sender, EventArgs e)
         {
             List<WordInfo> result = PHTWords.PHTWords.GetWordMatches(
-                Request.QueryString["wordPatterns"],
-                Request.QueryString["anagramPatterns"],
-                Request.QueryString["cryptogramPatterns"],
-                Request.QueryString["cryptoAnagramPatterns"],
-                Request.QueryString["phoneticPatterns"],
+                Request.Params["wordPatterns"],
+                Request.Params["anagramPatterns"],
+                Request.Params["cryptogramPatterns"],
+                Request.Params["cryptoAnagramPatterns"],
+                Request.Params["phoneticPatterns"],
                 this.Dictionaries, 
                 this.MaxResults, 
                 this.MinFrequency, 
                 this.MinWordLength, 
-                this.MaxWordLength);
+                this.MaxWordLength,
+                this.GetPronunciation);
 
             Response.Write(JsonConvert.SerializeObject(result));
         }

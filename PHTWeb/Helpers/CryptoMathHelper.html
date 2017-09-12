@@ -1,12 +1,16 @@
 ﻿<!--
 Featue Todo:
 
+    Highlight a token whos value is the same through all results.
+
     Add ability to provide multiple equation tables that each can have
     independent base values.
 
     Add support for "()" in expressions.
 
     Bug with "-" operator results a+b-c-d results in a+b-(c-d)
+
+    Add ability to have names as digits with " " as seperator.
 
 -->
 
@@ -17,15 +21,8 @@ Featue Todo:
     <script src="/es6-shim.js"></script>
     <script src="/jquery-2.1.4.js"></script>
     <script src="/Utils.js"></script>    
-    <script src="/PHTWords.js"></script>
 
     <script type="text/javascript">
-
-
-
-        var gSearchResults = [];
-        var gSearchResultsSort = 1;
-        var gSearchMapTry = "";
 
         var gExpressions = [];
         var gLeadingDigits = "";
@@ -38,7 +35,7 @@ Featue Todo:
         // CryptoExpression Class Definition
         ////
         function CryptoExpression(text) {
-            text = text.replace(/(\t| )/g, ''); // remove spaces and tab characters
+            text = text.replace(/(\t| |\r|\n)/g, ''); // remove spaces and tab and line feed characters
 
             this.text = text;
 
@@ -251,7 +248,7 @@ Featue Todo:
                 text = text.toUpperCase();
             }
 
-            var txtExpressions = text.split(/(\r\n|\r|\n)/g);  // each line is an expression
+            var txtExpressions = text.split(";");
 
             doMapChange();
 
@@ -260,11 +257,6 @@ Featue Todo:
 
             for (var i = 0; i < txtExpressions.length; i++) {
                 if (txtExpressions[i].trim() != "") {
-                    // HACK: replace all occurances of '-' with '+0-' to fix precedence problem with evaulation engine.
-                    //txtExpressions[i] = txtExpressions[i].replace(/\-/g, "+0-");
-                    // HACK: replace all occurances of '/' with '*1/' to fix precedence problem with evaulation engine.
-                    //txtExpressions[i] = txtExpressions[i].replace(/\//g, "*1/");
-
                     gExpressions.push(new CryptoExpression(txtExpressions[i]));
                 }
             }
@@ -514,7 +506,7 @@ Featue Todo:
 
 
         function doEncryptionChanged() {
-            gMapping = getNewMapping(gMapping, getOriginalText(), getExcludeText());
+            gMapping = getNewMapping(gMapping, getOriginalText());
             renderMappingTable(gMapping);
         }
 
@@ -643,46 +635,22 @@ Featue Todo:
                 return true;
             }
 
-            function getNewMapping(oldMap, encryptedText, excludeText) {
-                var domainChars = "";
+            function getNewMapping(oldMap, text) {
                 var newMap = [];
 
-                // Calculate new map from encrypted text minus the characters in exludeText.
+                if (getIgnoreCase()) {
+                    text = text.toUpperCase();
+                }
+
+                // Find all unique digits.
                 //
-                var first = true;
-                var previousChar = '';
-                for (var i = 0; i < encryptedText.length; i++) {
-                    var encryptedChar = encryptedText.charAt(i);
-                    if (getIgnoreCase()) {
-                        encryptedChar = encryptedChar.toUpperCase();
+                var tokens = [];
+                for (var i = 0; i < text.length; i++) {
+                    var c = text.charAt(i);
+                    if (((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) && (tokens.indexOf(c) < 0)) {
+                        tokens.push(c);
+                        newMap.push({ digit: c, value: "" });
                     }
-
-                    if (!excludeText || (excludeText.indexOf(encryptedChar) < 0)) {
-                        var index = domainChars.indexOf(encryptedChar);
-                        if (index < 0) {
-                            newMap.push({ digit: encryptedChar, value: "" });
-                            domainChars = domainChars + encryptedChar;
-                            index = domainChars.length - 1;
-                        }
-                        else {
-                            newMap[index].frequency++;
-                            if (previousChar == encryptedChar) {
-                                newMap[index].double++;
-                            }
-                        }
-
-                        if (first) {
-                            newMap[index].first = newMap[index].first + 1;
-                            first = false;
-                        }
-                    }
-                    else {
-                        if (PHTWords.IsWhitespace(encryptedChar)) {
-                            first = true;
-                        }
-                    }
-
-                    previousChar = encryptedChar;
                 }
 
                 // Copy any mappings from the old map to the new map.
@@ -698,7 +666,6 @@ Featue Todo:
 
                 return newMap;
             }
-
 
             function renderMappingTable(map) {
 
@@ -864,20 +831,6 @@ Featue Todo:
                 }
             }
 
-
-
-
-            ///
-            ///
-            function getExcludeText() {
-                var operators = "+-*/!=<>$&|?:"
-
-                var result = operators + PHTWords.Digits + PHTWords.Punctuation + PHTWords.Whitespace;
-
-                return result
-            }
-
-
     </script>
 </head>
 <body onload="doEncryptionChanged();">
@@ -921,17 +874,18 @@ Featue Todo:
 
                 <span>Equations:</span>
                 <label><input type="checkbox" id="IgnoreCase" checked="checked" value="1" onchange="doEncryptionChanged();" />Ignore Case</label>
+                <span style="color:blue;">&nbsp;&nbsp;&nbsp;(seperate equations with ";" characters)</span>
+                <br />
                 <textarea id="Encrypted" style="width:100%;height:175px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doEncryptionChanged();"></textarea>
 
                 <hr />
                 <label>Results: <input type="text" size="5" disabled="disabled" id="ResultsCount" /></label>
                 <label>Duration: <input type="text" size="12" disabled="disabled" id="Duration" /></label>
-                <label>Max Results: <input type="text" maxlength="4" id="MaxResults" size="5" value="999" /></label>
                 <label><input id="ShowAllResults" type="checkbox" value="1" onchange="renderResults(gResults);" />Show&nbsp;All&nbsp;Results</label>
                 <br />
                 <hr />
 
-                <table id="ResultsTable" style="width:100%;">
+                <table id="ResultsTable" style="width:100%;font-family: monospace;">
                 </table>
 
             </td>
