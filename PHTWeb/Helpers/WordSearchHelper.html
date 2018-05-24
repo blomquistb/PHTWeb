@@ -878,10 +878,13 @@ Featue Todo:
             return solutions;
         }
 
-        Grid.prototype.FindWordSearchWords = function (row, col, rowAdj, colAdj, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
+        Grid.prototype.FindWordSearchWords = function (startRow, startCol, rowAdj, colAdj, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
             var solutions = [];
             var text = "";
             var path = [];
+            var wordPatterns = "";
+            var row = startRow;
+            var col = startCol;
 
             while (this.IsValid(row, col)) {
                 path.push(new GridPosition(row, col));
@@ -898,20 +901,33 @@ Featue Todo:
                 }
 
                 if (text.length >= minWordLength) {
-                    var words = PHTWords.GetWordMatches(PHTWords.EscapeString(text), null, null, null, null, dictionaries, minFrequency, 1, minWordLength, maxWordLength);
-                    if (words.length == 1) {
-                        var grid = new Grid(this);
-                        grid.positions = grid.positions.concat(path);
-                        solutions.push(new GridSolution(grid, words[0]));
+                    if (wordPatterns) {
+                        wordPatterns = wordPatterns + "|" + PHTWords.EscapeString(text);
                     }
-                }
-
-                if (!this.ContinueSearching(row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency)) {
-                    break;
+                    else {
+                        wordPatterns = PHTWords.EscapeString(text);
+                    }
                 }
 
                 row += rowAdj;
                 col += colAdj;
+            }
+
+            if (wordPatterns) {
+                var words = PHTWords.GetWordMatches(wordPatterns, null, null, null, null, dictionaries, minFrequency, 999, minWordLength, maxWordLength);
+                for (i = 0; i < words.length; i++) {
+                    path = [];
+                    row = startRow;
+                    col = startCol;
+                    for (j = 0; j < words[i].value.length; j++) {
+                        path.push(new GridPosition(row, col));
+                        row += rowAdj;
+                        col += colAdj;
+                    }
+                    var grid = new Grid(this);
+                    grid.positions = grid.positions.concat(path);
+                    solutions.push(new GridSolution(grid, words[i]));
+                }
             }
 
             return solutions;
