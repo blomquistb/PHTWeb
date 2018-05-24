@@ -176,7 +176,7 @@ ITA s o
 "T" in center
 
 -----------------------------------------
-SF13-BW2:Nine Lives
+SF13-BW2:Nine Lives (normal word search with remainder text as result)
 
 R R G H O U L S M N
 F E L O N Y E I A O
