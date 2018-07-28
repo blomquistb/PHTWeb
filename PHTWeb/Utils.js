@@ -119,6 +119,25 @@ function setIsChecked(id, value) {
 }
 
 /**
+ *
+ * @param {string} name
+ * @param {string} value The value to set the element's checked state too.
+ */
+function getRadioValue(name, defaultValue) {
+    let elems = document.getElementsByName(name);
+
+    if (elems) {
+        for (let i = 0; i < elems.length; i++) {
+            if (elems[i].checked) {
+                return elems[i].value;
+            }
+        }
+    }
+
+    return defaultValue;
+}
+
+/**
  * Set the value of the input element with the specified id.
  *
  * @param {string} id The id of the input element who's value will be set.

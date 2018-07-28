@@ -85,11 +85,12 @@
     <Content Include="Decoders\Semaphore.js" />
     <Content Include="es6-shim.js" />
     <Content Include="GridMarker.png" />
+    <Content Include="Helpers\AnaQuoteHelper.html" />
     <Content Include="Helpers\CryptogramHelper.html" />
     <Content Include="Helpers\CryptoMathHelper.html" />
     <Content Include="Helpers\CryptoMathHelper2.html" />
+    <Content Include="Helpers\DropQuoteHelper.html" />
     <Content Include="Helpers\FatFingerHelper.html" />
-    <Content Include="Helpers\NgramHelper.html" />
     <Content Include="Helpers\PolyominoHelper.html" />
     <Content Include="Helpers\SoundsLikeHelper.html" />
     <Content Include="Helpers\WordFillHelper.html" />

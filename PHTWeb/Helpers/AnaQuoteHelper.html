@@ -1,0 +1,1364 @@
+﻿<!DOCTYPE html>
+
+<!--
+Featue Todo:
+
+    Add feature to provide a list of word lengths for solution. (any text beside numbers should be inserted in solution)
+        ANE AQU NAN OFA OTE PLE SIS THI XAM (4 2 2 7 2 2 8) "THIS IS AN EXAMPLE OF AN ANAQUOTE"
+
+    Bug: When no solutions are found the Results shows 1 (1) instead of 0.
+
+    Bug: When I search for a single word extension and the next word is fully contained in left over text it will search forward two words.
+         Will not find words fully contained in left over text or let me select them
+        IAM OPE NTO (second search at max depth 1)
+
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head id="Head1" runat="server">
+    <title>Ngram Helper</title>
+
+    <script src="/es6-shim.js"></script>
+    <script src="/jquery-2.1.4.js"></script>
+    <script src="/Utils.js"></script>
+    <script src="/PHTWords.js"></script>
+
+
+
+    <script type="text/javascript">
+
+        function NgramSolution(phrase, ngrams) {
+            this.phrase = [];
+            this.ngrams = [];
+
+            if (phrase) {
+                this.phrase = phrase;
+            }
+
+            if (ngrams) {
+                this.ngrams = ngrams;
+            }
+
+            this.initValues();
+        }
+
+        NgramSolution.prototype = {
+
+            initValues: function () {
+                this.text = "";
+                this.displayText = "";
+                this.remainingText = "";
+                this.frequency = 0;
+
+                var count = 0;
+
+                for (var i = 0; i < this.phrase.length; i++) {
+                    if (this.phrase[i]) {
+                        this.text += this.phrase[i].value;
+                        if (this.displayText != "") {
+                            this.displayText += " ";
+                        }
+                        this.displayText += this.phrase[i].value;
+                        this.frequency += this.phrase[i].frequency;
+                        count++;
+                    }
+                }
+
+                if (count > 0) {
+                    this.frequency = Math.floor(this.frequency / count);
+                }
+
+                var ngramText = this.ngrams.join('');
+                this.remainingText = ngramText.substring(this.text.length);
+            },
+
+            removeUsedNgrams: function (ngramsSource) {
+                var leftOver = [].concat(ngramsSource);
+                for (var i = 0; i < this.ngrams.length; i++) {
+                    var index = leftOver.indexOf(this.ngrams[i]);
+                    if (index != -1) {
+                        leftOver.splice(index, 1);
+                    }
+                }
+                return leftOver;
+            },
+
+            removeWord: function () {
+                if (this.phrase.length > 0) {
+                    var words = this.phrase.splice(this.phrase.length - 1, 1);
+                    this.initValues();
+
+                    var removeCount = this.remainingText.length;
+                    for (var ngramLen = this.ngrams[this.ngrams.length - 1].length; removeCount > 0 && removeCount >= ngramLen;) {
+                        removeCount = removeCount - ngramLen;
+                        this.ngrams.splice(this.ngrams.length - 1, 1);
+                        if (this.ngrams.length > 0) {
+                            ngramLen = this.ngrams[this.ngrams.length - 1].length;
+                        }
+                    }
+
+                    this.initValues();
+                }
+            }
+        };
+
+        function NgramSolutionCompareText(a, b) {
+            if (a.displayText > b.displayText) {
+                return 1;
+            }
+            else if (a.displayText < b.displayText) {
+                return -1;
+            }
+
+            return 0;
+        }
+
+        function NgramSolutionCompareLength(a, b) {
+            if (a.displayText.length > b.displayText.length) {
+                return 1;
+            }
+            else if (a.displayText.length < b.displayText.length) {
+                return -1;
+            }
+
+            return 0;
+        }
+
+        function NgramSolutionCompareFrequency(a, b) {
+            if (a.frequency > b.frequency) {
+                return 1;
+            }
+            else if (a.frequency < b.frequency) {
+                return -1;
+            }
+
+            return 0;
+        }
+
+
+        var gNgrams = [];
+        var gSolution = null;
+        var gPrevSolution = null;
+        var gSolutions = [];
+        var gAllWords = []
+
+
+        function getWordLadder() {
+            var table = document.getElementById("NgramTable");
+
+            var results = [];
+
+            if (table) {
+                for (var i = 1; i < table.rows.length; i++) {
+                    var word = table.rows[i].cells[wordColumn].firstChild.value.trim();
+                    if (word) {
+                        words = PHTWords.GetWordMatches(word, null, null, null, null, "", 0, 2);
+                        if (words.length == 0) {
+                            results.push(new WordInfo(word, 0));
+                        }
+                        else if (words.length == 1) {
+                            results.push(words[0]);
+                        }
+                        else {
+                            results.push(new WordInfo(word, -1));
+                        }
+                    }
+                    else {
+                        results.push(null);
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        function setWordLadder(ladder, overwrite) {
+            var table = document.getElementById("NgramTable");
+
+            if (table && ladder && (ladder.length == (table.rows.length - 1))) {
+                for (var i = 1; i < table.rows.length; i++) {
+                    if (ladder[i - 1] != null) {
+                        table.rows[i].cells[wordColumn].firstChild.value = ladder[i - 1].value;
+                    }
+                    else if (overwrite) {
+                        table.rows[i].cells[wordColumn].firstChild.value = "";
+                    }
+                }
+            }
+        }
+
+
+        function getMinWordLength() {
+            var result = 0;
+
+            var elem = document.getElementById("MinWordLength");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function getMaxWordLength() {
+            var result = 0;
+
+            var elem = document.getElementById("MaxWordLength");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function getMaxDepth() {
+            var result = 1;
+
+            var elem = document.getElementById("MaxDepth");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 1;
+
+                elem.value = result;
+            }
+
+            return result;
+        }
+
+        function getIndexes() {
+            var result = [];
+
+            var elem = document.getElementById("Indexes");
+            if (elem) {
+                var values = [];
+                if (elem.value.indexOf(',') >= 0) {
+                    values = elem.value.trim().split(',');
+                } else {
+                    values = elem.value.trim().split(' ');
+                }
+
+                for (var i = 0; i < values.length; i++) {
+                    var value = parseInt(values[i].trim());
+                    if (!isNaN(value)) {
+                        result.push(value);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        function getOneLetterWords() {
+            result = "";
+
+            var elem = document.getElementById("OneLetterWords");
+            if (elem) {
+                result = elem.value.trim().toUpperCase();
+                elem.value = result;
+            }
+
+            return result;
+        }
+
+
+
+        function doNgramsChanged() {
+            gNgrams = getNgramsSource();
+
+            gSolution = new NgramSolution();
+            doClearSolutions(false);
+
+            doUpdateText();
+        }
+
+        function getNgramsSource() {
+            text = document.getElementById("NgramSource").innerHTML.trim().replace(/[\s]+/g, ' ').toUpperCase();
+            return text.split(' ');
+        }
+
+        function renderNgrams(list) {
+
+            var t = document.getElementById("NgramTable");
+            t.innerHTML = '<tr><th>Order</th><th><a href="javascript:void(0)" onclick="doSortNGrams();">Ngram</a></th><th>Search</th><th>Link</th></tr>';
+
+            for (var i = 0; i < list.length; i++) {
+                var r = t.insertRow(-1);
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "center";
+                c.style.whiteSpace = "nowrap";
+                c.innerHTML = '<button onclick="doMoveUp(event);">Up</button><button onclick="doMoveDown(event);">Dn</button>';
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "center";
+                c.innerHTML = list[i];
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "center";
+                c.style.whiteSpace = "nowrap";
+                c.innerHTML = '<button onclick="doSuggestWords(event);">Sug</button>';
+
+                c = r.insertCell(-1);
+                c.style.textAlign = "center";
+                c.innerHTML = '<input type="checkbox" onchange="doLinkChange();" value="' + "Link" + i + '"' + (false ? ' checked' : '') + ' />'
+            }
+        }
+
+
+
+
+
+
+        function appendPatterns(curPatterns, newPatterns) {
+            if (!newPatterns) {
+                return curPatterns;
+            }
+
+            if (curPatterns) {
+                curPatterns += "&";
+            }
+
+            return curPatterns + newPatterns;
+        }
+
+        function doClearSolutions(keepSelected) {
+            if (keepSelected) {
+                var newSolutions = [];
+                var table = document.getElementById("ResultsTable");
+                if (table) {
+                    for (var i = 0; i < table.rows.length; i++) {
+                        if (table.rows[i].style.backgroundColor == "yellow") {
+                            newSolutions.push(gSolutions[i]);
+                        }
+                    }
+                }
+                gSolutions = newSolutions;
+            }
+            else {
+                gSolutions = [];
+            }
+
+            renderSolutions(gSolutions);
+        }
+
+        function doSelect(event) {
+            var row = event.currentTarget;
+            var table = row.parentElement;
+
+            if (row.style.backgroundColor == "yellow") {
+                row.style.backgroundColor = "";
+                gSolution = gPrevSolution;
+            }
+            else {
+                for (var i = 0; i < table.rows.length; i++) {
+                    table.rows[i].style.backgroundColor = "";
+                }
+                row.style.backgroundColor = "yellow";
+                gSolution = gSolutions[row.rowIndex];
+            }
+
+            doUpdateText();
+        }
+
+        function doRemoveWord() {
+            if (gSolution) {
+                gSolution.removeWord();
+            }
+
+            doClearSolutions(false);
+            doUpdateText();
+        }
+
+        function doSearch() {
+            var countElem = document.getElementById("ResultsCount");
+            if (countElem) {
+                countElem.value = "";
+            }
+
+            var durElem = document.getElementById("Duration");
+            if (durElem) {
+                durElem.value = "";
+            }
+
+            window.setTimeout("doSearchWork();", 0);
+        }
+
+        function doSearchWork() {
+            var startTime = new Date().getTime();
+
+            if (!gSolution) {
+                gSolution = new NgramSolution();
+            }
+
+            var newSolutions = solveArray([gSolution], getOneLetterWords(), getMaxDepth(), getDictionaries(), getMinFrequency(), getMinWordLength(), getMaxWordLength());
+
+            gPrevSolution = gSolution;
+            gSolutions = newSolutions;
+            doSortByFrequency();    // calls render solutions after sorting.
+
+            setDuration(new Date().getTime() - startTime);
+
+            beep();
+        }
+
+
+        function findValidPhrases(available_ngrams, used_ngrams, starting_letters, min_ngrams) {
+            let solutions = []
+            let oneLetterWords = getOneLetterWords();
+            let dictionaries = getDictionaries();
+            let minFrequency = getMinFrequency();
+
+            // Do it one ngram at a time until min_ngrams built up.
+
+            let phrase = starting_letters + used_ngrams.join("");
+            if (isValidPhrase(phrase, true, oneLetterWords, dictionaries, minFrequency)) {
+                if ((used_ngrams.length >= min_ngrams) || (available_ngrams.length == 0)) {
+                    return [phrase];
+                }
+
+                for (let i = 0; i < available_ngrams.length; i++) {
+                    let result = findValidPhrases(
+                        available_ngrams.slice(0, i).concat(available_ngrams.slice(i + 1, available_ngrams.length)),
+                        used_ngrams.concat(available_ngrams[i]),
+                        starting_letters,
+                        min_ngrams);
+
+                    soultions = solutions.concat(result);
+                }
+            }
+
+            return solutions;
+        }
+
+        function isValidPhrase(phrase, canBeStart, oneLetterWords, dictionaries, minFrequency) {
+
+            if (canBeStart) {
+                if (phrase == "" || PHTWords.GetWordMatches(phrase + "%", null, null, null, null, dictionaries, minFrequency, 1 /*max results*/).length >= 1) {
+                    return true;
+                }
+            }
+            else {
+                if (phrase.length == 1 && oneLetterWords) {
+                    return oneLetterWords.indexOf(phrase) != -1;
+                }
+
+                if (PHTWords.GetWordMatches(phrase, null, null, null, null, dictionaries, minFrequency, 1 /*max results*/).length >= 1) {
+                    return true;
+                }
+            }
+
+            for (let i = phrase.length - 1; i > 0; i--) {
+                let beg = phrase.substring(0, i);
+                let end = phrase.substring(i);
+
+                if (isValidPhrase(end, canBeStart, oneLetterWords, dictionaries, minFrequency) && isValidPhrase(beg, false, oneLetterWords, dictionaries, minFrequency)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function solveArray(solutions, oneLetterWords, depth, dictionaries, minFrequency, minWordLength, maxWordLength) {
+            var possibles = [];
+
+            if (depth <= 0) {
+                return solutions
+            }
+
+            for (var i = 0; i < solutions.length; i++) {
+
+                var ngrams = solutions[i].removeUsedNgrams(gNgrams); // clone the global ngrams list and then remove all ngrams used by this solution.
+
+                possibles = possibles.concat(solve(solutions[i], ngrams, oneLetterWords, dictionaries, minFrequency, minWordLength, maxWordLength));
+            }
+
+            if (possibles.length == 0) {
+                return solutions;
+            }
+            else {
+                return solveArray(possibles, oneLetterWords, depth - 1, dictionaries, minFrequency, minWordLength, maxWordLength);
+            }
+        }
+
+        function solve(solution, ngrams, oneLetterWords, dictionaries, minFrequency, minWordLength, maxWordLength) {
+            solutions = [];
+
+            if (!solution) {
+                solution = new NgramSolution();
+            }
+
+            if (ngrams && ngrams.length > 0) {
+                var possibles = [solution];
+
+                for (var i = solution.remainingText.length; i > 0; i--) {
+                    var word = solution.remainingText.substring(0, i);
+                    if (word.length > 1 || !oneLetterWords || oneLetterWords.indexOf(word) != -1) {
+                        var words = PHTWords.GetWordMatches(word, null, null, null, null, dictionaries, minFrequency, 1, minWordLength, maxWordLength);
+                        if (words.length == 1) {
+                            possibles = possibles.concat(new NgramSolution(solution.phrase.concat(words[0]), solution.ngrams));
+                        }
+                    }
+                }
+
+                for (var i = 0; i < possibles.length; i++) {
+                    var wordPatterns = [];
+                    for (var j = 0; j < ngrams.length; j++) {
+                        var ngram = ngrams[j];
+                        for (var k = 0; k < ngram.length - 1; k++) {
+                            var text = possibles[i].remainingText + ngram.substring(0, k + 1);
+                            if (text.length > 1 || !oneLetterWords || oneLetterWords.indexOf(text) != -1) {
+                                if (wordPatterns.indexOf(text) == -1) {
+                                    wordPatterns.push(text);
+                                }
+                            }
+                        }
+                        var text = possibles[i].remainingText + ngram + "%";
+                        if (wordPatterns.indexOf(text) == -1) {
+                            wordPatterns.push(text);
+                        }
+                    }
+
+                    var words = PHTWords.GetWordMatches(wordPatterns.join('|'), null, null, null, null, dictionaries, minFrequency, 2500, minWordLength, maxWordLength);
+
+                    for (var w = 0; w < words.length; w++) {
+                        var word = words[w].value.substr(possibles[i].remainingText.length);
+                        var results = findNgrams(word, ngrams);
+                        for (var r = 0; r < results.length; r++) {
+                            solutions.push(new NgramSolution(possibles[i].phrase.concat(words[w]), possibles[i].ngrams.concat(results[r])));
+                        }
+                    }
+                }
+            }
+
+            return solutions;
+        }
+
+        function findNgrams(word, srcNgrams, solNgrams) {
+            var results = [];
+
+            if (!solNgrams) {
+                solNgrams = [];
+            }
+
+            for (var i = 0; i < srcNgrams.length; i++) {
+                if (word.length <= srcNgrams[i].length && srcNgrams[i].startsWith(word)) {
+                    results.push(solNgrams.concat(srcNgrams[i]));
+                }
+                else if (word.length > srcNgrams[i].length && word.startsWith(srcNgrams[i])) {
+                    results = results.concat(findNgrams(word.substr(srcNgrams[i].length), srcNgrams.slice(0, i).concat(srcNgrams.slice(i + 1)), solNgrams.concat([srcNgrams[i]])));
+                }
+            }
+
+            return results;
+        }
+
+
+
+        function doFindWords() {
+            var durElem = document.getElementById("Duration");
+            if (durElem) {
+                durElem.value = "";
+            }
+
+            window.setTimeout("doFindWordsWork();", 0);
+        }
+
+        function doFindWordsWork() {
+            var startTime = new Date().getTime();
+
+            let ngrams = gNgrams;
+            if (gSolution) {
+                ngrams = gSolution.removeUsedNgrams(gNgrams);
+            }
+
+            gAllWords = findAllWords(ngrams);
+
+            doSortAllWords(getRadioValue("AllWordSort", "Frequency"));
+
+            setDuration(new Date().getTime() - startTime);
+
+            beep();
+        }
+
+        function doSortAllWords(order) {
+            if (order == "Alphabetical") {
+                gAllWords.sort(function (a, b) {
+                    if (a.value > b.value) {
+                        return 1;
+                    }
+                    else if (a.value < b.value) {
+                        return -1;
+                    }
+
+                    return 0;
+                });
+            }
+            else if (order == "Length") {
+                gAllWords.sort(function (a, b) { return b.value.length - a.value.length; });
+            }
+            else {
+                gAllWords.sort(function (a, b) { return b.frequency - a.frequency; });
+            }
+
+            let s = "";
+            for (let i = 0; i < gAllWords.length; i++) {
+                if (s == "") {
+                    s = gAllWords[i].value;
+                } else {
+                    s = s + " " + gAllWords[i].value;
+                }
+            }
+
+            setInputValue("AllWords", s);
+        }
+
+        function findAllWords(available_ngrams) {
+            let solutions = []
+            let oneLetterWords = getOneLetterWords();
+            let dictionaries = getDictionaries();
+            let minFrequency = getMinFrequency();
+            let minWordLength = getMinWordLength();
+            let maxWordLength = getMaxWordLength();
+
+            let word_queries = [];
+            let wild_queries = [];
+
+            // Calculate the word queries values and the wild card query values.
+            //
+            for (let i = 0; i < available_ngrams.length; i++) {
+                let left = available_ngrams[i];
+                let remaining = available_ngrams.slice(0, i).concat(available_ngrams.slice(i + 1, available_ngrams.length));
+
+                if (!maxWordLength || left.length < maxWordLength) {
+                    let query = "%" + left + "%";
+                    if (!containsString(wild_queries, query)) {
+                        wild_queries.push(query);
+
+                        let words = PHTWords.GetWordMatches(query, null, null, null, null, dictionaries, minFrequency, 999 /*max results*/, minWordLength, maxWordLength);
+
+                        if (words.length >= 999) {
+                            console.warn("Number of words returned exceeds 998 for query: " + query);
+                        }
+
+                        for (let j = 0; j < words.length; j++) {
+                            let s = canBuildWord(words[j].value, left, remaining);
+                            if (s.length > 0) {
+                                if (!containsWord(solutions, words[j])) {
+                                    solutions.push(words[j]);
+                                }
+                            }
+                        }
+                    }
+                } else if (available_ngrams[i].length == maxWordLength) {
+                    let value = available_ngrams[i];
+                    if (!containsString(word_queries, value)) {
+                        word_queries.push(value);
+                    }
+                }
+
+                for (let j = 0; j < remaining.length; j++) {
+                    let value = left + remaining[j];
+
+                    let wlen = value.length - 2;
+                    if (maxWordLength) {
+                        wlen = Math.min(value.length - 2, maxWordLength);
+                    }
+
+                    for (let k = wlen; k > 0 && k >= minWordLength; k--) {
+                        for (let l = 1; (l + k) < value.length; l++) {
+                            let word = value.substr(l, k);
+                            if (word.length > 1 || !oneLetterWords || oneLetterWords.indexOf(word) != -1) {
+                                if (!containsString(word_queries, word)) {
+                                    word_queries.push(word);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Validate single word query groupings.
+            let query = "";
+            for (let i = 0; i < word_queries.length; i++) {
+                if (query === "") {
+                    query = word_queries[i];
+                } else {
+                    query = query + "|" + word_queries[i];
+                }
+
+                if (query.length > 4000) {
+                    let words = PHTWords.GetWordMatches(query, null, null, null, null, dictionaries, minFrequency, 999 /*max results*/, minWordLength, maxWordLength);
+                    for (let j = 0; j < words.length; j++) {
+                        if (!containsWord(solutions, words[j])) {
+                            solutions.push(words[j]);
+                        }
+                    }
+                    query = "";
+                }
+            }
+
+            if (query) {
+                let words = PHTWords.GetWordMatches(query, null, null, null, null, dictionaries, minFrequency, 999 /*max results*/, minWordLength, maxWordLength);
+                for (let j = 0; j < words.length; j++) {
+                    if (!containsWord(solutions, words[j])) {
+                        solutions.push(words[j]);
+                    }
+                }
+                query = "";
+            }
+
+            return solutions;
+        }
+
+        function canBuildWord(word, core, pieces) {
+            let results = [];
+
+            for (let leftEnd = word.indexOf(core); leftEnd > -1; leftEnd = word.indexOf(core, leftEnd + core.length)) {
+                let leftSide = word.substr(0, leftEnd);
+                let rightSide = word.substr(leftEnd + core.length);
+
+                if (leftSide) {
+                    for (let i = 0; i < pieces.length; i++) {
+                        let piece = pieces[i];
+                        if (piece.length > leftSide.length) {
+                            piece = piece.substring(piece.length - leftSide.length);
+                        }
+
+                        if (piece == leftSide.substr(leftSide.length - piece.length)) {
+                            results = results.concat(canBuildWord(word, piece + core, pieces.slice(0, i).concat(pieces.slice(i + 1, pieces.length))));
+                        }
+                    }
+                } else if (rightSide) {
+                    for (let i = 0; i < pieces.length; i++) {
+                        let piece = pieces[i];
+                        if (piece.length > rightSide.length) {
+                            piece = piece.substr(0, rightSide.length);
+                        }
+
+                        if (piece == rightSide.substr(0, piece.length)) {
+                            results = results.concat(canBuildWord(word, core + piece, pieces.slice(0, i).concat(pieces.slice(i + 1, pieces.length))));
+                        }
+                    }
+                }
+                else {
+                    results.push(core); // want to push this with front and back extents?
+                }
+            }
+
+            return results;
+        }
+
+        function containsWord(words, word) {
+            for (let i = 0; i < words.length; i++) {
+                if (words[i].value == word.value) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function containsString(values, value) {
+            for (let i = 0; i < values.length; i++) {
+                if (values[i] == value) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function doSuggestWords(event) {
+            var startTime = new Date().getTime();
+
+            var row = event.currentTarget.parentElement.parentElement;
+            var index = row.rowIndex - 1;
+
+            var ladder = getWordLadder();
+            var chgLetter = getChangeLetter();
+            var addLetter = getAddLetter();
+            var rmvLetter = getRemoveLetter();
+            var allowRepeats = getAllowRepeats();
+            var allowAnagrams = getAllowAnagrams();
+
+            var patterns = "";
+            var anagrams = "";
+
+            if (ladder[index] != null) {
+                patterns = appendPatterns(patterns, ladder[index].value);
+            }
+
+            if (getIsCircle() && (ladder.length > 2) && (index == 0) && (ladder[ladder.length - 1] != null)) {
+                if (allowAnagrams) {
+                    anagrams = appendPatterns(anagrams, getLadderPatterns(ladder[ladder.length - 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+                else {
+                    patterns = appendPatterns(patterns, getLadderPatterns(ladder[ladder.length - 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+            } else if ((index > 0) && (ladder[index - 1] != null)) {
+                if (allowAnagrams) {
+                    anagrams = appendPatterns(anagrams, getLadderPatterns(ladder[index - 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+                else {
+                    patterns = appendPatterns(patterns, getLadderPatterns(ladder[index - 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+            }
+
+            if (getIsCircle() && (ladder.length > 2) && (index == (ladder.length - 1)) && (ladder[0] != null)) {
+                if (allowAnagrams) {
+                    anagrams = appendPatterns(anagrams, getLadderPatterns(ladder[0], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+                else {
+                    patterns = appendPatterns(patterns, getLadderPatterns(ladder[0], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+            } else if ((index < (ladder.length - 1)) && (ladder[index + 1] != null)) {
+                if (allowAnagrams) {
+                    anagrams = appendPatterns(anagrams, getLadderPatterns(ladder[index + 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+                else {
+                    patterns = appendPatterns(patterns, getLadderPatterns(ladder[index + 1], chgLetter, addLetter, rmvLetter, allowAnagrams));
+                }
+            }
+
+            if (!allowRepeats) {
+                for (var i = 0; i < ladder.length; i++) {
+                    if (ladder[i] && (i != index) && (ladder[i].frequency != -1)) {
+                        patterns = appendPatterns(patterns, "!" + ladder[i].value);
+                    }
+                }
+            }
+
+            var solutions = [];
+            var words = PHTWords.GetWordMatches(patterns, anagrams, null, null, null, getDictionaries(), getMinFrequency(), 2500, getMinWordLength(), getMaxWordLength());
+            for (var i = 0; i < words.length; i++) {
+                var newLadder = new Array(ladder.length);
+                for (var j = ladder.length - 1; j >= 0; j--) {
+                    newLadder[j] = null;
+                }
+                newLadder[index] = words[i];
+                solutions.push(new NgramSolution(newLadder));
+            }
+
+            gPrevSolution = null;
+            gSolutions = solutions;
+            doSortByFrequency();    // calls render solutions after sorting.
+
+            setDuration(new Date().getTime() - startTime);
+
+            beep();
+        }
+
+        function doUpdateText() {
+            var elem = document.getElementById("Result");
+            if (elem) {
+                if (gSolution) {
+                    elem.innerHTML = "<b>" + escapeHtml(gSolution.displayText) + "</b>" + " " + '<span style="dislay:inline-block;background-color:yellow">' + escapeHtml(gSolution.remainingText) + '</span>';
+                }
+                else {
+                    elem.innerHTML = "&nbsp;";
+                }
+            }
+
+            elem = document.getElementById("NgramsLeft");
+            if (elem) {
+                if (gSolution) {
+                    var ngrams = gSolution.removeUsedNgrams(gNgrams); // clone the global ngrams list and then remove all ngrams used by this solution.
+                    ngrams.sort();
+                    elem.innerText = ngrams.join(' ');
+                }
+                else {
+                    elem.innerText = gNgrams.join(' ');
+                }
+            }
+
+            elem = document.getElementById("IndexValues");
+            if (elem) {
+                if (gSolution) {
+                    var result = "";
+                    var text = gSolution.text + gSolution.remainingText;
+                    var indexs = getIndexes();
+                    for (var i = 0; i < indexs.length; i++) {
+                        var index = indexs[i];
+                        if (index > 0 && index <= text.length) {
+                            result = result + text[index - 1];
+                        }
+                        else {
+                            result = result + '_';
+                        }
+                    }
+
+                    elem.innerText = result;
+                }
+                else {
+                    elem.innerText = "";
+                }
+            }
+        }
+
+        function findDiffs(first, second) {
+            var result = { from: "_", to: "_", change: "_", add: "_", remove: "_" };
+
+            if (first && second) {
+                if (containsWildCards(first) || containsWildCards(second)) {
+                    return result;
+                }
+
+                if (first.length == second.length) {
+                    result.add = "";
+                    result.remove = "";
+                    result.change = "";
+                    for (var i = 0; i < first.length; i++) {
+                        if (first[i] != second[i]) {
+                            result.from = first[i];
+                            result.to = second[i];
+                            break;
+                        }
+                    }
+                }
+                else if (first.length < second.length) {
+                    for (var i = 0; i < first.length; i++) {
+                        for (var j = 0; j < second.length; j++) {
+                            if (first[i] == second[j]) {
+                                second = second.substring(0, j) + second.substring(j + 1);
+                                break;
+                            }
+                        }
+                    }
+                    result.change = second;
+                    result.add = second;
+                    result.remove = "";
+                    result.from = "";
+                    result.to = "";
+                }
+                else if (second.length < first.length) {
+                    for (var i = 0; i < second.length; i++) {
+                        for (var j = 0; j < first.length; j++) {
+                            if (second[i] == first[j]) {
+                                first = first.substring(0, j) + first.substring(j + 1);
+                                break;
+                            }
+                        }
+                    }
+                    result.change = first;
+                    result.add = "";
+                    result.remove = first;
+                    result.from = "";
+                    result.to = "";
+                }
+            }
+
+            return result;
+        }
+
+
+        function getIntValues(s) {
+            var result = [];
+
+            if (s) {
+                var values = s.split(',');
+                for (var i = 0; i < values.length; i++) {
+                    var value = parseInt(values[i]);
+                    if (isNaN(value)) {
+                        value = 0;
+                    }
+                    result.push(value);
+                }
+            }
+
+            return result;
+        }
+
+        function containsWildCards(s) {
+            var wildCards = "_%[";
+
+            for (var i = 0; i < s.length; i++) {
+                if (wildCards.indexOf(s[i]) > -1) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function doAddRow(table, rowIndex) {
+            if (typeof (table) === "undefined") {
+                table = document.getElementById("NgramTable");
+            }
+
+            if (table) {
+                if (typeof (rowIndex) === "undefined") {
+                    rowIndex = -1;
+                }
+
+                var row = table.insertRow(rowIndex);
+                var cmdCell = row.insertCell(-1);
+                var rungCell = row.insertCell(-1);
+                var orderCell = row.insertCell(-1);
+                var indexCell = row.insertCell(-1);
+                var wordCell = row.insertCell(-1);
+                var clueCell = row.insertCell(-1);
+
+                cmdCell.style.whiteSpace = "nowrap";
+                cmdCell.innerHTML = '<button onclick="doDelRow(event);">Del</button><button onclick="doInsRow(event);">Ins</button>';
+
+                rungCell.style.textAlign = "center";
+
+                orderCell.innerHTML = '<input type="text" style="width:2em;" value="" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />';
+
+                indexCell.innerHTML = '<input type="text" style="width:2em;" value="" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" />';
+
+                wordCell.style.whiteSpace = "nowrap";
+                wordCell.innerHTML = '<input type="text" style="width:9em;" value="" onkeyup="return doValueKeyUp(event);" onkeydown="return doValueKeyDown(event);" /><button onclick="doSuggestWords(event);">Sug</button>';
+
+                clueCell.innerHTML = '<div contenteditable="true"></div>';
+
+                renumberRungs(table);
+                doUpdateText();
+            }
+        }
+
+        function doDelRow(event) {
+            var row = event.currentTarget.parentElement.parentElement;
+            var table = row.parentElement.parentElement;
+
+            // Don't let them delete the last data row (row 1 is the title row).
+            if (table.rows.length > 2) {
+                table.deleteRow(row.rowIndex);
+
+                renumberRungs(table);
+                doUpdateText();
+            }
+        }
+
+        function doInsRow(event) {
+            var row = event.currentTarget.parentElement.parentElement;
+            var table = row.parentElement.parentElement;
+
+            doAddRow(table, row.rowIndex);
+        }
+
+        function doValueKeyDown(event) {
+            var cell = event.currentTarget.parentElement;
+            var row = cell.parentElement;
+            var table = row.parentElement.parentElement;
+
+            if (event.keyCode == 13) {
+                if (event.shiftKey) {
+                    if (row.rowIndex > 1) {
+                        table.rows[row.rowIndex - 1].cells[cell.cellIndex].firstChild.select();
+                    }
+                }
+                else {
+                    if (row.rowIndex == (table.rows.length - 1)) {
+                        doAddRow(table);
+                        table.rows[table.rows.length - 1].cells[cell.cellIndex].firstChild.select();
+                    }
+                    else {
+                        table.rows[row.rowIndex + 1].cells[cell.cellIndex].firstChild.select();
+                    }
+                }
+                return false;
+            }
+
+            return true;
+        }
+
+        function doValueKeyUp(event) {
+            doUpdateText();
+            return true;
+        }
+
+
+
+        function renderSolutions(solutions) {
+
+            var duplicates = 0;
+
+            var table = document.getElementById("ResultsTable");
+            if (table) {
+                table.innerHTML = "";
+                for (var i = 0; i < solutions.length; i++) {
+                    var r = table.insertRow(-1);
+                    r.setAttribute("onclick", "doSelect(event);");
+
+                    var c = r.insertCell(-1);
+                    c.innerHTML = "<b>" + escapeHtml(solutions[i].displayText) + "</b>" + " " + '<span style="dislay:inline-block;background-color:yellow">' + escapeHtml(solutions[i].remainingText) + '</span>';
+                    c = r.insertCell(-1);
+                    c.style.textAlign = "right";
+                    c.innerHTML = "(" + solutions[i].frequency + ")";
+                }
+            }
+
+            var elem = document.getElementById("ResultsCount");
+            if (elem) {
+                elem.value = "" + (solutions.length - duplicates) + " (" + solutions.length + ")";
+            }
+        }
+
+
+        //------------------------------------------------
+        //----------  Results Rendering Metods ---------------------------
+
+        function doSortAlphabetical() {
+            gSolutions.sort(function (a, b) { return NgramSolutionCompareText(a, b) });
+            renderSolutions(gSolutions);
+        }
+
+        function doSortByLength() {
+            gSolutions.sort(function (a, b) { var comp = -NgramSolutionCompareLength(a, b); return comp != 0 ? comp : NgramSolutionCompareText(a, b); });
+            renderSolutions(gSolutions);
+        }
+
+        function doSortByFrequency() {
+            gSolutions.sort(function (a, b) { var comp = -NgramSolutionCompareFrequency(a, b); return comp != 0 ? comp : NgramSolutionCompareText(a, b); });
+            renderSolutions(gSolutions);
+        }
+
+
+
+        function getDictionaries() {
+            var dictionaries = "";
+
+            var elem = document.getElementById("WordList");
+            if (elem && elem.checked) {
+                dictionaries += "0";
+            }
+
+            elem = document.getElementById("ModernEnglish");
+            if (elem && elem.checked) {
+                dictionaries += "1";
+            }
+
+            elem = document.getElementById("MiddleEnglish");
+            if (elem && elem.checked) {
+                dictionaries += "2";
+            }
+
+            return dictionaries
+        }
+
+        function getMinFrequency() {
+            var result = 0;
+
+            var elem = document.getElementById("MinFrequency");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function getMaxResults() {
+            var result = 25;
+
+            var elem = document.getElementById("MaxResults");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 25;
+            }
+
+            return result;
+        }
+
+        function setDuration(duration) {
+            var millis = (duration % 1000);
+            var seconds = Math.floor((duration / 1000)) % 60;
+            var minutes = Math.floor((duration / 1000) / 60);
+
+            var text = ""
+            if (minutes < 10) text += "0";
+            text += minutes;
+            text += ":";
+            if (seconds < 10) text += "0";
+            text += seconds;
+            text += ":";
+            if (millis < 10) {
+                text += "00";
+            } else if (millis < 100) {
+                text += "0";
+            }
+            text += millis;
+
+            var elem = document.getElementById("Duration");
+            if (elem) {
+                elem.value = text;
+            }
+        }
+
+        //------------------------------------------------
+
+
+        //------------------------------------------------
+        //----------  Word List Metods ---------------------------
+        function doGetWordList() {
+            PHTWords.Clear();
+            PHTWords.AddText(getInputValue("WordListText"), getIsChecked("LinesAsWords"), getIsChecked("UseFrequency"));
+        }
+        //-------------------------------------------------------------------
+
+
+    </script>
+</head>
+<body onload="">
+    <table style="width:100%;">
+        <tr>
+            <td valign="top" style="width:50%;border-right: 3px solid black;border-left: 3px solid black;padding-left:5px; padding-right:10px;">
+                <table style="width: 100%">
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="3">
+                            <label>Indexes: <input type="text" id="Indexes" value="" onkeyup="doUpdateText();" /></label>
+                            <label>WordBreaks: <input type="text" id="WordBreaks" value="no implemented" disabled="disabled" /></label>
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="3">
+                            <label>Allowed One Letter Words: <input type="text" id="OneLetterWords" value="AI" /></label>
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;">
+                            <label>Min Length: <input type="text" id="MinWordLength" value="" style="width:2em;" /></label>
+                            <label>Max Length: <input type="text" id="MaxWordLength" value="" style="width:2em;" /></label>
+                            <label>Max Depth: <input type="text" id="MaxDepth" value="1" style="width:2em;" /></label>
+                        </td>
+                        <td>
+                            &nbsp;
+                        </td>
+                        <td>
+                            <button onclick="doRemoveWord();">Back</button>
+                            <button onclick="doSearch();">Search</button>
+                        </td>
+                    </tr>
+                </table>
+
+                <hr />
+                Result:
+                <br />
+                <span id="Result">&nbsp;</span>
+                <hr />
+
+                <table id="NgramTable" style="display:none;"></table>
+                <br />
+                Index Values:
+                <br />
+                <div id="IndexValues" style="width:100%;font-family:Courier New, Courier, monospace;font-size:12px;"></div>
+                <br />
+                Ngrams Left:
+                <br />
+                <div id="NgramsLeft" style="width:100%;font-family:Courier New, Courier, monospace;font-size:12px;"></div>
+                <br />
+                Ngrams Source:
+                <br />
+                <textarea id="NgramSource" style="width:100%;height:100px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doNgramsChanged();"></textarea>
+
+                <br />
+                <br />
+                <button onclick="doFindWords();">Find Words</button>
+                <label><input type="radio" name="AllWordSort" id="Frequency" checked="checked" value="Frequency" onclick="doSortAllWords('Frequency');" />Frequency</label>
+                <label><input type="radio" name="AllWordSort" id="Length" value="Length" onclick="doSortAllWords('Length');" />Length</label>
+                <label><input type="radio" name="AllWordSort" id="Alphabetical" value="Alphabetical" onclick="doSortAllWords('Alphabetical');" />Alphabetical</label>
+                <br />
+                <textarea id="AllWords" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;"></textarea>
+            </td>
+            <td valign="top" style="width:50%;">
+
+                <table style="width: 100%">
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="2">
+                            <span>Dictionary:</span>
+                            <label><input type="checkbox" id="ModernEnglish" value="1" checked="checked" />Modern&nbsp;English</label>
+                            <label><input type="checkbox" id="MiddleEnglish" value="2" />Middle&nbsp;English</label>
+                            <label><input type="checkbox" id="WordList" value="-1" checked="checked" />Word&nbsp;List</label>
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;">
+                            <label>
+                                Min&nbsp;Frequency: <input type="text" id="MinFrequency" size="10" value="1" title="Modern English (BNC):
+  0 = 700,000 words
+  1 = 80,000 words
+  15 = 60,000 words
+  50 = 40,000 words
+  200 = 20,000 words
+  500 = 10,000 words
+  1500 = 5,000 words
+  4000 = 2,500 words
+  10000 = 1,000 words
+" />
+                            </label>
+                        </td>
+                        <td style="white-space: nowrap;text-align:right;">
+                            <label>Max Results: <input type="text" maxlength="4" id="Text2" size="5" value="9999" /></label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="2">
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="1">
+                            <label>Results: <input type="text" size="10" disabled="disabled" id="ResultsCount" /></label>
+                            <label>Duration: <input type="text" size="10" disabled="disabled" id="Duration" /></label>
+                        </td>
+                        <td style="white-space: nowrap;text-align:right;">
+                            &nbsp;
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="2">
+                            <hr />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="white-space: nowrap;" colspan="1">
+                            <button onclick="doSelectAll();">Select&nbsp;All</button>
+                            <button onclick="doCopySelected();">Copy&nbsp;Selected</button>
+                        </td>
+                        <td style="white-space: nowrap;text-align:right;">
+                            <button onclick="doClearSolutions(true);">Clear&nbsp;Unselected</button>
+                            <button onclick="doClearSolutions(false);">Clear&nbsp;All</button>
+                        </td>
+                    </tr>
+                </table>
+
+                <hr />
+
+                <div style="border:1px solid black;">
+                    <table id="ResultsHeader" style="width:100%;">
+                        <tr>
+                            <th style="text-align:left;">
+                                <a href="javascript:void(0)" onclick="doSortAlphabetical();">Alphabetical</a>
+                                <a href="javascript:void(0)" onclick="doSortByLength();">Length</a>
+                            </th>
+                            <th style="text-align:right;">
+                                <a href="javascript:void(0)" onclick="doSortByFrequency();">Frequency</a>
+                            </th>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="height:460px;overflow-y:auto;border:1px solid black;">
+                    <table id="ResultsTable" style="width:100%;font-family: monospace;"></table>
+                </div>
+
+                <br />
+
+                <span style="font-weight:bold;">Word List:</span>
+                <label><input type="checkbox" id="LinesAsWords" onclick="doGetWordList();" value="1" />Lines Are Words</label>
+                <label><input type="checkbox" id="UseFrequency" onclick="doGetWordList();" value="1" />Use BNC Frequency</label>
+                <label><input type="checkbox" id="GetPronunciation" onclick="doGetWordList();" value="1" />Get Pronunciations</label>
+                <textarea id="WordListText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onchange="doGetWordList();"></textarea>
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>
