@@ -851,8 +851,7 @@ namespace PHTWords
 
         private static SqlConnection GetConnection()
         {
-            //SqlConnection result = new SqlConnection(@"Data Source=.; Initial Catalog=pht; Integrated Security=True");
-            SqlConnection result = new SqlConnection(@"Server=tcp:pht.database.windows.net,1433;Initial Catalog=PHT;Persist Security Info=False;User ID=pht_readonly;Password=WordReader1;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+            SqlConnection result = new SqlConnection(@"Data Source=.; Initial Catalog=pht; Integrated Security=True");
             result.Open();
 
             return result;
