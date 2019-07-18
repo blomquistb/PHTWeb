@@ -1,0 +1,1137 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Puzzle Safari Tracker</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+        /* Always set the map height explicitly to define the size of the div
+        * element that contains the map. */
+        #map {
+            height: 100%;
+        }
+        /* Optional: Makes the sample page fill the window. */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
+    <script src="/jquery-2.1.4.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCY-OaY9xXBYjW99PsdQYefmg5DfFbNI7I"></script>
+
+    <script>
+        var boundries = [
+        ];
+
+        var features = [
+            { label: "Commons", lat: 47.6445, long: -122.1370 },
+            { label: "Mixer", lat: 47.6443, long: -122.1364 },
+            { label: "Submixer", lat: 47.6439, long: -122.1374 },
+            { label: "Boardwalk", lat: 47.6441, long: -122.1378 },
+            { label: "Field", lat: 47.6442, long: -122.1391, title: "Commons Field" },
+            { label: "CTC", lat: 47.6426, long: -122.1399, title: "Commons Transit Center" },
+            { label: "CVB", lat: 47.6443, long: -122.1356, title: "Commons Volleyball Court" },
+            { label: "CBB", lat: 47.6440, long: -122.1358, title: "Commons Basketball Court" },
+            { label: "XBB", lat: 47.6410, long: -122.1378, title: "Studio X Basketball Court" },
+            { label: "A", lat: 47.6453, long: -122.1363, restricted: true },
+            { label: "B", lat: 47.6453, long: -122.1389, restricted: true },
+            { label: "C", lat: 47.6430, long: -122.1379, restricted: true },
+            { label: "D", lat: 47.6432, long: -122.1355 },
+            { label: "E", lat: 47.6450, long: -122.1409 },
+            { label: "F", lat: 47.6450, long: -122.1421 },
+            { label: "G", lat: 47.6434, long: -122.1421 },
+            { label: "H", lat: 47.6436, long: -122.1409 },
+            { label: "X", lat: 47.6411, long: -122.1361 },
+            { label: "92", lat: 47.6423, long: -122.1371 },
+            { label: "99", lat: 47.6420, long: -122.1421 },
+            { label: "99P", lat: 47.6417, long: -122.1404 },
+            { label: "109", lat: 47.6373, long: -122.1402 },
+            { label: "111", lat: 47.6403, long: -122.1378, restricted: true },
+            { label: "112", lat: 47.6406, long: -122.1412 },
+            { label: "113", lat: 47.6396, long: -122.1415, restricted: true },
+            { label: "114", lat: 47.6392, long: -122.1424, restricted: true },
+            { label: "115", lat: 47.6402, long: -122.1423 },
+            { label: "PEB", lat: 47.6447, long: -122.1384, title: "Commons Parking Elevator Studio B" },
+            { label: "PEC", lat: 47.6437, long: -122.1381, title: "Commons Parking Elevator Studio C" },
+            { label: "PED", lat: 47.6437, long: -122.1361, title: "Commons Parking Elevator Studio D" },
+        ];
+
+        var gPuzzles = [
+            { id: "1", name: "On the Beach", retrieved: false, type: "R1", location: "H", room: "1234", notes: "The stamp is located at the 269 bus stop between building 16 and the soccer fields." },
+            { id: "2", name: "Gears Ticket", retrieved: false, type: "CT", location: "XBB", room: "East", notes: "The challenge ticket is located on the East side of the Studio X basketball court." },
+            { id: "3", name: "666", retrieved: true, type: "R1", location: "H", room: "2501", notes: "The challenge ticket is located in the printer room 2501." },
+            { id: "4", name: "So Long And Thanks For All The 'ish", retrieved: false, type: "R2", location: "99", room: "2501", notes: "The challenge ticket is located in the printer room 2501." },
+            { id: "5", name: "On the Beach", retrieved: false, type: "R1", location: "H", room: "1234", notes: "The stamp is located at the 269 bus stop between building 16 and the soccer fields." },
+            { id: "6", name: "Gears Ticket", retrieved: false, type: "CT", location: "XBB", room: "East", notes: "The challenge ticket is located on the East side of the Studio X basketball court." },
+            { id: "7", name: "666", retrieved: false, type: "R1", location: "H", room: "2501", notes: "The challenge ticket is located in the printer room 2501." },
+            { id: "8", name: "So Long And Thanks For All The 'ish", retrieved: false, type: "R2", location: "99", room: "2501", notes: "The challenge ticket is located in the printer room 2501." },
+            { id: "9", name: "On the Beach", retrieved: false, type: "R1", location: "H", room: "1234", notes: "The stamp is located at the 269 bus stop between building 16 and the soccer fields." },
+            { id: "10", name: "Gears Ticket", retrieved: false, type: "CT", location: "XBB", room: "East", notes: "The challenge ticket is located on the East side of the Studio X basketball court." },
+            { id: "11", name: "666", retrieved: false, type: "R1", location: "H", room: "2501", notes: "The challenge ticket is located in the printer room 2501." },
+            { id: "12", name: "So Long And Thanks For All The 'ish", retrieved: false, type: "R2", location: "99", room: "2501", notes: "The challenge ticket is located in the printer room 2501." },
+            { id: "13", name: "On the Beach", retrieved: false, type: "R1", location: "H", room: "1234", notes: "The stamp is located at the 269 bus stop between building 16 and the soccer fields." },
+            { id: "14", name: "Gears Ticket", retrieved: false, type: "CT", location: "XBB", room: "East", notes: "The challenge ticket is located on the East side of the Studio X basketball court." },
+            { id: "15", name: "666", retrieved: false, type: "R1", location: "H", room: "2501", notes: "The challenge ticket is located in the printer room 2501." },
+            { id: "16", name: "So Long And Thanks For All The 'ish", retrieved: false, type: "R2", location: "99", room: "2501", notes: "The challenge ticket is located in the printer room 2501." },
+        ];
+
+        var puzzleMarkers = {};
+
+        var config = {
+
+        };
+
+        var gMap;
+        var gPuzzleMarkers = [];
+        var gRunnerMarkers = [];
+
+
+        function setCookie(name, value) {
+            document.cookie = name + "=" + value; +";";
+        }
+
+        function getCookie(cookieName) {
+            result = "";
+
+            var name = cookieName + "=";
+            var allCookieArray = document.cookie.split(';');
+            for (let i = 0; i < allCookieArray.length; i++) {
+                let temp = allCookieArray[i].trim();
+                if (temp.indexOf(name) == 0) {
+                    return temp.substring(name.length, temp.length);
+                }
+            }
+            return result;
+        }
+
+        function initialize() {
+            initLocationList();
+
+            gPuzzles = getPuzzles();
+
+            doShowList();
+
+            let name = getCookie("RunnerName");
+            setRunnerName(name);
+            let color = getCookie("RunnerColor");
+            if (color) {
+                setRunnerColor(color);
+            }
+            let transmit = getCookie("RunnerTransmit");
+            setRunnerTransmit(transmit == '1');
+
+            setInterval(function () {
+                gPuzzles = getPuzzles();
+                doRenderPuzzleList();
+                doUpdateMapMarkers();
+                doUpdateRunnerMarkers();
+            }, 15000);
+        }
+
+        function initLocationList() {
+            elem = document.getElementById("LocationSelect");
+            if (elem) {
+                features.forEach(function (f) {
+                    let option = document.createElement("option");
+                    option.text = f.label;
+                    option.value = f.label;
+                    elem.add(option);
+                });
+            }
+        }
+
+        function initMap() {
+            var WestCampus = new google.maps.LatLngBounds();
+            WestCampus.extend(new google.maps.LatLng('47.6460', '-122.1430'));
+            WestCampus.extend(new google.maps.LatLng('47.6367', '-122.1347'));
+
+            gMap = new google.maps.Map(document.getElementById('map'), {
+                //center: { lat: 47.642, lng: -122.139 },
+                //center: { lat: 47.642, lng: -122.139 },
+                restriction: { latLngBounds: WestCampus, strictBounds: false },
+                disableDefaultUI: true,
+                //gestureHandling: 'none',
+                zoom: 16,
+                minZoom: 15,
+                maxZoom: 18,
+            });
+
+            gMap.fitBounds(WestCampus, 0)
+            gMap.setOptions({
+                styles: [
+                    {
+                        featureType: 'poi',
+                        stylers: [{ visibility: 'off' }]
+                    },
+                    {
+                        featureType: 'poi.business',
+                        elementType: 'geometry',
+                        stylers: [{ visibility: 'on' }]
+                    },
+                    {
+                        featureType: 'poi.sports_complex',
+                        stylers: [{ visibility: 'on' }]
+                    },
+                    //{
+                    //    featureType: 'transit',
+                    //    elementType: 'labels.icon',
+                    //    stylers: [{ visibility: 'off' }]
+                    //}
+                ]
+            });
+
+            features.forEach(addFeature)
+
+            doUpdateMapMarkers();
+            doUpdateRunnerMarkers();
+        }
+
+        function getRunners() {
+            let result = [];
+
+            $.ajax({
+                url: '/api/GetRunners.aspx',
+                type: 'POST',
+                dataType: 'json',
+                processData: false,
+                data: 'team=' + encodeURIComponent('12Monkeys'),
+                error: function (jqXHR, status, error) { console.log("GetRunners call failed: " + status + " - " + error); },
+                success: function (data) {
+                    result = data;
+                },
+                async: false,
+            });
+
+            return result;
+        }
+
+        function saveRunner(name, color, latitude, longitude) {
+            let result = [];
+
+            $.ajax({
+                url: '/api/SaveRunner.aspx',
+                type: 'POST',
+                dataType: 'json',
+                processData: false,
+                data: 'team=' + encodeURIComponent('12Monkeys')
+                    + '&name=' + encodeURIComponent(name) + '&color=' + encodeURIComponent(color)
+                    + '&latitude=' + encodeURIComponent(latitude.toString()) + '&longitude=' + encodeURIComponent(longitude.toString()),
+                error: function (jqXHR, status, error) { console.log("SaveRunner call failed: " + status + " - " + error); },
+                success: function (data) {
+                    result = data;
+                },
+                async: false,
+            });
+
+            return result;
+        }
+
+        function getPuzzles() {
+            let result = [];
+
+            $.ajax({
+                url: '/api/GetPuzzles.aspx',
+                type: 'POST',
+                dataType: 'json',
+                processData: false,
+                data: 'team=' + encodeURIComponent('12Monkeys'),
+                error: function (jqXHR, status, error) { console.log("GetPuzzle call failed: " + status + " - " + error); },
+                success: function (data) {
+                    result = data;
+                },
+                async: false,
+            });
+
+            return result;
+        }
+
+        function savePuzzle(p) {
+            let result = null;
+
+            $.ajax({
+                url: '/api/SavePuzzle.aspx',
+                type: 'POST',
+                dataType: 'json',
+                processData: false,
+                data: 'id=' + encodeURIComponent(p.id) + "&type=" + encodeURIComponent(p.type) + "&name=" + encodeURIComponent(p.name)
+                    + "&location=" + encodeURIComponent(p.location) + "&room=" + encodeURIComponent(p.room) + "&notes=" + encodeURIComponent(p.notes),
+                error: function (jqXHR, status, error) { console.log("SavePuzzle call failed: " + status + " - " + error); },
+                success: function (data) {
+                    result = data;
+                },
+                async: false,
+            });
+
+            return result;
+        }
+
+        function deletePuzzle(id) {
+            let result = null;
+
+            $.ajax({
+                url: '/api/DeletePuzzle.aspx',
+                type: 'POST',
+                dataType: 'json',
+                processData: false,
+                data: 'id=' + encodeURIComponent(id),
+                error: function (jqXHR, status, error) { console.log("DeletePuzzle call failed: " + status + " - " + error); },
+                success: function (data) {
+                    result = data;
+                },
+                async: false,
+            });
+
+            return result;
+        }
+
+        function setRetrievedPuzzle(id, retrieved) {
+            let result = null;
+
+            $.ajax({
+                url: '/api/SetRetrievedPuzzle.aspx',
+                type: 'POST',
+                dataType: 'json',
+                processData: false,
+                data: 'id=' + encodeURIComponent(id) + '&retrieved=' + encodeURIComponent(retrieved),
+                error: function (jqXHR, status, error) { console.log("DeletePuzzle call failed: " + status + " - " + error); },
+                success: function (data) {
+                    result = data;
+                },
+                async: false,
+            });
+
+            return result;
+        }
+
+        function getPosition(location) {
+            for (var i = 0; i < features.length; i++) {
+                if (features[i].label === location) {
+                    return new google.maps.LatLng(features[i].lat, features[i].long);
+                }
+            }
+        }
+
+        function addFeature(feature) {
+            var marker = new google.maps.Marker({
+                map: gMap,
+                title: feature.title ? feature.title : feature.label,
+                position: new google.maps.LatLng(feature.lat, feature.long),
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: (feature.label.length > 3) ? 0 : 12,
+                    strokeWeight: 1,
+                    strokeColor: feature.restricted ? "#FF0000" : "#000000",
+                },
+                label: {
+                    text: feature.label,
+                    color: feature.restricted ? "#FF0000" : "#000000",
+                    fontSize: "12px",
+                    fotWeight: "bold",
+                },
+            });
+
+            return marker;
+        }
+
+
+        function doShowList() {
+            doShowTab("List");
+
+            doRenderPuzzleList();
+        }
+
+        function getPuzzleSort() {
+            let sortOptions = ["Name", "Location", "Type"];
+            let sortFunctions = [nameSort, locationSort, typeSort];
+
+            for (let i = 0; i < sortOptions.length; i++) {
+                let elem = document.getElementById(sortOptions[i] + "Sort");
+                if (elem && elem.checked) {
+                    return sortFunctions[i];
+                }
+            }
+
+            return nameSort;
+        }
+
+        function doUpdatePuzzleFilter() {
+            let column = getPuzzleFilterColumn();
+            let elem = document.getElementById("PuzzleFilterText");
+
+            if (column === "none") {
+                if (elem) {
+                    elem.style.display = "none";
+                    elem.innerHTML = "";
+                }
+            } else {
+                if (elem) {
+                    elem.style.display = "";
+
+                    if (column === "location") {
+                        elem.innerHTML = "";
+                        features.forEach(function (f) {
+                            let option = document.createElement("option");
+                            option.text = f.label;
+                            option.value = f.label;
+                            elem.add(option);
+                        });
+                    }
+
+                    if (column === "type") {
+                        let types = ["R1", "R2", "CT", "MP"]
+                        elem.innerHTML = "";
+                        types.forEach(function (type) {
+                            let option = document.createElement("option");
+                            option.text = type;
+                            option.value = type;
+                            elem.add(option);
+                        });
+                    }
+                }
+            }
+        }
+
+        function nameSort(a, b) {
+            if (a.retrieved && !b.retrieved) {
+                return 1;
+            } else if (b.retrieved && !a.retrieved) {
+                return -1;
+            }
+            else {
+                return a.name.localeCompare(b.name);
+            }
+        }
+
+        function locationSort(a, b) {
+            if (a.retrieved && !b.retrieved) {
+                return 1;
+            } else if (b.retrieved && !a.retrieved) {
+                return -1;
+            }
+            else {
+                let locationA = a.location + " / " + a.room;
+                let locationB = b.location + " / " + b.room;
+                return locationA.localeCompare(locationB);
+            }
+        }
+
+        function typeSort(a, b) {
+            if (a.retrieved && !b.retrieved) {
+                return 1;
+            } else if (b.retrieved && !a.retrieved) {
+                return -1;
+            }
+            else {
+                return a.type.localeCompare(b.type);
+            }
+        }
+
+        function filterPuzzles(puzzles) {
+            let column = getPuzzleFilterColumn()
+            let text = getPuzzleFilterText();
+
+            if (column != 'none' && text) {
+                puzzles = puzzles.filter(function (p) {
+                    return p[column] === text;
+                });
+            }
+
+            return puzzles;
+        }
+
+        function doRenderPuzzleList() {
+
+            // Sort the puzzle list.
+            //
+            gPuzzles.sort(getPuzzleSort());
+
+
+            // Filter the puzzle list
+            //
+            let puzzles = filterPuzzles(gPuzzles);
+
+            // Set the puzzle count
+            //
+            let count = 0;
+            puzzles.forEach(function (p) {
+                if (!p.retrieved) {
+                    count++;
+                }
+            });
+            let elem = document.getElementById("PuzzleCount");
+            if (elem) {
+                elem.innerHTML = puzzles.length.toString() + "&nbsp;(" + count.toString() + ")";
+            }
+
+            // Output the puzzle list.
+            //
+            let table = document.getElementById("PuzzleList");
+            if (table) {
+                table.innerHTML = "";
+                for (let i = 0; i < puzzles.length; i++) {
+                    let r = table.insertRow(-1);
+                    //r.setAttribute("onclick", "doSelect(event);");
+
+                    let c = r.insertCell(-1);
+                    c.innerHTML =
+                        "<table><tr>" +
+                        "<td style=\"width: 99%;\" onclick=\"doEditPuzzle('" + puzzles[i].id + "');\">" +
+                        "<div style = \"font-size: small;\">" + puzzles[i].type + " | " + puzzles[i].location + " / " + puzzles[i].room + "</div>" +
+                        "<div style = \"font-size: large;\">" + puzzles[i].name + "</div>" +
+                        "<div style = \"font-size: small;\">" + puzzles[i].notes + "</div>" +
+                        "</td>" +
+                        "<td style=\"width: 1%;padding:10px;\"><input type=\"checkbox\"" + (puzzles[i].retrieved ? " checked" : "") + " onclick=\"doClickRetrieved('" + puzzles[i].id + "');\" /></td>" +
+                        "</tr ></table > ";
+                    c.style.border = "1px solid black";
+                    if (puzzles[i].retrieved) {
+                        c.style.color = "#888888";
+                    }
+                }
+            }
+        }
+        
+        function doClickRetrieved(id) {
+            let puzzle = gPuzzles.find(function (p) {
+                return p.id == id;
+            });
+
+            if (puzzle) {
+                puzzle.retrieved = !puzzle.retrieved;
+            }
+
+            setRetrievedPuzzle(puzzle.id, puzzle.retrieved);
+
+            // Re-Render the puzzle list and markers.
+            //
+            doUpdateMapMarkers();
+            doRenderPuzzleList(gPuzzles);
+        }
+
+
+        function doEditPuzzle(id) {
+            // Clear the edit fields.
+            //
+            setPuzzleId("");
+            setPuzzleName("");
+            setPuzzleType("");
+            setPuzzleLocation("");
+            setPuzzleRoom("");
+            setPuzzleNotes("");
+
+            if (id) {
+                let puzzle = gPuzzles.find(function (p) { return p.id == id; });
+                if (puzzle) {
+                    setPuzzleId(puzzle.id);
+                    setPuzzleName(puzzle.name);
+                    setPuzzleType(puzzle.type);
+                    setPuzzleLocation(puzzle.location);
+                    setPuzzleRoom(puzzle.room);
+                    setPuzzleNotes(puzzle.notes);
+                }
+
+                let elem = document.getElementById("DeleteButton");
+                if (elem) {
+                    elem.style.display = "";
+                }
+            } else {
+                let elem = document.getElementById("DeleteButton");
+                if (elem) {
+                    elem.style.display = "none";
+                }
+            }
+
+            doShowTab("Edit");
+        }
+
+        function doEditCancel() {
+            doShowList();
+        }
+
+        function doEditSave() {
+            let p = {
+                id: getPuzzleId(),
+                type: getPuzzleType(),
+                name: getPuzzleName(),
+                location: getPuzzleLocation(),
+                room: getPuzzleRoom(),
+                notes: getPuzzleNotes(),
+            };
+
+            let result = savePuzzle(p);
+
+            if (result) {
+                p = gPuzzles.find(function (puzzle) {
+                    return puzzle.id == result.id;
+                });
+
+                if (p) {
+                    p.id = result.id;
+                    p.type = result.type;
+                    p.name = result.name;
+                    p.location = result.location;
+                    p.room = result.room;
+                    p.notes = result.notes;
+                    p.retrieved = result.retrieved;
+                } else {
+                    gPuzzles.push(result);
+                }
+
+                doUpdateMapMarkers();
+            }
+
+            doShowList();
+        }
+
+        function doEditDelete() {
+            let id = getPuzzleId();
+
+            deletePuzzle(id);
+
+            let index = gPuzzles.findIndex(function (p) { return p.id == id });
+            if (index > -1) {
+                gPuzzles.splice(index, 1);
+            }
+
+            doUpdateMapMarkers();
+            doShowList();
+        }
+
+        function onLocationSelectChange() {
+            elem = document.getElementById("LocationSelect");
+            if (elem) {
+                if (elem.value == "Other") {
+                    setPuzzleLocation("");
+                } else {
+                    setPuzzleLocation(elem.value);
+                }
+            }
+        }
+
+        function onLocationFieldChange() {
+            elem = document.getElementById("LocationField");
+            if (elem) {
+                setPuzzleLocation(elem.value);
+            }
+        }
+
+
+        function getRunnerTransmit() {
+            let result = false;
+
+            let elem = document.getElementById("RunnerTransmit");
+            if (elem) {
+                result = elem.checked;
+            }
+
+            return result;
+        }
+
+        function setRunnerTransmit(transmit) {
+            let elem = document.getElementById("RunnerTransmit");
+            if (elem) {
+                elem.checked = transmit;
+            }
+        }
+
+        function getRunnerName() {
+            let result = "Runner";
+
+            let elem = document.getElementById("RunnerName");
+            if (elem && elem.value) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setRunnerName(name) {
+            let elem = document.getElementById("RunnerName");
+            if (elem) {
+                elem.value = name;
+            }
+        }
+
+        function getRunnerColor() {
+            let result = "yellow";
+
+            let elem = document.getElementById("RunnerColor");
+            if (elem && elem.value) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setRunnerColor(color) {
+            let elem = document.getElementById("RunnerColor");
+            if (elem) {
+                elem.value = color;
+            }
+        }
+
+        function getPuzzleFilterColumn() {
+            let result = "none";
+
+            let elem = document.getElementById("PuzzleFilterType");
+            if (elem) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setPuzzleFilterColumn(column) {
+            let elem = document.getElementById("PuzzleFilterType");
+            if (elem) {
+                elem.value = column;
+                doUpdatePuzzleFilter();
+                doRenderPuzzleList();
+            }
+        }
+
+        function getPuzzleFilterText() {
+            let result = "";
+
+            let elem = document.getElementById("PuzzleFilterText");
+            if (elem) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setPuzzleFilterText(text) {
+            let elem = document.getElementById("PuzzleFilterText");
+            if (elem) {
+                elem.value = text;
+                doRenderPuzzleList();
+            }
+        }
+
+        function getPuzzleId() {
+            let result = "";
+
+            let elem = document.getElementById("IdField");
+            if (elem) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setPuzzleId(id) {
+            let elem = document.getElementById("IdField");
+            if (elem) {
+                elem.value = id;
+            }
+        }
+
+        function getPuzzleName() {
+            let result = "";
+
+            let elem = document.getElementById("NameField");
+            if (elem) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setPuzzleName(name) {
+            let elem = document.getElementById("NameField");
+            if (elem) {
+                elem.value = name;
+            }
+        }
+
+        function getPuzzleType() {
+            let result = "";
+
+            let elem = document.getElementById("TypeSelect");
+            if (elem) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setPuzzleType(type) {
+            let elem = document.getElementById("TypeSelect");
+            if (elem) {
+                elem.value = type;
+            }
+        }
+
+        function getPuzzleLocation() {
+            let result = "";
+
+            let elem = document.getElementById("LocationField");
+            if (elem) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setPuzzleLocation(location) {
+            let elem = document.getElementById("LocationField");
+            if (elem) {
+                elem.value = location;
+            }
+
+            elem = document.getElementById("LocationSelect");
+            if (elem) {
+                elem.value = location;
+
+                if (!location || elem.value != location) {
+                    elem.value = "Other";
+                }
+            }
+        }
+
+        function getPuzzleRoom() {
+            let result = "";
+
+            let elem = document.getElementById("RoomField");
+            if (elem) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setPuzzleRoom(room) {
+            let elem = document.getElementById("RoomField");
+            if (elem) {
+                elem.value = room;
+            }
+        }
+
+        function getPuzzleNotes() {
+            let result = "";
+
+            let elem = document.getElementById("NotesField");
+            if (elem) {
+                result = elem.value;
+            }
+
+            return result;
+        }
+
+        function setPuzzleNotes(notes) {
+            let elem = document.getElementById("NotesField");
+            if (elem) {
+                elem.value = notes;
+            }
+        }
+
+
+        function doShowMap() {
+            doShowTab("Map");
+
+            if (!gMap) {
+                initMap();
+            }
+        }
+
+        function doUpdateMapMarkers() {
+            if (gMap) {
+                let counts = {};
+                let markers = [];
+
+                // remove any existing puzzle markers.
+                //
+                gPuzzleMarkers.forEach(function (pm) {
+                    pm.setMap(null);
+                });
+                gPuzzleMarkers = [];
+
+                // Count up the puzzles at each location
+                //
+                gPuzzles.forEach(function (puzzle) {
+                    if (!puzzle.retrieved) {
+                        if (counts[puzzle.location]) {
+                            counts[puzzle.location]++;
+                        } else {
+                            counts[puzzle.location] = 1;
+                        }
+                    }
+                });
+
+                for (let location in counts) {
+                    let marker = new google.maps.Marker({
+                        map: gMap,
+                        position: getPosition(location),
+                        clickable: true,
+                        label: {
+                            text: counts[location].toString(),
+                        },
+                    });
+
+                    marker.addListener('click', function () {
+                        setPuzzleFilterColumn('location');
+                        setPuzzleFilterText(location);
+                        doShowList();
+                    });
+
+                    markers.push(marker);
+                }
+
+                gPuzzleMarkers = markers;
+            }
+        }
+
+        function doUpdateRunnerMarkers() {
+
+            if (getRunnerTransmit()) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        function (position) {
+                            saveRunner(getRunnerName(), getRunnerColor(), position.coords.latitude, position.coords.longitude);
+                        },
+                        function (error) {
+                            console.log("Position Error: " + error.code + error.message);
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            maximumAge: 20000,
+                            timeout: 2700
+                        }
+                    );
+                }
+            }
+
+            if (gMap) {
+                let markers = [];
+                let runners = getRunners()
+
+                // remove any existing puzzle markers.
+                //
+                gRunnerMarkers.forEach(function (rm) {
+                    rm.setMap(null);
+                });
+                gRunnerMarkers = [];
+
+                runners.forEach(function (r) {
+                    markers.push(new google.maps.Marker({
+                        map: gMap,
+                        title: r.name,
+                        position: new google.maps.LatLng(r.latitude, r.longitude),
+                        icon: "http://maps.google.com/mapfiles/ms/icons/" + r.color + "-dot.png",
+                        clickable: false,
+                    }));
+                });
+
+                gRunnerMarkers = markers;
+            }
+        }
+
+        function doShowConfig() {
+            doShowTab("Config");
+        }
+
+        function doShowTab(name) {
+            let allTabs = ["Map", "List", "Config", "Edit"]
+
+            allTabs.forEach(function (tabName) {
+                let elem = document.getElementById(tabName + "Tab");
+                if (elem) {
+                    if (tabName === name) {
+                        elem.style.display = "";
+                    } else {
+                        elem.style.display = "none";
+                    }
+                }
+
+                elem = document.getElementById(tabName + "Button");
+                if (elem) {
+                    if (tabName === name) {
+                        elem.style.fontWeight = "bold";
+                    } else {
+                        elem.style.fontWeight = "normal";
+                    }
+                }
+            });
+
+            let menuBar = document.getElementById("MenuBar");
+            if (menuBar) {
+                if (name === "Edit") {
+                    menuBar.style.display = "none";
+                } else {
+                    menuBar.style.display = "";
+                }
+            }
+        }
+
+    </script>
+
+</head>
+<body onload="initialize();">
+    <div style="height:100%;">
+        <table style="height:100%;width:100%;">
+            <tr id="MenuBar">
+                <td>
+                    <div>
+                        <table style="width:100%;font-size:large;">
+                            <tr id="TopMenuBar">
+                                <td id="ListButton" style="text-align:left;vertical-align:central; width:25%;" onclick="doShowList();">List</td>
+                                <td id="MapButton" style="text-align:center;vertical-align:central;width:25%;" onclick="doShowMap();">Map</td>
+                                <td id="EditButton" style="text-align:center;vertical-align:central;width:25%;" onclick="doEditPuzzle();">Add</td>
+                                <td id="ConfigButton" style="text-align:right;vertical-align:central;width:25%;" onclick="doShowConfig();">Config</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <hr />
+                </td>
+            </tr>
+            <tr id="ListTab" style="height:100%;display:none;">
+                <td style="vertical-align:top;">
+                    <table style="height:100%;width:100%;">
+                        <tr>
+                            <td style="height:1%;" colspan="2">
+                                Sort:
+                                <label><input type="radio" name="SortType" id="NameSort" checked="checked" value="name" onclick="doRenderPuzzleList();" />Name</label>
+                                <label><input type="radio" name="SortType" id="LocationSort" value="location" onclick="doRenderPuzzleList();" />Location</label>
+                                <label><input type="radio" name="SortType" id="TypeSort" value="type" onclick="doRenderPuzzleList();" />Type</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="height:1%;width:99%;">
+                                Filter:
+                                <select id="PuzzleFilterType" onchange="doUpdatePuzzleFilter(); doRenderPuzzleList();">
+                                    <option value="none">None</option>
+                                    <option value="type">Type</option>
+                                    <option value="location">Location</option>
+                                </select>
+                                &nbsp;&nbsp;
+                                <select id="PuzzleFilterText" style="display:none;" onchange="doRenderPuzzleList();"></select>
+                            </td>
+                            <td id="PuzzleCount" style="width:1%;text-align:right">0</td>
+                        </tr>
+                        <tr>
+                            <td style="height:98%;" colspan="2">
+                                <div style="height:100%;overflow-y:scroll;">
+                                    <table id="PuzzleList" style="width: 100%;">
+                                        <tr>
+                                            <td id="" style="border:1px solid black;">
+                                                <table>
+                                                    <tr>
+                                                        <td>
+                                                            <div style="font-size:small;">R1 | 16/outside</div>
+                                                            <div style="font-size:large;">Puzzle Name goes here</div>
+                                                            <div style="font-size:small;">The notes for the puzzle stamp location go here.</div>
+                                                        </td>
+                                                        <td>
+                                                            <input id="" type="checkbox" onclick="" />
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr id="MapTab" style="height:100%;display:none;">
+                <td style="vertical-align:top;">
+                    <div id="map"></div>
+                </td>
+            </tr>
+            <tr id="EditTab" style="height:100%;display:none;">
+                <td style="vertical-align:top;">
+                    <table style="width:100%;font-size:large;font-weight:bold;">
+                        <tr id="TopMenuBar">
+                            <td id="BackButton" style="text-align:left;vertical-align:central; width:33%;" onclick="doEditCancel();">Cancel</td>
+                            <td id="SaveButton" style="text-align:center;vertical-align:central; width:34%;" onclick="doEditSave();">Save</td>
+                            <td id="DeleteButton" style="text-align:right;vertical-align:central; width:33%;" onclick="doEditDelete();">Delete</td>
+                        </tr>
+                    </table>
+                    <hr />
+                    <table style="width: 100%">
+                        <input id="IdField" type="hidden" />
+                        <tr>
+                            <td>Type:</td>
+                            <td>
+                                <select id="TypeSelect">
+                                    <option value="R1">Round 1 Puzzle</option>
+                                    <option value="R2">Round 2 Puzzle</option>
+                                    <option value="CT">Challenge Ticket</option>
+                                    <option value="MP">Meta Puzzle</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Name:</td>
+                            <td><input id="NameField" style="width: 100%;" type="text" /></td>
+                        </tr>
+                        <tr>
+                            <td>Location:</td>
+                            <td>
+                                <table style="width:100%">
+                                    <tr>
+                                        <td style="width:2%;padding:0px;">
+                                            <select id="LocationSelect" onchange="onLocationSelectChange();">
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </td>
+                                        <td style="width:98%;padding:0px;">
+                                            <input id="LocationField" style="width: 100%;" type="text" onchange="onLocationFieldChange();" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Room:</td>
+                            <td><input id="RoomField" style="width: 100%;" type="text" /></td>
+                        </tr>
+                        <tr>
+                            <td>Notes:</td>
+                            <td><textarea id="NotesField" style="width: 100%;height:120px;"></textarea></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr id="ConfigTab" style="height:100%;display:none;">
+                <td style="vertical-align:top;">
+                    <table>
+                        <tr>
+                            <td>Team Name:</td>
+                            <td><input id="TeamName" type="text" /></td>
+                        </tr>
+                        <tr>
+                            <td>Team Password:</td>
+                            <td><input type="password" /></td>
+                        </tr>
+                        <tr>
+                            <td>Transmit Location:</td>
+                            <td><input id="RunnerTransmit" type="checkbox"  onchange="setCookie('RunnerTransmit', getRunnerTransmit() ? '1' : '0');" /></td>
+                        </tr>
+                        <tr>
+                            <td>Color:</td>
+                            <td>
+                                <select id="RunnerColor" onchange="setCookie('RunnerColor', getRunnerColor());">
+                                    <option value="yellow">Yellow</option>
+                                    <option value="blue">Blue</option>
+                                    <option value="green">Green</option>
+                                    <option value="purple">Purple</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Name:</td>
+                            <td><input id="RunnerName" type="text" onchange="setCookie('RunnerName', getRunnerName());" /></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>
