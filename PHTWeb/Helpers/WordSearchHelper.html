@@ -89,7 +89,7 @@ Featue Todo:
                     {
                         var start = getStart();
                         var grid = getGrid(!getAllowOverlap());
-                        newSolutions = grid.FindWordSearchSolutions(start.row, start.col, getSearchBackwards(), getWordBreaks(), getHasSpaces(), getMinWordLength(), getMaxWordLength(), getDictionaries(), getMinFrequency());
+                        newSolutions = grid.FindWordSearchSolutions(start.row, start.col, getSearchBackwards(), getWordBreaks(), getHasSpaces(), getMinWordLength(), getMaxWordLength(), getDiagonalSearch(), getHorizontalSearch(), getVerticalSearch(), getDictionaries(), getMinFrequency());
                         break;
                     }
                 case 2: // Word Snake Search
@@ -292,17 +292,22 @@ Featue Todo:
         function setSearchType(type) {
             hWrapElem = document.getElementById("HorizontalWrapLabel");
             vWrapElem = document.getElementById("VerticalWrapLabel");
+            dSearchElem = document.getElementById("DiagonalSearchLabel");
             hSearchElem = document.getElementById("HorizontalSearchLabel");
             vSearchElem = document.getElementById("VerticalSearchLabel");
 
             hideElement(hWrapElem);
             hideElement(vWrapElem);
+            hideElement(dSearchElem);
             hideElement(hSearchElem);
             hideElement(vSearchElem);
 
             switch (type) {
                 case 1: { // Word Search
                     setAllowOverlap(true);
+                    showElement(dSearchElem);
+                    showElement(hSearchElem);
+                    showElement(vSearchElem);
                     break;
                 }
                 case 2: { // Snake Search
@@ -489,6 +494,15 @@ Featue Todo:
             }
 
             return false;
+        }
+
+        function getDiagonalSearch() {
+            var elem = document.getElementById("DiagonalSearch");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return true;
         }
 
         function getHorizontalSearch() {
@@ -840,7 +854,7 @@ Featue Todo:
             return true;
         }
 
-        Grid.prototype.FindWordSearchSolutions = function (row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
+        Grid.prototype.FindWordSearchSolutions = function (row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dSearch, hSearch, vSearch, dictionaries, minFrequency) {
             var solutions = [];
 
             if (wordLengths && wordLengths[0]) {
@@ -849,27 +863,49 @@ Featue Todo:
             }
 
             if ((row >= 0) && (col >= 0)) {
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                // Horizontal Search
+                if (hSearch) {
+                    solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                    solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                }
+
+                // Vertical Search
+                if (vSearch) {
+                    solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                    solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                }
+
+                // Diaganal Search
+                if (dSearch) {
+                    solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                    solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                    solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                    solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                }
             }
             else {
                 for (var row = 0; row < this.height; row++) {
                     for (var col = 0; col < this.width; col++) {
                         if (!this.rows[row][col].visited) {
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                            // Horizontal Search
+                            if (hSearch) {
+                                solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                                solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                            }
+
+                            // Vertical Search
+                            if (vSearch) {
+                                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                            }
+
+                            // Diaganal Search
+                            if (dSearch) {
+                                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
+                            }
                         }
                     }
                 }
@@ -1563,14 +1599,14 @@ Featue Todo:
         function CompareGridSolutionPaths(a, b) {
             var result = 0;
 
-            for (var i = 0; i < a.grid.positions.length && i < b.grid.positions.length; i++) {
-                result = CompareGridPosition(a.grid.positions[i], b.grid.positions[i]);
-                if (result != 0) {
-                    break;
+            if (a.grid.positions.length == b.grid.positions.length) {
+                for (var i = 0; i < a.grid.positions.length && i < b.grid.positions.length; i++) {
+                    result = CompareGridPosition(a.grid.positions[i], b.grid.positions[i]);
+                    if (result != 0) {
+                        break;
+                    }
                 }
-            }
-
-            if ((result == 0) && (a.grid.positions.length != b.grid.positions.length)) {
+            } else {
                 if (a.grid.positions.length < b.grid.positions.length) {
                     result = 1;
                 }
@@ -1650,7 +1686,7 @@ Featue Todo:
                             <label><input type="radio" name="Direction" id="Start" checked="checked" value="Forward" />Start</label>
                             <label><input type="radio" name="Direction" id="End" value="Backwards"  />End</label>
                             <input type="text" id="StartCell" size="8" onkeyup="renderGrid();" value="" />
-                            <label>Words&nbsp;Breaks:<input type="text" id="WordBreaks" size="20" value="" /></label>
+                            <label>Word&nbsp;Breaks:<input type="text" id="WordBreaks" size="20" value="" /></label>
                             <label><input type="checkbox" id="HasSpaces" value="1" />Has&nbsp;Spaces</label>
                             <hr />
                         </td>
@@ -1663,11 +1699,12 @@ Featue Todo:
                         <td style="text-align:right;white-space:nowrap;">
                             <label style="display:none;" id="HorizontalWrapLabel"><input type="checkbox" id="HorizontalWrap" value="1" />H-Wrap</label>
                             <label style="display:none;" id="VerticalWrapLabel"><input type="checkbox" id="VerticalWrap" value="1" />V-Wrap</label>
-                            <label style="display:none;" id="HorizontalSearchLabel"><input type="checkbox" id="HorizontalSearch" checked="checked" value="1" />H-Search</label>
-                            <label style="display:none;" id="VerticalSearchLabel"><input type="checkbox" id="VerticalSearch" value="1" />V-Search</label>
-                            <label><input type="checkbox" id="AutoClear" checked="checked" value="1" />Auto&nbsp;Clear</label>
+                            <label id="DiagonalSearchLabel"><input type="checkbox" id="DiagonalSearch" checked="checked" value="1" />D-Search</label>
+                            <label id="HorizontalSearchLabel"><input type="checkbox" id="HorizontalSearch" checked="checked" value="1" />H-Search</label>
+                            <label id="VerticalSearchLabel"><input type="checkbox" id="VerticalSearch" checked="checked" value="1" />V-Search</label>
                         </td>
                         <td style="text-align:right;">
+                            <label><input type="checkbox" id="AutoClear" checked="checked" value="1" />Auto&nbsp;Clear</label>
                             <button onclick="doSearch();">Search</button>
                         </td>
                     </tr>

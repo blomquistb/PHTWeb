@@ -56,7 +56,7 @@ Featue Todo:
         }
 
         function getOriginalText() {
-            return unEscapeHtml(document.getElementById("Encrypted").innerHTML);
+            return unEscapeHtml(document.getElementById("Encrypted").value);
         }
 
         function getCharacterMap(encryptedText, ignoreCase, excludeText, oldMap) {

@@ -1,5 +1,113 @@
-﻿PH17-Adele-06-He Won't Go
+﻿Random Internet Magic Word Square (words the same across and down, requlare word squars have different words across and down)
+-----------------------------------------
+
+_____
+_____
+_____
+_____
+_____
+
+SOLVE
+ONION
+LIMIT
+VOICE
+ENTER
+
+____
+____
+____
+____
+
+LINE
+AREA
+MOST
+ANTS
+
+LAMS
+IRON
+NEST
+EATS
+
+-----------------------------------------
+
+PS18 -	World War Z
+-----------------------------------------
+Horizontal, Vertical and Diagnal (forward and backwards?)
+All shells filled.
+
+_______E___Z
+___N###__#__
+Z____##___Z_
+____Z______Z
+__I____OI___
+_Z__P_______
+T___________
+___#__Z_ZZG_
+#ZZO___Z_#_#
+Z_____B____Z
+##__I___Z#_#
+#__________Z
+
+ZAIRE
+ZAMBONI
+ZANZIBAR
+ZENITH
+ZEPPELIN
+ZEUS
+ZIGGYMARLEY
+ZIGZAG
+ZILLION
+ZIMBABWE
+ZINCOXIDE
+ZION
+ZIPCODE
+ZIPPER
+ZIRCONIA
+ZOMBIEATTACK
+ZOOKEEPER
+ZOOLOGY
+ZOOM
+ZUCCHINI
+ZURICH
+
+-----------------------------------------
+
+
+PH18 - A Nice Place To Visit
+-----------------------------------------
+
+-Horizont and Vertical
+
+############_####
+########_________
+############_####
+#####_######_####
+#####________####
+#####_###_##_####
+###_______##_____
+#####_###_#######
+#####_###_#######
+______###_#######
+#####_###########
+#####________####
+
+SHAMBHALA
+AVALON
+CAMELOT
+THULE
+COCKAIGNE
+HYBRASIL
+LEMURIA
+CIBOLA
+ATLANTIS
+
+-----------------------------------------
+
+
+PH17-Adele-06-He Won't Go
 -------------------------
+- Horizontal / Loose Fit
+
 _________!E!_________
 _________!P!_________
 _________!Y!_________
@@ -46,8 +154,10 @@ SUBSCRIPTIONPRICE
 -------------------------
 
 
-Random Word Fill Puzzle of Internet
+Random Word Fill Puzzle from Internet
 -------------------------
+Horizont and Vertical
+
 ____#____#_____
 ____#____#_____
 ____#____#_____
@@ -140,3 +250,6 @@ NANETTE
 ONETIME
 VARIATE
 VENISON
+
+
+

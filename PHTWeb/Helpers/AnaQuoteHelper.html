@@ -274,7 +274,7 @@ Featue Todo:
         }
 
         function getNgramsSource() {
-            text = document.getElementById("NgramSource").innerHTML.trim().replace(/[\s]+/g, ' ').toUpperCase();
+            text = document.getElementById("NgramSource").value.trim().replace(/[\s]+/g, ' ').toUpperCase();
             return text.split(' ');
         }
 

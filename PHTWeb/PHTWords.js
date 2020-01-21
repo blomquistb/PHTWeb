@@ -172,7 +172,7 @@ PHTWords.AddText = function (text, linesAreWords, useFrequency, usePronunciation
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim().replace(/[\s]+/g, ' ');
 
-            if (line.indexOf(";;") != 0) {  // comment line
+            if ((line !== "") && (line.indexOf(";;") !== 0)) {  // comment line
                 var words = line.split(" ");
                 for (var j = 0; j < words.length; j++) {
                     if (useFrequency) {

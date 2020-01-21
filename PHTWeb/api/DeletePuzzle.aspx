@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" CodeBehind="DeletePuzzle.aspx.cs" Inherits="PHTWeb.api.DeletePuzzle" ValidateRequest="false" EnableEventValidation="false" EnableSessionState="False" EnableViewState="false" EnableTheming="false"%>

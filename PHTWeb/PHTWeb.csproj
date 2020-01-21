@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -15,12 +15,14 @@
     <AssemblyName>PHTWeb</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <UseIISExpress>true</UseIISExpress>
+    <Use64BitIISExpress />
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
-    <Use64BitIISExpress />
     <UseGlobalApplicationHostFile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,6 +43,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Emgu.CV.UI, Version=4.0.1.3373, Culture=neutral, PublicKeyToken=7281126722ab4438, processorArchitecture=MSIL">
+      <HintPath>packages\EMGU.CV.4.0.1.3373\lib\net35\Emgu.CV.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Emgu.CV.World, Version=4.0.1.3373, Culture=neutral, PublicKeyToken=7281126722ab4438, processorArchitecture=MSIL">
+      <HintPath>packages\EMGU.CV.4.0.1.3373\lib\net35\Emgu.CV.World.dll</HintPath>
+    </Reference>
+    <Reference Include="IronOcr, Version=4.4.0.21181, Culture=neutral, PublicKeyToken=5f366048dc436899, processorArchitecture=MSIL">
+      <HintPath>packages\IronOcr.4.4.0\lib\net40\IronOcr.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -61,10 +72,20 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
+    <Reference Include="ZedGraph, Version=5.1.7.430, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
+      <HintPath>packages\ZedGraph.5.1.7\lib\net35-Client\ZedGraph.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="AnagramSolver.aspx" />
+    <Content Include="api\ConvertImageToText.aspx" />
+    <Content Include="api\DeletePuzzle.aspx" />
+    <Content Include="api\GetPuzzles.aspx" />
+    <Content Include="api\GetRunners.aspx" />
     <Content Include="api\GetWordCounts.aspx" />
+    <Content Include="api\SavePuzzle.aspx" />
+    <Content Include="api\SaveRunner.aspx" />
+    <Content Include="api\SetRetrievedPuzzle.aspx" />
     <Content Include="BaseCalculator.aspx" />
     <Content Include="api\GetWordMatches.aspx" />
     <Content Include="Decoders\ASL.jpg" />
@@ -98,7 +119,16 @@
     <Content Include="Helpers\WordSearchHelper.html" />
     <Content Include="Index.html" />
     <Content Include="jquery-2.1.4.js" />
+    <Content Include="License-LGPL.txt" />
     <Content Include="PHTWords.js" />
+    <Content Include="Content\tessdata\eng.word-dawg" />
+    <Content Include="Content\tessdata\eng.user-words" />
+    <Content Include="Content\tessdata\eng.unicharset" />
+    <Content Include="Content\tessdata\eng.pffmtable" />
+    <Content Include="Content\tessdata\eng.normproto" />
+    <Content Include="Content\tessdata\eng.inttemp" />
+    <Content Include="Content\tessdata\eng.freq-dawg" />
+    <Content Include="Content\tessdata\eng.DangAmbigs" />
     <None Include="SampleData\CryptoAnagramData.txt" />
     <None Include="SampleData\CryptogramData.txt" />
     <None Include="SampleData\CryptoMathData.txt" />
@@ -110,6 +140,7 @@
     <None Include="SampleData\WordSearchData.txt" />
     <Content Include="React-15.3.2\react-dom.js" />
     <Content Include="React-15.3.2\react.js" />
+    <Content Include="SafariMap.html" />
     <Content Include="SampleData\SoundsLikeData.txt" />
     <Content Include="test.html" />
     <Content Include="Utils.js" />
@@ -126,12 +157,66 @@
     <Compile Include="AnagramSolver.aspx.designer.cs">
       <DependentUpon>AnagramSolver.aspx</DependentUpon>
     </Compile>
+    <Compile Include="api\ConvertImageToText.aspx.cs">
+      <DependentUpon>ConvertImageToText.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\ConvertImageToText.aspx.designer.cs">
+      <DependentUpon>ConvertImageToText.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="api\DeletePuzzle.aspx.cs">
+      <DependentUpon>DeletePuzzle.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\DeletePuzzle.aspx.designer.cs">
+      <DependentUpon>DeletePuzzle.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="api\GetPuzzles.aspx.cs">
+      <DependentUpon>GetPuzzles.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\GetPuzzles.aspx.designer.cs">
+      <DependentUpon>GetPuzzles.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="api\GetRunners.aspx.cs">
+      <DependentUpon>GetRunners.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\GetRunners.aspx.designer.cs">
+      <DependentUpon>GetRunners.aspx</DependentUpon>
+    </Compile>
     <Compile Include="api\GetWordCounts.aspx.cs">
       <DependentUpon>GetWordCounts.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="api\GetWordCounts.aspx.designer.cs">
       <DependentUpon>GetWordCounts.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="api\PSTBasePage.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\PuzzleInfo.cs" />
+    <Compile Include="api\PuzzleRunner.cs" />
+    <Compile Include="api\SavePuzzle.aspx.cs">
+      <DependentUpon>SavePuzzle.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\SavePuzzle.aspx.designer.cs">
+      <DependentUpon>SavePuzzle.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="api\SaveRunner.aspx.cs">
+      <DependentUpon>SaveRunner.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\SaveRunner.aspx.designer.cs">
+      <DependentUpon>SaveRunner.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="api\SetRetrievedPuzzle.aspx.cs">
+      <DependentUpon>SetRetrievedPuzzle.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="api\SetRetrievedPuzzle.aspx.designer.cs">
+      <DependentUpon>SetRetrievedPuzzle.aspx</DependentUpon>
     </Compile>
     <Compile Include="BaseCalculator.aspx.cs">
       <DependentUpon>BaseCalculator.aspx</DependentUpon>
@@ -173,7 +258,9 @@
       <Name>PHTWords</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="tessdata\" />
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
@@ -187,7 +274,7 @@
         <WebProjectProperties>
           <UseIIS>True</UseIIS>
           <AutoAssignPort>True</AutoAssignPort>
-          <DevelopmentServerPort>3040</DevelopmentServerPort>
+          <DevelopmentServerPort>57069</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
           <IISUrl>http://localhost:57069/</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
@@ -199,6 +286,20 @@
       </FlavorProperties>
     </VisualStudio>
   </ProjectExtensions>
+  <Import Project="packages\MSBuild.NugetContentRestore.0.1.6\build\net40\MSBuild.NugetContentRestore.targets" Condition="Exists('packages\MSBuild.NugetContentRestore.0.1.6\build\net40\MSBuild.NugetContentRestore.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\MSBuild.NugetContentRestore.0.1.6\build\net40\MSBuild.NugetContentRestore.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\MSBuild.NugetContentRestore.0.1.6\build\net40\MSBuild.NugetContentRestore.targets'))" />
+    <Error Condition="!Exists('packages\Tesseract.3.3.0\build\Tesseract.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Tesseract.3.3.0\build\Tesseract.targets'))" />
+    <Error Condition="!Exists('packages\EMGU.CV.4.0.1.3373\build\EMGU.CV.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\EMGU.CV.4.0.1.3373\build\EMGU.CV.targets'))" />
+  </Target>
+  <Target Name="BeforeBuild">
+    <NugetContentRestoreTask SolutionDir="$(SolutionDir)" ProjectDir="$(ProjectDir)" />
+  </Target>
+  <Import Project="packages\Tesseract.3.3.0\build\Tesseract.targets" Condition="Exists('packages\Tesseract.3.3.0\build\Tesseract.targets')" />
+  <Import Project="packages\EMGU.CV.4.0.1.3373\build\EMGU.CV.targets" Condition="Exists('packages\EMGU.CV.4.0.1.3373\build\EMGU.CV.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

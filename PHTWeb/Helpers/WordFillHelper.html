@@ -19,7 +19,6 @@ Featue Todo:
     <style type="text/css">
         table.GridTable {
             text-align: center;
-            vertical-align: central;
         }
 
         table.GridTable td {
@@ -28,11 +27,14 @@ Featue Todo:
             width: 1.5em;
             height: 1.5em;
             background-repeat: no-repeat;
+            position: relative;
         }
     </style>
 
     <script type="text/javascript">
 
+        var gGrid;
+        var gWordListSort;
         var gSolutions = [];
         var gSelected = [];
 
@@ -41,15 +43,6 @@ Featue Todo:
         var gRequiredToken = '!';
 
 
-        function getLooseFit() {
-            var elem = document.getElementById("LooseFit");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
-        }
-
         ///
         /// Grid object definition.
         ///
@@ -57,9 +50,8 @@ Featue Todo:
             this.width = 0;
             this.height = 0;
             this.rows = [];
-
-            this.across = [];
-            this.down = [];
+            this.locations = [];
+            this.positionIndex = [];
 
             if (typeof (grid == "string")) {
                 var text = grid.trim().replace("\r", "");
@@ -97,36 +89,122 @@ Featue Todo:
                 // Clean up the row lengths if needed.
                 //
                 for (var row = 0; row < this.height; row++) {
+                    this.positionIndex[row] = [];
                     if (this.rows[row].length != this.width) {
                         for (var i = this.width - this.rows[row].length; i >= 0; i--) {
                             this.rows[row].push(new GridCell("", false, true));
                         }
                     }
                 }
+            }
+        }
 
-                // Calculate the positions for word placements.
-                var positionIdex = 1;
+        Grid.prototype.CalculateLocations = function(horizontal, vertical, diagonal) {
 
-                for (var r = 0; r < this.height; r++) {
-                    for (var c = 0; c < this.width; c++) {
-                        if (this.IsValid(r, c) && !this.IsValid(r, c - 1) && this.IsValid(r, c + 1)) {
-                            var length = 2;
-                            for (var i = c+2; this.IsValid(r, c + i) ; i++) {
-                                length++;
+            this.locations = [];
+
+            var positionIdex = 1;
+
+            let paths = [];
+            if (horizontal) {
+                paths.push({ prefix: "A", r: 0, c: 1 });
+            }
+            if (vertical) {
+                paths.push({ prefix: "D",  r: 1, c: 0 });
+            }
+            if (diagonal) {
+                paths.push({ prefix: "DR",  r: 1, c:  1 });
+                paths.push({ prefix: "DL",  r: 1, c: -1 });
+            }
+
+            for (let r = 0; r < this.height; r++) {
+                for (let c = 0; c < this.width; c++) {
+                    let incPosition = false;
+                    for (let p = 0; p < paths.length; p++) {
+                        if (this.IsValid(r, c)) {
+                            if (!this.IsValid(r - paths[p].r, c - paths[p].c) && this.IsValid(r + paths[p].r, c + paths[p].c)) {
+                                incPosition = true;
+                                var length = 2;
+                                let ri = r + (2 * paths[p].r);
+                                let ci = c + (2 * paths[p].c)
+                                for (; this.IsValid(ri, ci); ) {
+                                    length++;
+                                    ri += paths[p].r;
+                                    ci += paths[p].c;
+                                }
+                                this.locations.push({ name: paths[p].prefix + positionIdex, row: r, col: c, length: length, ri: paths[p].r, ci: paths[p].c });
+                                this.positionIndex[r][c] = positionIdex;
                             }
-                            this.across.push(new Position(positionIdex, 'A', length));
                         }
                     }
+                    if (incPosition) {
+                        positionIdex++;
+                    }
                 }
-
-
             }
+
+            return this.locations;
         }
 
         //
         Grid.prototype.IsValid = function (row, col) {
             return row >= 0 && col >= 0 && row < this.height && col < this.width && !this.rows[row][col].seperator;
         }
+
+        //
+        Grid.prototype.GetFrequencyCounts = function () {
+            let results = [];
+
+            if (this.locations) {
+                for (let i = 0; i < this.locations.length; i++) {
+                    if (results[this.locations[i].length]) {
+                        results[this.locations[i].length]++;
+                    } else {
+                        results[this.locations[i].length] = 1;
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        //
+        Grid.prototype.GetLocations = function (word) {
+            result = [];
+            if (word) {
+                for (let i = 0; i < this.locations.length; i++) {
+                    if (this.WordFits(word, this.locations[i])) {
+                        result.push(this.locations[i].name);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        //
+        Grid.prototype.WordFits = function (word, location) {
+            if (word.length != location.length) {
+                return false;
+            } else {
+                let r = location.row;
+                let c = location.col;
+                let ri = location.ri;
+                let ci = location.ci;
+
+                for (let i = 0; i < word.length; i++) {
+                    if (!(this.rows[r][c].value == "" || this.rows[r][c].value == word[i])) {
+                        return false;
+                    }
+
+                    r += ri;
+                    c += ci;
+                }
+            }
+
+            return true;
+        }
+
 
         ///
         /// GridCell object declaration
@@ -146,17 +224,33 @@ Featue Todo:
             this.length = length;
         }
 
+
         //
         //
         //
         function renderGrid() {
-            var grid = getGrid();
+
+            let grid = new Grid(getInputValue("GridText"));
+            let t = grid.CalculateLocations(getIsChecked("HorizontalFit"), getIsChecked("VerticalFit"), getIsChecked("DiagonalFit"));
+
+            let wCounts = ""
+            let l = grid.GetFrequencyCounts();
+            for (let i = 0; i < l.length; i++) {
+                if (l[i]) {
+                    if (wCounts) {
+                        wCounts = wCounts + ", ";
+                    }
+                    wCounts = wCounts + i + "-(" + l[i] + ")";
+                }
+            }
 
             var dimensions = document.getElementById("GridDimensions");
             if (dimensions) {
-                dimensions.innerText = grid.width + " x " + grid.height;
+                dimensions.innerHTML = grid.width + " x " + grid.height +
+                    "<BR/>" +
+                    "Locations [" + grid.locations.length + "] : " +
+                    wCounts;
             }
-
 
             var table = document.getElementById("GridTable");
             if (table) {
@@ -165,7 +259,12 @@ Featue Todo:
                     var r = table.insertRow(-1);
                     for (var col = 0; col < grid.width; col++) {
                         var c = r.insertCell(-1);
-                        c.innerHTML = grid.rows[row][col].value;
+
+                        if (grid.positionIndex[row][col]) {
+                            c.innerHTML = '<span style="font-size:xx-small;position:absolute;top:0;left:0;">' + grid.positionIndex[row][col] + '</span>';
+                        }
+
+                        c.innerHTML = c.innerHTML + grid.rows[row][col].value;
 
                         if (getLooseFit() && grid.rows[row][col].required) {
                             c.style.backgroundColor = "lightgray";
@@ -177,26 +276,132 @@ Featue Todo:
                     }
                 }
             }
+
+            gGrid = grid;
         }
+
+        function renderWordList(wordList) {
+
+            let wordFreq = []
+            if (wordList) {
+                for (let i = 0; i < wordList.length; i++) {
+                    if (wordList[i]) {
+                        if (wordFreq[wordList[i].length]) {
+                            wordFreq[wordList[i].length]++;
+                        } else {
+                            wordFreq[wordList[i].length] = 1;
+                        }
+                    }
+                }
+            }
+
+
+            let wordDimensions = document.getElementById("WordDimensions");
+            if (wordDimensions) {
+                let wCounts = "";
+                for (let i = 0; i < wordFreq.length; i++) {
+                    if (wordFreq[i]) {
+                        if (wCounts) {
+                            wCounts = wCounts + ", ";
+                        }
+                        wCounts = wCounts + i + "-(" + wordFreq[i] + ")";
+                    }
+                }
+
+                wordDimensions.innerHTML = "[" + wordList.length + "] : " + wCounts;
+            }
+
+
+            let table = document.getElementById("WordListTable");
+            if (table) {
+                table.innerHTML = "<tr><th>Id</th><th>Word</th><th>Len</th></tr>";
+                if (getIsChecked("KnownLocations")) {
+                    let locations = sortLocations(gGrid.locations);
+                    for (let i = 0; i < locations.length; i++) {
+                        let r = table.insertRow(-1);
+                        let idCell = r.insertCell(-1);
+                        let wordCell = r.insertCell(-1);
+                        let lenCell = r.insertCell(-1);
+
+                        idCell.style.textAlign = "center";
+                        idCell.innerHTML = locations[i].name;
+
+                        wordCell.style.whiteSpace = "nowrap";
+                        wordCell.innerHTML = '<input type="edit" size="25" style="" value="' + '' + '" />';
+
+                        lenCell.style.textAlign = "center";
+                        lenCell.innerHTML = locations[i].length;
+                    }
+                } else {
+                    for (let i = 0; i < wordList.length; i++) {
+                        let r = table.insertRow(-1);
+                        let idCell = r.insertCell(-1);
+                        let wordCell = r.insertCell(-1);
+                        let lenCell = r.insertCell(-1);
+
+                        let locations = [];
+                        if (gGrid) {
+                            locations = gGrid.GetLocations(wordList[i])
+                        }
+
+                        // TODO: create a <select> element and append each location as an option then add it to the cell.
+
+                        idCell.innerHTML = '<input type="edit" size="2" style="" value="' + locations.join(",") + '" />';
+
+                        wordCell.style.whiteSpace = "nowrap";
+                        wordCell.innerHTML = '<input type="edit" size="25" style="" value="' + wordList[i] + '" />';
+
+                        lenCell.innerHTML = wordList[i].length;
+                    }
+                }
+            }
+        }
+
+        function sortLocations(locations) {
+            if (gWordListSort == "Word") {
+
+            } else if (gWordListSort == "Length") {
+
+            }
+            else { // "Id"
+                locations.sort(function (a, b) { return -CompareGridSolutionFrequency(a, b) });
+            }
+
+            return locations;
+        }
+
+        function doSortWordsById() {
+            gWordListSort = "Id";
+            renderWordList()
+        }
+
+        function doSortWordsByWord() {
+            gWordListSort = "Word";
+            renderWordList()
+        }
+
+        function doSortWordsByLength() {
+            gWordListSort = "Length";
+            renderWordList()
+        }
+
+        function getLooseFit() {
+            var elem = document.getElementById("LooseFit");
+            if (elem) {
+                return elem.checked;
+            }
+
+            return false;
+        }
+
+
+
 
         //////////////////////////////////////////////////////////////////////////////////////////////
 
         function doSearch() {
-            var countElem = document.getElementById("ResultsCount");
-            if (countElem) {
-                countElem.value = "";
-            }
-
-            var durElem = document.getElementById("Duration");
-            if (durElem) {
-                durElem.value = "";
-            }
-
-            // If the Auto Clear checkbox is checked then clear any non selected results.
-            //
-            if (getAutoClear()) {
-                doClearSolutions(true);
-            }
+            setInputValue("ResultsCount", "");
+            setInputValue("Duration", "");
 
             window.setTimeout("doSearchWork();", 0);
         }
@@ -204,106 +409,48 @@ Featue Todo:
         function doSearchWork() {
             var startTime = new Date().getTime();
 
-            var newSolutions = [];
-
-            switch (getSearchType()) {
-                case 1: // Normal Word Search
-                    {
-                        var start = getStart();
-                        var grid = getGrid(!getAllowOverlap());
-                        newSolutions = grid.FindWordSearchSolutions(start.row, start.col, getSearchBackwards(), getWordBreaks(), getHasSpaces(), getMinWordLength(), getMaxWordLength(), getDictionaries(), getMinFrequency());
-                        break;
-                    }
-                case 2: // Word Snake Search
-                    {
-                        var start = getStart();
-                        var grid = getGrid(!getAllowOverlap());
-                        newSolutions = grid.FindWordSnakeSolutions(start.row, start.col, getSearchBackwards(), getWordBreaks(), getHasSpaces(), getMinWordLength(), getMaxWordLength(), getDictionaries(), getMinFrequency());
-                        break;
-                    }
-                case 3: // Knights Move Search
-                    {
-                        var start = getStart();
-                        var grid = getGrid(!getAllowOverlap());
-                        newSolutions = grid.FindKnightsPathSolutions(start.row, start.col, getSearchBackwards(), getWordBreaks(), getHasSpaces(), getMinWordLength(), getMaxWordLength(), getDictionaries(), getMinFrequency());
-                        break;
-                    }
-                case 4: // Boggle Search
-                    {
-                        var start = getStart();
-                        var grid = getGrid(!getAllowOverlap());
-                        newSolutions = grid.FindBoggleSolutions(start.row, start.col, getSearchBackwards(), getWordBreaks(), getHasSpaces(), getMinWordLength(), getMaxWordLength(), getDictionaries(), getMinFrequency());
-                        break;
-                    }
-                case 5: // Letter Skip Search
-                    {
-                        var start = getStart();
-                        var grid = getGrid(!getAllowOverlap());
-                        newSolutions = grid.FindLtrSkipSolutions(start.row, start.col, getSearchBackwards(), getWordBreaks(), getHasSpaces(), getMinWordLength(), getMaxWordLength(), getDictionaries(), getMinFrequency());
-                        break;
-                    }
-            }
-
-            // Merge soloutions into results table.
             //
-            for (var i = 0; i < newSolutions.length; i++) {
-                var j = 0;
-                for (j = 0; j < gSolutions.length; j++) {
-                    if (CompareGridSolutionPaths(newSolutions[i], gSolutions[j]) == 0) {
-                        break;
-                    }
-                }
-
-                if (j == gSolutions.length) {
-                    gSolutions.push(newSolutions[i]);
-                }
-            }
-
-            gSolutions.sort(function (a, b) { return -CompareGridSolutionFrequency(a, b) });
-
-            renderSolutions();
 
             setDuration(new Date().getTime() - startTime);
-
             beep();
         }
 
         function doUpdateGridText() {
-            var elem = document.getElementById("RequiredToken");
-            if (elem) {
-                gRequiredToken = elem.value;
-            }
+            gSpaceToken = getInputValue("SpaceToken", "_");
+            gSeperatorToken = getInputValue("SeperatorToken", "#");
+            gRequiredToken = getInputValue("RequiredToken", "!");
 
-            elem = document.getElementById("SpaceToken");
-            if (elem) {
-                gSpaceToken = elem.value;
-            }
+            renderGrid();
+            doUpdateWordList();
+        }
 
-            elem = document.getElementById("SeperatorToken");
-            if (elem) {
-                gSeperatorToken = elem.value;
-            }
+        function doUpdateWordList() {
 
-            var grid = getGrid();
-            var hasSpaces = false;
-
-            for (var row = 0; !hasSpaces && row < grid.height; row++) {
-                for (var col = 0; !hasSpaces && col < grid.width; col++) {
-                    if (grid.rows[row][col].value == ' ') {
-                        hasSpaces = true;
+            let wordList = [];
+            let text = getInputValue("Words");
+            text = text.trim();
+            let lines = text.split("\n");
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim().replace(/[\s]+/g, ' ');
+                var words = line.split(" ");
+                for (let j = 0; j < words.length; j++) {
+                    if (words[j]) {
+                        wordList.push(words[j]);
                     }
                 }
             }
 
-            setHasSpaces(hasSpaces);
-
-            renderGrid();
+            renderWordList(wordList);
         }
 
-        function doGetWordList() {
-            PHTWords.Clear();
-            PHTWords.AddText(getInputValue("WordListText"), getIsChecked("LinesAsWords"), getIsChecked("UseFrequency"));
-        }
+
+
+
+
+
+
+
+
 
         function doClearSolutions(keepSelected) {
             gSolutions = [];
@@ -362,364 +509,6 @@ Featue Todo:
             renderGrid();
         }
 
-        function getGrid() {
-            var grid = null;
-
-            var elem = document.getElementById("GridText");
-            if (elem) {
-                grid = new Grid(elem.value);
-            }
-
-            return grid;
-        }
-
-        function hideElement(elem) {
-            if (elem) {
-                elem.style.display = "none";
-            }
-        }
-
-        function showElement(elem) {
-            if (elem) {
-                elem.style.display = "";
-            }
-        }
-
-        function setSearchType(type) {
-            hWrapElem = document.getElementById("HorizontalWrapLabel");
-            vWrapElem = document.getElementById("VerticalWrapLabel");
-            hSearchElem = document.getElementById("HorizontalSearchLabel");
-            vSearchElem = document.getElementById("VerticalSearchLabel");
-
-            hideElement(hWrapElem);
-            hideElement(vWrapElem);
-            hideElement(hSearchElem);
-            hideElement(vSearchElem);
-
-            switch (type) {
-                case 1: { // Word Search
-                    setAllowOverlap(true);
-                    break;
-                }
-                case 2: { // Snake Search
-                    setAllowOverlap(false);
-                    showElement(hWrapElem);
-                    showElement(vWrapElem);
-                    break;
-                }
-                case 3: { // KnightSearch
-                    setAllowOverlap(false);
-                    break;
-                }
-                case 4: { // BoggleSearch
-                    setAllowOverlap(false);
-                    break;
-                }
-                case 5: { // LtrSkipSearch
-                    setAllowOverlap(true);
-                    showElement(hSearchElem);
-                    showElement(vSearchElem);
-                    break;
-                }
-            }
-        }
-
-        function getSearchType() {
-            var result = 1; // Normal Word Search
-
-            var elem = document.getElementById("SnakeSearch");
-            if (elem && elem.checked) {
-                result = 2;
-            }
-
-            elem = document.getElementById("KnightSearch");
-            if (elem && elem.checked) {
-                result = 3;
-            }
-
-            elem = document.getElementById("BoggleSearch");
-            if (elem && elem.checked) {
-                result = 4;
-            }
-
-            elem = document.getElementById("LtrSkipSearch");
-            if (elem && elem.checked) {
-                result = 5;
-            }
-
-            return result;
-        }
-
-        function getAllowOverlap() {
-            result = getSearchType() == 1;
-            var elem = document.getElementById("AllowOverlap");
-            if (elem) {
-                result = elem.checked;
-            }
-
-            return result;
-        }
-
-        function setAllowOverlap(allowOverlap) {
-            var elem = document.getElementById("AllowOverlap");
-            if (elem) {
-                elem.checked = allowOverlap;
-            }
-        }
-
-        function getSearchBackwards() {
-            var result = false;
-
-            var elem = document.getElementById("End");
-            if (elem) {
-                result = elem.checked;
-            }
-
-            return result;
-        }
-
-        function getStart() {
-            var results = new GridPosition(-1, -1);
-
-            var elem = document.getElementById("StartCell");
-            if (elem) {
-                var text = elem.value.trim();
-                var breakText = text.split(',');
-                if (breakText.length == 2) {
-                    results.row = parseInt(breakText[0].trim(), 10);
-                    if (isNaN(results.row)) results.row = -1;
-
-                    results.col = parseInt(breakText[1].trim(), 10);
-                    if (isNaN(results.col)) results.col = -1;
-                }
-            }
-
-            return results;
-        }
-
-        function setStart(row, col) {
-            var elem = document.getElementById("StartCell");
-            if (elem) {
-                elem.value = row + ',' + col;
-            }
-
-            renderGrid();
-        }
-
-        function setHasSpaces(enabled) {
-            var elem = document.getElementById("HasSpaces");
-            if (elem) {
-                elem.checked = enabled;
-            }
-        }
-
-        function getHasSpaces() {
-            var result = false;
-            var elem = document.getElementById("HasSpaces");
-            if (elem) {
-                result = elem.checked;
-            }
-
-            return result;
-        }
-
-        function getWordBreaks() {
-            var results = [];
-
-            var elem = document.getElementById("WordBreaks");
-            if (elem) {
-                var text = elem.value.trim();
-                var breakText = text.split(',');
-                for (var i = 0; i < breakText.length; i++) {
-                    var value = parseInt(breakText[i].trim(), 10);
-                    if (isNaN(value)) {
-                        value = 0;
-                    }
-                    if (value < 0) {
-                        value = -value;
-                    }
-                    results.push(value);
-                }
-            }
-
-            return results;
-        }
-
-        function getMinWordLength() {
-            var result = 0;
-
-            var elem = document.getElementById("MinWordLength");
-            if (elem) {
-                result = parseInt(elem.value.trim());
-                if (isNaN(result)) result = 0;
-            }
-
-            return result;
-        }
-
-        function getMaxWordLength() {
-            var result = 0;
-
-            var elem = document.getElementById("MaxWordLength");
-            if (elem) {
-                result = parseInt(elem.value.trim());
-                if (isNaN(result)) result = 0;
-            }
-
-            return result;
-        }
-
-        function getHorizontalWrap() {
-            var elem = document.getElementById("HorizontalWrap");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
-        }
-
-        function getVerticalWrap() {
-            var elem = document.getElementById("VerticalWrap");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
-        }
-
-        function getHorizontalSearch() {
-            var elem = document.getElementById("HorizontalSearch");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
-        }
-
-        function getVerticalSearch() {
-            var elem = document.getElementById("VerticalSearch");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
-        }
-
-        function getAutoClear() {
-            var elem = document.getElementById("AutoClear");
-            if (elem) {
-                return elem.checked;
-            }
-
-            return false;
-        }
-
-
-
-        function getRemainingTextFlag() {
-            var result = "None";
-
-            var elem = document.getElementById("String");
-            if (elem && elem.checked) {
-                result = "String";
-            }
-
-            elem = document.getElementById("Grid");
-            if (elem && elem.checked) {
-                result = "Grid";
-            }
-
-            return result;
-        }
-
-
-
-
-
-
-        function getDictionaries() {
-            var dictionaries = "";
-
-            var elem = document.getElementById("WordList");
-            if (elem && elem.checked) {
-                dictionaries += "0";
-            }
-
-            elem = document.getElementById("ModernEnglish");
-            if (elem && elem.checked) {
-                dictionaries += "1";
-            }
-
-            elem = document.getElementById("MiddleEnglish");
-            if (elem && elem.checked) {
-                dictionaries += "2";
-            }
-
-            return dictionaries
-        }
-
-        function getMinFrequency() {
-            var result = 0;
-
-            var elem = document.getElementById("MinFrequency");
-            if (elem) {
-                result = parseInt(elem.value.trim());
-                if (isNaN(result)) result = 0;
-            }
-
-            return result;
-        }
-
-        function setDuration(duration) {
-            var millis = (duration % 1000);
-            var seconds = Math.floor((duration / 1000)) % 60;
-            var minutes = Math.floor((duration / 1000) / 60);
-
-            var text = ""
-            if (minutes < 10) text += "0";
-            text += minutes;
-            text += ":";
-            if (seconds < 10) text += "0";
-            text += seconds;
-            text += ":";
-            if (millis < 10) {
-                text += "00";
-            } else if (millis < 100) {
-                text += "0";
-            }
-            text += millis;
-
-            var elem = document.getElementById("Duration");
-            if (elem) {
-                elem.value = text;
-            }
-        }
-
-
-        function isGridCellSelected(row, col) {
-            for (var i = 0; i < gSelected.length; i++) {
-                for (var j = 0; j < gSelected[i].grid.positions.length; j++) {
-                    if ((row == gSelected[i].grid.positions[j].row) && (col == gSelected[i].grid.positions[j].col)) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        function getGridCellSelectionCount(row, col) {
-            var result = 0;
-            for (var i = 0; i < gSelected.length; i++) {
-                for (var j = 0; j < gSelected[i].grid.positions.length; j++) {
-                    if ((row == gSelected[i].grid.positions[j].row) && (col == gSelected[i].grid.positions[j].col)) {
-                        result++;
-                    }
-                }
-            }
-
-            return result;
-        }
 
         function renderSolutions() {
 
@@ -770,611 +559,120 @@ Featue Todo:
         }
 
 
+
+
+
+        function getStart() {
+            var results = new GridPosition(-1, -1);
+
+            var elem = document.getElementById("StartCell");
+            if (elem) {
+                var text = elem.value.trim();
+                var breakText = text.split(',');
+                if (breakText.length == 2) {
+                    results.row = parseInt(breakText[0].trim(), 10);
+                    if (isNaN(results.row)) results.row = -1;
+
+                    results.col = parseInt(breakText[1].trim(), 10);
+                    if (isNaN(results.col)) results.col = -1;
+                }
+            }
+
+            return results;
+        }
+
+        function setStart(row, col) {
+            var elem = document.getElementById("StartCell");
+            if (elem) {
+                elem.value = row + ',' + col;
+            }
+
+            renderGrid();
+        }
+
+        function getWordBreaks() {
+            var results = [];
+
+            var elem = document.getElementById("WordBreaks");
+            if (elem) {
+                var text = elem.value.trim();
+                var breakText = text.split(',');
+                for (var i = 0; i < breakText.length; i++) {
+                    var value = parseInt(breakText[i].trim(), 10);
+                    if (isNaN(value)) {
+                        value = 0;
+                    }
+                    if (value < 0) {
+                        value = -value;
+                    }
+                    results.push(value);
+                }
+            }
+
+            return results;
+        }
+
+        function getMinWordLength() {
+            var result = 0;
+
+            var elem = document.getElementById("MinWordLength");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+        function getMaxWordLength() {
+            var result = 0;
+
+            var elem = document.getElementById("MaxWordLength");
+            if (elem) {
+                result = parseInt(elem.value.trim());
+                if (isNaN(result)) result = 0;
+            }
+
+            return result;
+        }
+
+
+
+
+
+
+
+        function isGridCellSelected(row, col) {
+            for (var i = 0; i < gSelected.length; i++) {
+                for (var j = 0; j < gSelected[i].grid.positions.length; j++) {
+                    if ((row == gSelected[i].grid.positions[j].row) && (col == gSelected[i].grid.positions[j].col)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        function getGridCellSelectionCount(row, col) {
+            var result = 0;
+            for (var i = 0; i < gSelected.length; i++) {
+                for (var j = 0; j < gSelected[i].grid.positions.length; j++) {
+                    if ((row == gSelected[i].grid.positions[j].row) && (col == gSelected[i].grid.positions[j].col)) {
+                        result++;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+
         ///
         /// Grid object definition.
         ///
 
 
-        Grid.prototype.ContinueSearching = function (row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            if (maxWordLength && (text.length >= maxWordLength)) {
-                return false;
-            }
-
-            var pattern = PHTWords.EscapeString(text);
-
-            if (searchBackwards) {
-                pattern = "%_" + pattern;
-            }
-            else {
-                pattern = pattern + "_%";
-            }
-
-            if (PHTWords.GetWordMatches(pattern, null, null, null, null, dictionaries, minFrequency, 1, minWordLength, maxWordLength) == 0) {
-                return false;
-            }
-
-            return true;
-        }
-
-        Grid.prototype.FindWordSearchSolutions = function (row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            if (wordLengths && wordLengths[0]) {
-                minWordLength = wordLengths[0];
-                maxWordLength = wordLengths[0];
-            }
-
-            if ((row >= 0) && (col >= 0)) {
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-            }
-            else {
-                for (var row = 0; row < this.height; row++) {
-                    for (var col = 0; col < this.width; col++) {
-                        if (!this.rows[row][col].visited) {
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, -1, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +0, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            solutions = solutions.concat(this.FindWordSearchWords(row, col, +1, -1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        }
-                    }
-                }
-            }
-
-            return solutions;
-        }
-
-        Grid.prototype.FindWordSearchWords = function (row, col, rowAdj, colAdj, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-            var text = "";
-            var path = [];
-
-            while (this.IsValid(row, col)) {
-                path.push(new GridPosition(row, col));
-
-                if (searchBackwards) {
-                    text = this.rows[row][col].value + text;
-                }
-                else {
-                    text = text + this.rows[row][col].value;
-                }
-
-                if (maxWordLength && (text.length > maxWordLength)) {
-                    break;
-                }
-
-                if (text.length >= minWordLength) {
-                    var words = PHTWords.GetWordMatches(PHTWords.EscapeString(text), null, null, null, null, dictionaries, minFrequency, 1, minWordLength, maxWordLength);
-                    if (words.length == 1) {
-                        var grid = new Grid(this);
-                        grid.positions = grid.positions.concat(path);
-                        solutions.push(new GridSolution(grid, words[0]));
-                    }
-                }
-
-                if (!this.ContinueSearching(row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency)) {
-                    break;
-                }
-
-                row += rowAdj;
-                col += colAdj;
-            }
-
-            return solutions;
-        }
-
-        Grid.prototype.FindWordSnakeSolutions = function (row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            if ((row < 0) && (col < 0)) {
-                for (row = 0; row < this.height; row++) {
-                    for (col = 0; col < this.width; col++) {
-                        solutions = solutions.concat(this.FindWordSnakeSolutions(row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                    }
-                }
-            }
-            else {
-                var startIndex = 0;
-                var endIndex = wordLengths.length;
-                var indexAdj = 1;
-                var index = startIndex;
-
-                if (searchBackwards) {
-                    startIndex = wordLengths.length - 1;
-                    endIndex = 0;
-                    indexAdj = -1
-                    index = startIndex;
-                }
-
-                for (var i = 0; i < wordLengths.length; i++) {
-                    if ((wordLengths.length > 1) || wordLengths[index] != 0) {
-                        minWordLength = wordLengths[index];
-                        maxWordLength = wordLengths[index];
-                    }
-
-                    if (index == startIndex) {
-                        solutions = this.FindWordSnakeWords(row, col, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency);
-                    }
-                    else {
-
-                        if (hasSpaces) {
-                            // Find solutions based on each of the previous solutions where a space exists after the word.
-                            //
-                            var newSolutions = [];
-
-                            for (var j = 0; j < solutions.length; j++) {
-                                var lastCell = solutions[j].grid.positions[solutions[j].grid.positions.length - 1];
-                                var row = lastCell.row;
-                                var col = lastCell.col;
-
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 1, col));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row - 1, col));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row, col + 1));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row, col - 1));
-                            }
-
-                            solutions = newSolutions;
-                        }
-
-                        var newSolutions = [];
-                        for (var j = 0; j < solutions.length; j++) {
-                            // Find solutions based on each of the previous solutions words that have been found.
-                            //
-                            var tempSolutions = [];
-                            var lastCell = solutions[j].grid.positions[solutions[j].grid.positions.length - 1];
-                            var row = lastCell.row;
-                            var col = lastCell.col;
-
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindWordSnakeWords(row + 1, col, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindWordSnakeWords(row - 1, col, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindWordSnakeWords(row, col + 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindWordSnakeWords(row, col - 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-
-                            for (var k = 0; k < tempSolutions.length; k++) {
-                                if (searchBackwards) {
-                                    tempSolutions[k].word.value = tempSolutions[k].word.value + " " + solutions[j].word.value;
-                                }
-                                else {
-                                    tempSolutions[k].word.value = solutions[j].word.value + " " + tempSolutions[k].word.value;
-                                }
-                                tempSolutions[k].word.frequency = (solutions[j].word.frequency + tempSolutions[k].word.frequency) / 2;
-                            }
-
-                            newSolutions = newSolutions.concat(tempSolutions);
-                        }
-                        solutions = newSolutions;
-                    }
-
-                    index = index + indexAdj;
-                }
-            }
-
-            return solutions;
-        }
-
-        Grid.prototype.FindWordSnakeWords = function (row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            if (getHorizontalWrap()) {
-                while (col < 0) {
-                    col = col + this.width;
-                }
-                while (col >= this.width) {
-                    col = col - this.width;
-                }
-            }
-
-            if (getVerticalWrap()) {
-                while (row < 0) {
-                    row = row + this.height;
-                }
-                while (row >= this.height) {
-                    row = row - this.height;
-                }
-            }
-
-            if (!this.IsValid(row, col)) {
-                return solutions;
-            }
-
-            if (searchBackwards) {
-                text = this.rows[row][col].value + text;
-            }
-            else {
-                text = text + this.rows[row][col].value;
-            }
-
-            if (maxWordLength && (text.length > maxWordLength)) {
-                return solutions;
-            }
-
-            this.rows[row][col].visited = true;
-            this.positions.push(new GridPosition(row, col));
-
-            if (text.length >= minWordLength) {
-                var words = PHTWords.GetWordMatches(PHTWords.EscapeString(text), null, null, null, null, dictionaries, minFrequency, 1, minWordLength, maxWordLength);
-                if (words.length == 1) {
-                    solutions.push(new GridSolution(new Grid(this), words[0]));
-                }
-            }
-
-            if (this.ContinueSearching(row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency)) {
-                solutions = solutions.concat(this.FindWordSnakeWords(row + 1, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSnakeWords(row - 1, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSnakeWords(row, col + 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindWordSnakeWords(row, col - 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-            }
-
-            this.rows[row][col].visited = false;
-            this.positions.pop();
-            return solutions;
-        }
-
-        Grid.prototype.FindKnightsPathSolutions = function (row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            var startIndex = 0;
-            var endIndex = wordLengths.length;
-            var indexAdj = 1;
-            var index = startIndex;
-
-            if (searchBackwards) {
-                startIndex = wordLengths.length - 1;
-                endIndex = 0;
-                indexAdj = -1
-                index = startIndex;
-            }
-
-            for (var i = 0; i < wordLengths.length; i++) {
-                if ((wordLengths.length > 1) || wordLengths[index] != 0) {
-                    minWordLength = wordLengths[index];
-                    maxWordLength = wordLengths[index];
-                }
-
-                if (index == startIndex) {
-                    solutions = this.FindKnightsPathWords(row, col, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency);
-                }
-                else {
-                    if (hasSpaces) {
-                        var newSolutions = [];
-
-                        for (var j = 0; j < solutions.length; j++) {
-                            var lastCell = solutions[j].grid.positions[solutions[j].grid.positions.length - 1];
-                            var row = lastCell.row;
-                            var col = lastCell.col;
-
-                            newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 1, col - 2));
-                            newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 2, col - 1));
-                            newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 2, col + 1));
-                            newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 1, col + 2));
-                            newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row - 1, col + 2));
-                            newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row - 2, col + 1));
-                            newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row - 2, col - 1));
-                            newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row - 1, col - 2));
-                        }
-
-                        solutions = newSolutions;
-                    }
-
-                    var newSolutions = [];
-
-                    for (var j = 0; j < solutions.length; j++) {
-                        // Find solutions based on each of the previous solutions words that have been found.
-                        //
-                        var tempSolutions = [];
-                        var lastCell = solutions[j].grid.positions[solutions[j].grid.positions.length - 1];
-                        var row = lastCell.row;
-                        var col = lastCell.col;
-
-                        tempSolutions = tempSolutions.concat(solutions[j].grid.FindKnightsPathWords(row + 1, col - 2, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        tempSolutions = tempSolutions.concat(solutions[j].grid.FindKnightsPathWords(row + 2, col - 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        tempSolutions = tempSolutions.concat(solutions[j].grid.FindKnightsPathWords(row + 2, col + 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        tempSolutions = tempSolutions.concat(solutions[j].grid.FindKnightsPathWords(row + 1, col + 2, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        tempSolutions = tempSolutions.concat(solutions[j].grid.FindKnightsPathWords(row - 1, col + 2, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        tempSolutions = tempSolutions.concat(solutions[j].grid.FindKnightsPathWords(row - 2, col + 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        tempSolutions = tempSolutions.concat(solutions[j].grid.FindKnightsPathWords(row - 2, col - 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        tempSolutions = tempSolutions.concat(solutions[j].grid.FindKnightsPathWords(row - 1, col - 2, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-
-                        for (var k = 0; k < tempSolutions.length; k++) {
-                            if (searchBackwards) {
-                                tempSolutions[k].word.value = tempSolutions[k].word.value + " " + solutions[j].word.value;
-                            }
-                            else {
-                                tempSolutions[k].word.value = solutions[j].word.value + " " + tempSolutions[k].word.value;
-                            }
-                            tempSolutions[k].word.frequency = (solutions[j].word.frequency + tempSolutions[k].word.frequency) / 2;
-                        }
-
-                        newSolutions = newSolutions.concat(tempSolutions);
-                    }
-                    solutions = newSolutions;
-                }
-
-                index = index + indexAdj;
-            }
-
-            return solutions;
-        }
-
-        Grid.prototype.FindKnightsPathWords = function (row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            if (!this.IsValid(row, col)) {
-                return solutions;
-            }
-
-            if (searchBackwards) {
-                text = this.rows[row][col].value + text;
-            }
-            else {
-                text = text + this.rows[row][col].value;
-            }
-
-            if (maxWordLength && (text.length > maxWordLength)) {
-                return solutions;
-            }
-
-            this.rows[row][col].visited = true;
-            this.positions.push(new GridPosition(row, col));
-
-            if (text.length >= minWordLength) {
-                var words = PHTWords.GetWordMatches(PHTWords.EscapeString(text), null, null, null, null, dictionaries, minFrequency, 1, minWordLength, maxWordLength);
-                if (words.length == 1) {
-                    solutions.push(new GridSolution(new Grid(this), words[0]));
-                }
-            }
-
-            if (this.ContinueSearching(row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency)) {
-                solutions = solutions.concat(this.FindKnightsPathWords(row + 1, col - 2, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindKnightsPathWords(row + 2, col - 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindKnightsPathWords(row + 2, col + 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindKnightsPathWords(row + 1, col + 2, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindKnightsPathWords(row - 1, col + 2, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindKnightsPathWords(row - 2, col + 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindKnightsPathWords(row - 2, col - 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindKnightsPathWords(row - 1, col - 2, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-            }
-
-            this.rows[row][col].visited = false;
-            this.positions.pop();
-            return solutions;
-        };
-
-
-        Grid.prototype.FindBoggleSolutions = function (row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            if ((row < 0) && (col < 0)) {
-                for (row = 0; row < this.height; row++) {
-                    for (col = 0; col < this.width; col++) {
-                        solutions = solutions.concat(this.FindBoggleSolutions(row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                    }
-                }
-            }
-            else {
-                var startIndex = 0;
-                var endIndex = wordLengths.length;
-                var indexAdj = 1;
-                var index = startIndex;
-
-                if (searchBackwards) {
-                    startIndex = wordLengths.length - 1;
-                    endIndex = 0;
-                    indexAdj = -1
-                    index = startIndex;
-                }
-
-                for (var i = 0; i < wordLengths.length; i++) {
-                    if ((wordLengths.length > 1) || wordLengths[index] != 0) {
-                        minWordLength = wordLengths[index];
-                        maxWordLength = wordLengths[index];
-                    }
-
-                    if (index == startIndex) {
-                        solutions = this.FindBoggleWords(row, col, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency);
-                    }
-                    else {
-                        if (hasSpaces) {
-                            // Find solutions based on each of the previous solutions where a space exists after the word.
-                            //
-                            var newSolutions = [];
-
-                            for (var j = 0; j < solutions.length; j++) {
-                                var lastCell = solutions[j].grid.positions[solutions[j].grid.positions.length - 1];
-                                var row = lastCell.row;
-                                var col = lastCell.col;
-
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row - 1, col - 1));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row - 1, col + 0));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row - 1, col + 1));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 0, col + 1));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 1, col + 1));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 1, col + 0));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 1, col - 1));
-                                newSolutions = newSolutions.concat(solutions[j].getSpaceSolutions(row + 0, col - 1));
-                            }
-
-                            solutions = newSolutions;
-                        }
-
-                        var newSolutions = [];
-                        for (var j = 0; j < solutions.length; j++) {
-                            // Find solutions based on each of the previous solutions words that have been found.
-                            //
-                            var tempSolutions = [];
-                            var lastCell = solutions[j].grid.positions[solutions[j].grid.positions.length - 1];
-                            var row = lastCell.row;
-                            var col = lastCell.col;
-
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindBoggleWords(row - 1, col - 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindBoggleWords(row - 1, col + 0, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindBoggleWords(row - 1, col + 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindBoggleWords(row + 0, col + 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindBoggleWords(row + 1, col + 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindBoggleWords(row + 1, col + 0, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindBoggleWords(row + 1, col - 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                            tempSolutions = tempSolutions.concat(solutions[j].grid.FindBoggleWords(row + 0, col - 1, "", searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-
-                            for (var k = 0; k < tempSolutions.length; k++) {
-                                if (searchBackwards) {
-                                    tempSolutions[k].word.value = tempSolutions[k].word.value + " " + solutions[j].word.value;
-                                }
-                                else {
-                                    tempSolutions[k].word.value = solutions[j].word.value + " " + tempSolutions[k].word.value;
-                                }
-                                tempSolutions[k].word.frequency = (solutions[j].word.frequency + tempSolutions[k].word.frequency) / 2;
-                            }
-
-                            newSolutions = newSolutions.concat(tempSolutions);
-                        }
-                        solutions = newSolutions;
-                    }
-
-                    index = index + indexAdj;
-                }
-            }
-
-            return solutions;
-        }
-
-        Grid.prototype.FindBoggleWords = function (row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            if (!this.IsValid(row, col)) {
-                return solutions;
-            }
-
-            if (searchBackwards) {
-                text = this.rows[row][col].value + text;
-            }
-            else {
-                text = text + this.rows[row][col].value;
-            }
-
-            if (maxWordLength && (text.length > maxWordLength)) {
-                return solutions;
-            }
-
-            this.rows[row][col].visited = true;
-            this.positions.push(new GridPosition(row, col));
-
-            if (text.length >= minWordLength) {
-                var words = PHTWords.GetWordMatches(PHTWords.EscapeString(text), null, null, null, null, dictionaries, minFrequency, 1, minWordLength, maxWordLength);
-                if (words.length == 1) {
-                    solutions.push(new GridSolution(new Grid(this), words[0]));
-                }
-            }
-
-            if (this.ContinueSearching(row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency)) {
-                solutions = solutions.concat(this.FindBoggleWords(row - 1, col - 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindBoggleWords(row - 1, col + 0, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindBoggleWords(row - 1, col + 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindBoggleWords(row + 0, col + 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindBoggleWords(row + 1, col + 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindBoggleWords(row + 1, col + 0, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindBoggleWords(row + 1, col - 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                solutions = solutions.concat(this.FindBoggleWords(row + 0, col - 1, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-            }
-
-            this.rows[row][col].visited = false;
-            this.positions.pop();
-            return solutions;
-        }
-
-        Grid.prototype.FindLtrSkipSolutions = function (row, col, searchBackwards, wordLengths, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            if (wordLengths && wordLengths[0]) {
-                minWordLength = wordLengths[0];
-                maxWordLength = wordLengths[0];
-            }
-
-            if ((row >= 0) && (col >= 0)) {
-                if (getHorizontalSearch()) {
-                    for (var i = col; i < this.width; i++) {
-                        solutions = solutions.concat(this.FindLtrSkipSearchWords("", row, i, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                    }
-                }
-
-                if (getVerticalSearch()) {
-                    for (var i = row; i < this.height; i++) {
-                        solutions = solutions.concat(this.FindLtrSkipSearchWords("", i, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                    }
-                }
-            }
-            else {
-                if (getHorizontalSearch()) {
-                    for (var row = 0; row < this.height; row++) {
-                        for (var col = 0; col < this.width; col++) {
-                            solutions = solutions.concat(this.FindLtrSkipSearchWords("", row, col, +0, +1, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        }
-                    }
-                }
-
-                if (getVerticalSearch()) {
-                    for (var col = 0; col < this.width; col++) {
-                        for (var row = 0; row < this.height; row++) {
-                            solutions = solutions.concat(this.FindLtrSkipSearchWords("", row, col, +1, +0, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                        }
-                    }
-                }
-            }
-
-            return solutions;
-        }
-
-        Grid.prototype.FindLtrSkipSearchWords = function (text, row, col, rowAdj, colAdj, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency) {
-            var solutions = [];
-
-            if (!this.IsValid(row, col)) {
-                return solutions;
-            }
-
-            if (searchBackwards) {
-                text = this.rows[row][col].value + text;
-            }
-            else {
-                text = text + this.rows[row][col].value;
-            }
-
-            if (maxWordLength && (text.length > maxWordLength)) {
-                return solutions;
-            }
-
-            this.rows[row][col].visited = true;
-            this.positions.push(new GridPosition(row, col));
-
-            if (text.length >= minWordLength) {
-                var words = PHTWords.GetWordMatches(PHTWords.EscapeString(text), null, null, null, null, dictionaries, minFrequency, 1, minWordLength, maxWordLength);
-                if (words.length == 1) {
-                    solutions.push(new GridSolution(new Grid(this), words[0]));
-                }
-            }
-
-            if (this.ContinueSearching(row, col, text, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency)) {
-                var startRow = row;
-                var startCol = col;
-                while ((startRow < this.height) && (startCol < this.width)) {
-                    startRow += rowAdj;
-                    startCol += colAdj;
-                    solutions = solutions.concat(this.FindLtrSkipSearchWords(text, startRow, startCol, rowAdj, colAdj, searchBackwards, hasSpaces, minWordLength, maxWordLength, dictionaries, minFrequency));
-                }
-            }
-
-            this.rows[row][col].visited = false;
-            this.positions.pop();
-            return solutions;
-        }
 
         //
         // GridPosition object declaration
@@ -1502,42 +800,54 @@ Featue Todo:
 
     <table style="width:100%;">
         <tr>
-            <td style="width:50%; vertical-align:top; border-right: 3px solid black; border-left: 3px solid black; padding-left:5px; padding-right:10px;">
+            <td style="vertical-align:top;white-space:nowrap;">
+                <span>Words </span><span id="WordDimensions"></span>
+
+                <table id="WordListTable">
+                    <tr>
+                        <th>Id</th>
+                        <th>Word</th>
+                        <th>Len</th>
+                    </tr>
+                    <tr>
+                        <td><input type="edit" size="2" style="" value="" /></td>
+                        <td><input type="edit" size="25" style="" value="" /></td>
+                        <td></td>
+                    </tr>
+                </table>
+            </td>
+            <td style="vertical-align:top; border-right: 3px solid black; border-left: 3px solid black; padding-left:5px; padding-right:10px;">
                 <table style="width: 100%">
                     <tr>
                         <td style="white-space: nowrap;" colspan="3">
-                            Options:
-                            <label><input type="checkbox" id="CluedWords" value="1" />Clued Words</label>
-                            <label><input type="checkbox" id="AnagramFill" value="1" />Anagram Fill</label>
-                            <label><input type="checkbox" id="LooseFit" value="1" onclick="doUpdateGridText();" />Loose Fit</label>
-                            <br />
                             Fit&nbsp;Words:
-                            <label><input type="checkbox" id="HorizontalFit" checked="checked" value="1" />Horizontal</label>
-                            <label><input type="checkbox" id="VerticalFit" checked="checked" value="1" />Vertical</label>
+                            <label><input type="checkbox" id="HorizontalFit" checked="checked" value="1" onclick="doUpdateGridText();" />Horizontal</label>
+                            <label><input type="checkbox" id="VerticalFit" checked="checked" value="1" onclick="doUpdateGridText();" />Vertical</label>
+                            <label><input type="checkbox" id="DiagonalFit" value="1" onclick="doUpdateGridText();" />Diagonal</label>
+                            <br />
+                            Options:
+                            <label><input type="checkbox" id="KnownLocations" value="1" onclick="doUpdateGridText();" />Known Locations</label>
+                            <label><input type="checkbox" id="AnagramFill" value="1" onclick="doUpdateGridText();" />Anagram Fill</label>
+                            <label><input type="checkbox" id="LooseFit" value="1" onclick="doUpdateGridText();" />Loose Fit</label>
                             <hr />
                         </td>
                     </tr>
                     <tr>
                         <td style="white-space: nowrap;" colspan="3">
                             <label><input type="radio" name="Direction" id="Start" checked="checked" value="Forward" />Start</label>
-                            <label><input type="radio" name="Direction" id="End" value="Backwards"  />End</label>
+                            <label><input type="radio" name="Direction" id="End" value="Backwards" />End</label>
                             <input type="text" id="StartCell" size="8" onkeyup="renderGrid();" value="" />
-                            <label>Words&nbsp;Breaks:<input type="text" id="WordBreaks" size="20" value="" /></label>
+                            <label>Must&nbsp;Overlap:<input type="text" id="WordBreaks" size="5" value=""  title="All letters specified in this box must overlap letters already in grid."/></label>
                             <label><input type="checkbox" id="HasSpaces" value="1" />Has&nbsp;Spaces</label>
                             <hr />
                         </td>
                     </tr>
                     <tr>
                         <td style="white-space: nowrap;">
-                            <label>Min Length: <input type="text" id="MinWordLength" value="3" style="width:2em;"/></label>
-                            <label>Max Length: <input type="text" id="MaxWordLength" value=""  style="width:2em;"/></label>
+                            <label>Min Length: <input type="text" id="MinWordLength" value="3" style="width:2em;" /></label>
+                            <label>Max Length: <input type="text" id="MaxWordLength" value="" style="width:2em;" /></label>
                         </td>
                         <td style="text-align:right;white-space:nowrap;">
-                            <label style="display:none;" id="HorizontalWrapLabel"><input type="checkbox" id="HorizontalWrap" value="1" />H-Wrap</label>
-                            <label style="display:none;" id="VerticalWrapLabel"><input type="checkbox" id="VerticalWrap" value="1" />V-Wrap</label>
-                            <label style="display:none;" id="HorizontalSearchLabel"><input type="checkbox" id="HorizontalSearch" checked="checked" value="1" />H-Search</label>
-                            <label style="display:none;" id="VerticalSearchLabel"><input type="checkbox" id="VerticalSearch" value="1" />V-Search</label>
-                            <label><input type="checkbox" id="AutoClear" checked="checked" value="1" />Auto&nbsp;Clear</label>
                         </td>
                         <td style="text-align:right;">
                             <button onclick="doSearch();">Search</button>
@@ -1548,21 +858,21 @@ Featue Todo:
 
                 <span>Grid: </span><span id="GridDimensions"></span>
                 <table id="GridTable" class="GridTable"></table>
-                
+
                 <br />
                 <hr />
                 <span>Words:</span>
-                <textarea id="Words" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" ></textarea>
+                <textarea id="Words" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doUpdateWordList();"></textarea>
                 <hr />
                 <span>Grid Text:</span>
-                <label><input type="text" id="SeperatorToken" value="#" onkeyup="doUpdateGridText()" style="width:1em;"/>Seperator</label>
-                <label><input type="text" id="SpaceToken" value="_" onkeyup="doUpdateGridText()" style="width:1em;"/>Space</label>
-                <label><input type="text" id="RequiredToken" value="!" onkeyup="doUpdateGridText()" style="width:1em;"/>Required</label>
+                <label><input type="text" id="SeperatorToken" value="#" onkeyup="doUpdateGridText()" style="width:1em;" />Seperator</label>
+                <label><input type="text" id="SpaceToken" value="_" onkeyup="doUpdateGridText()" style="width:1em;" />Space</label>
+                <label><input type="text" id="RequiredToken" value="!" onkeyup="doUpdateGridText()" style="width:1em;" />Required</label>
                 <br />
                 <br />
                 <textarea id="GridText" style="width:100%;height:250px;font-family:Courier New, Courier, monospace;font-size:12px;" onkeyup="doUpdateGridText();"></textarea>
             </td>
-            <td style="width:50%; vertical-align:top;">
+            <td style="vertical-align:top;">
                 <table style="width: 100%">
                     <tr>
                         <td style="white-space: nowrap;" colspan="2">
@@ -1575,7 +885,8 @@ Featue Todo:
                     </tr>
                     <tr>
                         <td style="white-space: nowrap;" colspan="2">
-                            <label>Min&nbsp;Frequency: <input type="text" id="MinFrequency" size="10" value="1" title="Modern English (BNC):
+                            <label>
+                                Min&nbsp;Frequency: <input type="text" id="MinFrequency" size="10" value="1" title="Modern English (BNC):
   0 = 700,000 words
   1 = 80,000 words
   15 = 60,000 words
@@ -1585,7 +896,8 @@ Featue Todo:
   1500 = 5,000 words
   4000 = 2,500 words
   10000 = 1,000 words
-" /></label>
+" />
+                            </label>
                             <br />
                             <hr />
                         </td>

@@ -5,16 +5,20 @@
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
     <style>
+        /* Make the page fill the window. */
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            position: fixed;
+            overflow: hidden;
+        }
+
         /* Always set the map height explicitly to define the size of the div
         * element that contains the map. */
         #map {
             height: 100%;
-        }
-        /* Optional: Makes the sample page fill the window. */
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
         }
     </style>
 
@@ -109,7 +113,7 @@
         function initialize() {
             initLocationList();
 
-            gPuzzles = getPuzzles();
+            doUpdatePuzzleList();
 
             doShowList();
 
@@ -123,7 +127,7 @@
             setRunnerTransmit(transmit == '1');
 
             setInterval(function () {
-                gPuzzles = getPuzzles();
+                doUpdatePuzzleList();
                 doRenderPuzzleList();
                 doUpdateMapMarkers();
                 doUpdateRunnerMarkers();
@@ -228,9 +232,7 @@
             return result;
         }
 
-        function getPuzzles() {
-            let result = [];
-
+        function doUpdatePuzzleList() {
             $.ajax({
                 url: '/api/GetPuzzles.aspx',
                 type: 'POST',
@@ -239,12 +241,10 @@
                 data: 'team=' + encodeURIComponent('12Monkeys'),
                 error: function (jqXHR, status, error) { console.log("GetPuzzle call failed: " + status + " - " + error); },
                 success: function (data) {
-                    result = data;
+                    gPuzzles = data;
                 },
                 async: false,
             });
-
-            return result;
         }
 
         function savePuzzle(p) {
@@ -295,7 +295,7 @@
                 dataType: 'json',
                 processData: false,
                 data: 'id=' + encodeURIComponent(id) + '&retrieved=' + encodeURIComponent(retrieved),
-                error: function (jqXHR, status, error) { console.log("DeletePuzzle call failed: " + status + " - " + error); },
+                error: function (jqXHR, status, error) { console.log("SetRetrievedPuzzle call failed: " + status + " - " + error); },
                 success: function (data) {
                     result = data;
                 },
@@ -498,10 +498,10 @@
             });
 
             if (puzzle) {
-                puzzle.retrieved = !puzzle.retrieved;
+                if (setRetrievedPuzzle(puzzle.id, !puzzle.retrieved)) {
+                    puzzle.retrieved = !puzzle.retrieved;
+                }
             }
-
-            setRetrievedPuzzle(puzzle.id, puzzle.retrieved);
 
             // Re-Render the puzzle list and markers.
             //

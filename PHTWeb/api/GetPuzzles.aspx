@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" CodeBehind="GetPuzzles.aspx.cs" Inherits="PHTWeb.api.GetPuzzles" ValidateRequest="false" EnableEventValidation="false" EnableSessionState="False" EnableViewState="false" EnableTheming="false"%>
